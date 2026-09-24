@@ -4,7 +4,7 @@ This is a `colcon` workspace for the Gazebo simulation and supporting ROS 2 pack
 
 ## Intended setup
 
-The initial configuration targets ROS 2 Jazzy and Gazebo Harmonic. Install the matching ROS 2, Gazebo and `ros_gz` packages on the machine that will run the simulation.
+The initial configuration targets ROS 2 Jazzy and Gazebo Harmonic. The team will run it on Ubuntu 24.04 under WSL2, with Gazebo developed through WSLg and Foxglove Desktop connected through Foxglove Bridge.
 
 ```bash
 cd autonomous_tidal_vehicle_ws

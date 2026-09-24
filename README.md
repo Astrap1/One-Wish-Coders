@@ -68,7 +68,7 @@ The final demo will run the same vehicle through three repeatable scenarios:
 
 1. **Normal delivery:** Deliver cargo across the tidal corridor and return safely.
 2. **Blocked route:** Detect debris or dense roots, create a local obstacle map and replan around the hazard.
-3. **Unsafe condition:** Rising tide, low battery, communications loss or simulated skirt degradation causes a safety-driven hold or return.
+3. **Rising tide:** Water levels change the terrain-cost map during the mission, requiring a visible replan, hold or safety-driven return.
 
 We will show a 3D vehicle-camera view and a mission console with route, LiDAR obstacles, battery/return reserve, tide risk, payload status and safety state. We may also compare terrain capability profiles for a wheeled rover, boat and air-cushion vehicle to communicate the operational niche; this comparison is not a claim that three complete autonomous systems have been built.
 

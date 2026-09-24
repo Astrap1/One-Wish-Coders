@@ -8,6 +8,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/imu` | Simulation | Autonomy | `sensor_msgs/Imu` | Orientation and motion sensing. |
 | `/odom` | Simulation | Autonomy, Safety, Operator | `nav_msgs/Odometry` | Vehicle position and velocity. |
 | `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. |
+| `/terrain_costmap` | Simulation | Autonomy, Operator | `nav_msgs/OccupancyGrid` | Current terrain-risk map after the simulated tide update. |
 | `/vehicle_health` | Simulation | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Battery, mobility, link and payload health. |
 | `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. |
 | `/planned_path` | Autonomy | Operator, Safety | `nav_msgs/Path` | Proposed route. |
@@ -19,3 +20,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 ## Safety states
 
 `CRUISE`, `CAUTION`, `HOLD` and `RETURN` are the required state names. The safety supervisor must publish a human-readable reason with every state change.
+
+## Rising-tide update rule
+
+The simulation publishes a new terrain state and cost map whenever the simulated tide changes. Autonomy must re-evaluate the outbound and return route from the current pose; it must not assume that the route accepted at launch remains safe. Safety uses the same updated terrain information to determine whether a return remains feasible.

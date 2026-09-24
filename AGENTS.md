@@ -42,7 +42,7 @@ They also confirm the three required scenarios:
 
 1. Normal delivery and return.
 2. Obstacle-induced reroute.
-3. Unsafe condition causing a hold or return.
+3. Rising tide changes terrain risk, forcing a replan, hold or return.
 
 Work during this stage:
 
@@ -50,7 +50,7 @@ Work during this stage:
 - **Person 2:** writes initial safety thresholds and the transition table for `CRUISE`, `CAUTION`, `HOLD` and `RETURN`.
 - **Person 3:** defines the world layout, start/goal coordinates, terrain zones and obstacle spawn locations.
 - **Person 4:** confirms the ROS/Gazebo environment, creates the common launch path and validates the package dependency graph.
-- **Person 5:** defines the metric schema, scenario checklist, dashboard fields and camera/storyboard requirements.
+- **Person 5:** defines the metric schema, scenario checklist, Foxglove layout, dashboard fields and camera/storyboard requirements.
 
 **Exit gate:** the topic contract in `docs/INTERFACES.md` is accepted, the expected demo host is known, and every role can run against mocked or placeholder inputs.
 
@@ -85,17 +85,17 @@ Work during this stage:
 **Timing:** Day 2 afternoon through Day 3 morning.
 **Goal:** demonstrate why the system is useful in a tidal corridor rather than merely following waypoints.
 
-- **Person 3:** adds final terrain materials, mangrove roots, debris, tide-risk zones and clearly visible delivery/return landmarks.
+- **Person 3:** adds final terrain materials, mangrove roots, debris, tide-risk zones and clearly visible delivery/return landmarks. Its tide manager must publish the updated terrain state and cost map.
 - **Person 4:** implements or tunes the transparent mobility model: terrain-dependent speed, limited turning/braking, battery consumption and vehicle-health inputs. Keep these assumptions documented rather than presenting them as validated physics.
-- **Person 1:** adds local obstacle avoidance and route replanning for the blocked-route scenario.
-- **Person 2:** adds return-reserve, tide-risk and fault handling. At least one condition must transition from `CRUISE` through `CAUTION` to `HOLD` or `RETURN` with a clear rationale.
-- **Person 5:** implements deterministic scenario triggers, result logging and the live mission overlay. It also prepares a simple capability comparison graphic for wheeled rover, boat and air-cushion vehicle profiles.
+- **Person 1:** adds local obstacle avoidance and repeated route assessment against `/terrain_costmap` for the blocked-route and rising-tide scenarios.
+- **Person 2:** adds return-reserve and tide-risk handling. A rising tide must transition from `CRUISE` through `CAUTION` to a visible replan, `HOLD` or `RETURN` with a clear rationale.
+- **Person 5:** implements deterministic scenario triggers, result logging and the Foxglove mission layout. It also prepares a simple capability comparison graphic for wheeled rover, boat and air-cushion vehicle profiles.
 
 **Exit gate:** all three required scenarios run from the common launcher:
 
 1. normal delivery and return;
 2. obstacle detected, route replanned and mission completed; and
-3. an unsafe condition causes a visible, safety-driven hold or return.
+3. rising tide updates the terrain cost map and causes a visible, safety-driven replan, hold or return.
 
 ### Stage 4 — Demonstration hardening
 

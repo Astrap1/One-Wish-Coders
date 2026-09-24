@@ -12,6 +12,9 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
+    entry_points={
+        "console_scripts": ["global_planner = tidal_vehicle_autonomy.global_planner_node:main"],
+    },
     maintainer="One Wish Coders",
     maintainer_email="team@example.com",
     description="Perception, planning, avoidance and mission logic.",

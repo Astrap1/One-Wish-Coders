@@ -24,3 +24,13 @@ These are the initial contracts between workstreams. Topic names and message typ
 ## Rising-tide update rule
 
 The simulation publishes a new terrain state and cost map whenever the simulated tide changes. Autonomy must re-evaluate the outbound and return route from the current pose; it must not assume that the route accepted at launch remains safe. Safety uses the same updated terrain information to determine whether a return remains feasible.
+
+## Terrain cost-map encoding
+
+`/terrain_costmap` uses standard `nav_msgs/OccupancyGrid` row-major layout in the `map` frame for the first integration slice. Its cell values are semantic traversal costs, not probability of occupancy:
+
+- `0`--`89`: traversable, with larger values representing increasing terrain risk.
+- `90`--`100`: no-go terrain or obstacle.
+- `-1`: unknown terrain, treated as no-go by autonomy.
+
+Until the common TF tree is integrated, `/terrain_costmap`, `/odom` and `/mission_goal` must have matching frame IDs. The global planner will publish only `/planned_path`; `/cmd_vel_proposed` remains a later path-following component.

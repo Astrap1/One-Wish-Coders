@@ -22,6 +22,18 @@ See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system bound
 | 4 | Vehicle simulation and integration lead | Vehicle SDF model, sensors, mobility abstraction, ROS-Gazebo bridge, packages and one-command launch. | Mission-policy thresholds or dashboard narrative. |
 | 5 | Operator, evaluation and demo lead | Operator display, scenario runner, fault injection controls, metrics, comparison visuals and presentation story. | Direct vehicle control outside the documented operator controls. |
 
+## Role 1: Autonomy implementation status
+
+- Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal` and `/terrain_state` and publishes `/planned_path` only.
+- Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
+- Agreed planner interpretation of `/terrain_costmap`: `0`--`89` traversable with increasing risk, `90`--`100` no-go, and `-1` unknown/no-go.
+- The planner replans after cost-map, goal or terrain-state updates, and refuses to combine mismatched frames until the shared TF tree is available.
+- Added five unit tests for direct routing, risk avoidance, unknown terrain, blocked diagonal corners and grid/world conversions.
+- Verified the interface and autonomy packages build in WSL; `global_planner` starts successfully.
+
+`/cmd_vel_proposed`, LiDAR-based local obstacle response and simulated-odometry integration remain the next Role 1 milestones. The planner does not publish `/cmd_vel`.
+
+
 ## Three-day build plan
 
 This plan assumes roughly 2.5–3 focused build days. If less time is available, preserve the milestone gates and reduce visual polish rather than skipping integration or safety behaviour.

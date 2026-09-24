@@ -1,0 +1,22 @@
+# ROS 2 / colcon build artefacts
+autonomous_tidal_vehicle_ws/build/
+autonomous_tidal_vehicle_ws/install/
+autonomous_tidal_vehicle_ws/log/
+
+# Python artefacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local simulator recordings and generated evaluation data
+recordings/
+results/
+*.bag
+*.db3

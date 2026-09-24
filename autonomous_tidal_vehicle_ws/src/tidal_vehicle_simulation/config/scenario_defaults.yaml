@@ -1,0 +1,12 @@
+# Scenario values are simulation assumptions, not claims about field performance.
+tide:
+  initial_state: low
+  risk_rate_per_minute: 0.05
+vehicle:
+  initial_battery_percent: 100.0
+  initial_mobility_health_percent: 100.0
+terrain_cost:
+  firm_shore: 1.0
+  wet_mud: 2.0
+  shallow_water: 1.5
+  mangrove_root_zone: 5.0

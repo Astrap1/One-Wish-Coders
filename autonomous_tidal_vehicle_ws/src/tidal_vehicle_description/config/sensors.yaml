@@ -1,0 +1,14 @@
+# Initial sensor contract. Update frame names together with the SDF/URDF model.
+base_frame: base_link
+lidar:
+  frame: lidar_link
+  topic: /scan
+  update_rate_hz: 10
+imu:
+  frame: imu_link
+  topic: /imu
+  update_rate_hz: 50
+camera:
+  frame: camera_link
+  topic: /camera/image_raw
+  update_rate_hz: 15

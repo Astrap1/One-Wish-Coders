@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>tidal_vehicle_simulation</name>
+  <version>0.0.1</version>
+  <description>Gazebo tidal-corridor world, terrain models and simulation plugins.</description>
+  <maintainer email="team@example.com">One Wish Coders</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

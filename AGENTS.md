@@ -28,7 +28,7 @@ This plan assumes roughly 2.5–3 focused build days. If less time is available,
 
 ### Stage 0 — Contract and environment lock
 
-**Timing:** first 2–3 hours.  
+**Timing:** first 2–3 hours.
 **Goal:** make every workstream independently productive without waiting for final assets.
 
 All five people agree on the fixed mission:
@@ -56,7 +56,7 @@ Work during this stage:
 
 ### Stage 1 — Minimal end-to-end spine
 
-**Timing:** remainder of Day 1.  
+**Timing:** remainder of Day 1.
 **Goal:** a crude but complete mission loop before visual detail.
 
 - **Person 4:** creates a simple controllable vehicle, basic Gazebo world and `/cmd_vel` bridge. It must publish usable `/odom`, `/scan`, `/imu`, `/terrain_state` and `/vehicle_health`, even if some values are initially simple constants.
@@ -69,7 +69,7 @@ Work during this stage:
 
 ### Stage 2 — First autonomous delivery
 
-**Timing:** Day 2 morning.  
+**Timing:** Day 2 morning.
 **Goal:** complete the core autonomous mission in a static, low-risk world.
 
 - **Person 1:** connects real simulated odometry and LiDAR to the planner, then produces a route to the delivery point and a return route.
@@ -82,7 +82,7 @@ Work during this stage:
 
 ### Stage 3 — Mission credibility and fault response
 
-**Timing:** Day 2 afternoon through Day 3 morning.  
+**Timing:** Day 2 afternoon through Day 3 morning.
 **Goal:** demonstrate why the system is useful in a tidal corridor rather than merely following waypoints.
 
 - **Person 3:** adds final terrain materials, mangrove roots, debris, tide-risk zones and clearly visible delivery/return landmarks.
@@ -99,7 +99,7 @@ Work during this stage:
 
 ### Stage 4 — Demonstration hardening
 
-**Timing:** final half-day.  
+**Timing:** final half-day.
 **Goal:** reliability, clarity and a backup plan.
 
 - **Person 4:** freezes the launch path and protects a stable demo branch/tag. Only integration fixes enter after this point.

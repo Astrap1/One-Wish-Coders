@@ -12,7 +12,7 @@
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
     <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors"><render_engine>ogre2</render_engine></plugin>
-    <plugin filename="gz-sim-buoyancy-system" name="gz::sim::systems::Buoyancy"><graded_buoyancy><default_density>1000</default_density><density_change><above_depth>0.0</above_depth><density>1.2</density></density_change></graded_buoyancy><enable>hovercraft::base_link</enable><enable>hovercraft::skirt</enable><enable>hovercraft_v2::base_link</enable><enable>hovercraft_v2::skirt</enable></plugin>
+    <plugin filename="gz-sim-buoyancy-system" name="gz::sim::systems::Buoyancy"><graded_buoyancy><default_density>1000</default_density><density_change><above_depth>0.0</above_depth><density>1.2</density></density_change></graded_buoyancy><enable>hovercraft::base_link</enable><enable>hovercraft::skirt</enable></plugin>
     <!-- Must match tide_manager's channel and mud rectangles exactly. -->
     <plugin filename="tidal_vehicle_plugins" name="hover::TerrainZones"><ground_height>0.0</ground_height><zone><name>tidal_channel</name><type>WATER</type><min>4 -8</min><max>18 8</max><level>0.0</level></zone><zone><name>mudflat</name><type>MUD</type><min>18 -8</min><max>32 8</max></zone></plugin>
     <!-- Detailed terrain visual with a deliberately simple DART/Bullet collision

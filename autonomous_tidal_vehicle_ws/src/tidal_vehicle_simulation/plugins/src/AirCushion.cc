@@ -49,8 +49,10 @@
 // makes the cushion carry that fraction of the weight while the tracks carry
 // the rest. Each corner then gets a constant r * s * F0 (no spring term, so
 // the cushion never lifts the vehicle off its tracks), still venting above
-// the design gap. A negative or NaN value switches load sharing off and
-// restores the normal hover law. Vehicles that never publish lift_share
+// the design gap. While load sharing is on, the propulsion fans idle: the
+// tracks propel and brake, and a fan speed loop would only fight them. A
+// negative or NaN value switches load sharing off and restores the normal
+// hover law and fan propulsion. Vehicles that never publish lift_share
 // (Version 1) behave exactly as before.
 //
 // Topics (all under /model/<model_name>/):
@@ -338,6 +340,14 @@ class AirCushion : public System,
       const double coll = 0.5 * (cmdL + cmdR);
       cmdL = coll - 0.5 * diff;      // left fan weaker -> nose left (CCW)
       cmdR = coll + 0.5 * diff;
+    }
+
+    // On the tracks (load sharing): the tracks propel and brake, fans idle.
+    if (std::isfinite(share) && share >= 0.0)
+    {
+      cmdL = 0.0;
+      cmdR = 0.0;
+      this->spdInt = 0.0;
     }
 
     // Lift-fan spin-up / spin-down ramp

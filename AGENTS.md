@@ -14,34 +14,59 @@ See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system bound
 
 ## Vehicle configuration and mobility modes
 
-The simulated vehicle has an inflatable air-cushion skirt, a lift fan, rear propulsion fans and wheels. Its initial planning size is approximately 2.5 m long and an estimated 1.5 m wide; Person 4's final collision geometry remains authoritative. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt or hovercraft physics.
+The simulated vehicle is a **hovercraft-dominant amphibious vehicle with a complete retractable tracked undercarriage and controlled air-cushion load sharing** (Vehicle Version 2, below). It has an inflatable, segmented air-cushion skirt, a lift fan, two rear ducted propulsion fans with rudders and two retractable rubber tracks. Its working size is 2.5 m long, 1.5 m wide and 1.5 m high overall, which matches the planning footprint Autonomy already uses; Person 4's final collision geometry remains authoritative. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, track or hovercraft physics.
 
 The vehicle controller uses three internal mobility modes:
 
-- **WHEEL** — used on firm ground. The lift fan is off or idling, the vehicle rests on its wheels, and the wheels execute the safety-approved motion command.
-- **TRANSITION** — used while changing between wheel and hover operation. Horizontal motion stops, the lift fan ramps up or down, and the controller waits until the vehicle is either hover-ready or settled onto its wheels.
-- **HOVER** — used over mud and shallow water. The lift fan maintains the simulated air cushion, the wheels are unloaded or ignored, and the rear propulsion fans execute the safety-approved forward and turning command.
+- **HOVER** — the default, used over mud and shallow water. The tracks are retracted into the hull, the lift fan carries the full weight on the air cushion, and the rear propulsion fans execute the safety-approved forward and turning command.
+- **TRACK** — used on firm land and on slopes. The tracks are deployed and execute the safety-approved command as a skid-steer drive. The lift fan provides a controlled share of the vehicle's weight (the *cushion load share*): about 0–20% on firm, level ground and up to about 60% on soft ground or slopes, lowering the tracks' ground pressure while they keep traction and braking. The tracks are never fully unloaded in TRACK mode.
+- **TRANSITION** — used while changing between TRACK and HOVER. Horizontal motion stops, the tracks deploy or retract, the lift fan ramps up or down, and the controller waits until the vehicle is either hover-ready or settled and loaded on its tracks.
+
+Mode selection is internal to Person 4's controller. It switches to TRACK when the vehicle reaches firm land (cost `0`--`19`) or a slope steeper than the hover slope limit (working value 6°), and back to HOVER on mud or shallow water (cost `20`--`89`) below that limit. A short dwell time prevents chattering at terrain boundaries.
 
 These mobility modes are separate from Person 2's safety states and must not replace or rename `CRUISE`, `CAUTION`, `HOLD` or `RETURN`. They do not introduce new external commands or topics. The existing command authority remains:
 
-1. Person 1 publishes route and motion proposals through `/planned_path` and `/cmd_vel_proposed`; autonomy does not directly command wheel speeds or fan RPM.
+1. Person 1 publishes route and motion proposals through `/planned_path` and `/cmd_vel_proposed`; autonomy does not directly command track speeds, fan RPM or cushion load share.
 2. Person 2 applies the existing safety and mission logic and remains the only publisher of `/cmd_vel`.
-3. Person 4 consumes the safety-approved `/cmd_vel` and owns the internal wheel, lift-fan and propulsion-fan control, including command limits, fan ramping, hover-ready checks and mobility-mode transitions.
+3. Person 4 consumes the safety-approved `/cmd_vel` and owns the internal track, lift-fan and propulsion-fan control, including command limits, fan ramping, cushion load sharing, hover-ready checks and mobility-mode transitions.
 
-A wheel-to-hover transition must stop horizontal motion, ramp the lift fan and wait for hover-ready status before propulsion begins. A hover-to-wheel transition must stop horizontal motion, reduce lift in a controlled way and confirm that the vehicle has settled onto its wheels before wheel motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
+A track-to-hover transition must stop horizontal motion, ramp the lift fan, wait for hover-ready status, then retract the tracks before propulsion begins. A hover-to-track transition must stop horizontal motion, deploy the tracks, reduce lift in a controlled way to the target load share and confirm that the vehicle has settled onto its tracks before track motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
+
+Version 1 used wheels, and this section called its ground mode **WHEEL**. Safety's ground-mode return-energy parameters (`wheel_cost_max`, `wheel_energy_percent_per_m`, `wheel_nominal_speed_mps`) stand in for TRACK mode until Person 2 renames them.
 
 ### Shared terrain-cost semantics
 
 The terrain cost map supplies the shared route and mobility interpretation:
 
-- `0`--`19`: firm shore; the controller uses **WHEEL** mode.
-- `20`--`59`: mud or shallow water; the controller uses **HOVER** mode.
+- `0`--`19`: firm shore; the controller uses **TRACK** mode.
+- `20`--`59`: mud or shallow water; the controller uses **HOVER** mode (TRACK with a high cushion load share on slopes steeper than the hover limit).
 - `60`--`89`: elevated-risk mud or shallow water; the controller uses **HOVER** mode with conservative speed/energy assumptions.
 - `90`--`100`: no-go terrain.
 - `-1`: unknown terrain; treated as no-go.
 
 Autonomy plans with these costs and Safety estimates the return energy/time using
 the same bands. A path that crosses a `90+` or `-1` cell is invalid.
+
+### Vehicle Version 2 (in design)
+
+Version 1 is frozen in `assets/vehicle_blender/version_1/`: a 1.2 × 0.7 m, 25 kg air-cushion vehicle on four wheels with swing-up legs. It remains the simulated model (`tidal_vehicle_description/models/hovercraft/`) until Version 2 replaces it. Version 2 is built in `assets/vehicle_blender/version_2/` with the same pipeline (Blender script → `link_frames.json` → `gen_description.py` → SDF/URDF).
+
+First-order sizing for Version 2. These are stated design assumptions, not validated data:
+
+| Quantity | Working value | Basis |
+| --- | --- | --- |
+| Overall size | 2.5 m L × 1.5 m W × 1.5 m H | Team working dimensions; the height includes the LiDAR mast. |
+| Design mass | ≈ 300 kg including a 30 kg payload | Composite hull and skirt ≈ 70 kg, track undercarriage ≈ 70 kg, fans and motors ≈ 50 kg, 10 kWh battery ≈ 65 kg, electronics ≈ 15 kg. |
+| Cushion pressure | ≈ 0.9 kPa over ≈ 3.2 m² of cushion | Within the usual 0.5–1.5 kPa range for light hovercraft. |
+| Lift power | ≈ 2–3 kW electrical | Air escaping under an 8 m skirt perimeter with a 6 mm effective gap, 50% fan-and-motor efficiency. |
+| Propulsion | Two ducted fans, ≈ 200 N each | Thrust-to-weight ≈ 0.14, enough to accelerate, brake with reverse thrust and climb gentle slopes on the cushion. |
+| Tracks | Two tracks, 0.30 m wide, ≈ 1.6 m ground contact | ≈ 3 kPa ground pressure with no cushion support and ≈ 1.2 kPa at 60% cushion load share. For comparison, a standing person exerts roughly 15–25 kPa. |
+| Slope limits (working) | HOVER ≤ 6°; TRACK ≤ 20° | Hovercraft lose control authority on side and up slopes; tracks with cushion assistance take over. |
+| Height and stability | Hull top ≤ ≈ 1.0 m, centre of mass ≤ ≈ 0.5 m above ground | Keeps centre-of-mass height to beam ≈ 0.33 so a compartmented skirt stays roll-stable on the cushion. The rest of the 1.5 m is the sensor mast. A solid 1.5 m-tall hull would be roll-unstable on the cushion and is not the intent. |
+
+Conclusion: the dimensions are physically plausible for an electric, 300 kg-class craft, provided the hull stays low and the 1.5 m height is mostly the mast. Air-cushion-assisted tracked vehicles have been studied for soft terrain such as marsh and snow, but performance in Singapore mangrove mud needs physical testing.
+
+Simulation risk to retire first: Gazebo Harmonic's track systems (`TrackController`/`TrackedVehicle`) need contact-surface-motion support from the physics engine, and Version 1 runs DART with the Bullet collision detector for the air-cushion ray casts. Prove tracks work on that combination before building the rest of Version 2. The fallback is a row of road wheels under a visual track.
 
 ## Team roles
 
@@ -57,13 +82,14 @@ the same bands. A path that crosses a `90+` or `-1` cell is invalid.
 
 - Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state` and `/scan` and publishes `/planned_path` only.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
-- Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-wheel terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
+- Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-ground (TRACK) terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
 - The planner replans after cost-map, goal or terrain-state updates, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe.
 - Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay, and a changed scan triggers route reassessment without modifying Simulation's terrain map.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
 - The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames.
 - Added seventeen ROS-independent planner, follower and LiDAR tests and three ROS topic integration tests.
 - Verified the autonomy package builds in WSL and both `global_planner` and `path_follower` start successfully.
+- **Open integration note (raised by Person 4):** `tidal_vehicle_autonomy/package.xml` no longer declares `<buildtool_depend>ament_python</buildtool_depend>`; it was removed in commit `c8c5cba`. The other Python packages (`tidal_vehicle_safety`, `_operator`, `_evaluation`) still declare it. Restore it so `rosdep` and `colcon` treat all Python packages the same way.
 
 ### Path follower implementation details
 
@@ -94,7 +120,7 @@ Default path-follower parameters are:
 
 The follower proposes a zero command when the path is empty, odometry is missing or stale, frames do not match, or the goal is reached. The global planner publishes an empty path once when a new terrain map invalidates a previously published route. This prevents continued tracking of a stale route.
 
-The follower is independent of `WHEEL`, `TRANSITION` and `HOVER` actuator behaviour. Person 2 retains final command authority and remains the only publisher of `/cmd_vel`; Person 4 translates the approved body-motion command into wheel, lift-fan and propulsion-fan behaviour.
+The follower is independent of `TRACK` (Version 1: `WHEEL`), `TRANSITION` and `HOVER` actuator behaviour. Person 2 retains final command authority and remains the only publisher of `/cmd_vel`; Person 4 translates the approved body-motion command into wheel, lift-fan and propulsion-fan behaviour.
 
 ### LiDAR obstacle response implementation details
 
@@ -112,6 +138,23 @@ Default LiDAR parameters are:
 For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 1.7 m circular inflation is based on an approximately 2.5 m by 1.5 m vehicle footprint plus about 0.25 m clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when available.
 
 Live simulated-odometry and LiDAR tuning, final sensor-frame integration and Safety-requested return-path handling remain the next Role 1 milestones. Autonomy does not publish `/cmd_vel`.
+
+## Role 4: Vehicle simulation and integration status
+
+- **Version 1 delivered** on branch `feat/vehicle-sim-hovercraft` (draft pull request into `main`). It contains the procedural Blender model, the generated SDF/URDF, the Gazebo plugins (`hover::AirCushion`, `hover::TerrainZones`, `hover::ScriptedCommands`), `vehicle_mobility_node`, `lidar_scan_node`, the `ros_gz` bridge and the one-command launch `ros2 launch tidal_vehicle_bringup sim.launch.py`. Full description: `docs/VEHICLE_SIMULATION.md`.
+- **Gazebo side verified:** 25 of 25 headless acceptance checks pass on Gazebo Harmonic 8.15, covering hover-gap hold, speed and turning, the water → mud → bank crossing, debris clearance, `/cmd_vel` tracking and the mud A/B test in which wheels bog down and hover crosses.
+- **ROS 2 side not yet run.** The first WSL integration check (bridge, `robot_state_publisher`, `/scan`, `/vehicle_health`, Foxglove) is the next milestone.
+- `/odom` is ground truth in the `map` frame with child `base_link`, so it satisfies Autonomy's matching-frame requirement. `/terrain_costmap` comes from Person 3's tide manager; until that exists, `vehicle_mobility_node` publishes only a constant placeholder `/terrain_state`.
+
+Follow-up fixes to bring the Version 1 controller in line with this guide:
+
+1. Rename the controller's `GROUND`/`TO_HOVER`/`TO_GROUND` modes to `TRACK` (`WHEEL` on Version 1), `TRANSITION` and `HOVER`.
+2. Require an explicit hover-ready status from the air-cushion plugin before HOVER propulsion. The current check also accepts a missing status.
+3. Confirm the vehicle has settled on its ground gear (hull height and suspension load) before ground motion. The current hover-to-ground sequence is timed only.
+4. Report transition failures through `/vehicle_health.fault` using the names in `docs/INTERFACES.md`.
+5. Decide with Person 5 whether the mode stays visible to the operator (`/vehicle/mode`) or becomes internal, then update `docs/INTERFACES.md` to match.
+6. Switch the default mode policy from `hover_only` to terrain- and slope-based selection, then run the deferred hover-to-ground transition test.
+7. Agree with Person 2 on the `/vehicle_health` and `/terrain_state` publish rate relative to Safety's 1.0 s wall-clock freshness timeout when the simulation runs slower than real time.
 
 ## Three-day build plan
 

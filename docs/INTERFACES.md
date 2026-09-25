@@ -50,22 +50,23 @@ Safety:
 
 | Cost | Meaning | Mobility used by vehicle controller |
 | --- | --- | --- |
-| `0`--`19` | Firm shore | `WHEEL` |
+| `0`--`19` | Firm shore | `TRACK` (Version 1: `WHEEL`) |
 | `20`--`59` | Mud or shallow water | `HOVER` |
 | `60`--`89` | Elevated-risk mud or shallow water | Conservative `HOVER` |
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
 
-Safety samples these bands along `/return_path`: wheel and hover segments use
-different declared energy/speed assumptions, and each wheel--hover mode change
-adds transition energy and time to the return ETA.
+Safety samples these bands along `/return_path`: track (Version 1: wheel) and
+hover segments use different declared energy/speed assumptions, and each
+ground--hover mode change adds transition energy and time to the return ETA.
 
 ## Vehicle-fault semantics
 
 `/vehicle_health.fault` is empty during normal operation. The vehicle
 controller publishes a non-empty fault only for an unsafe failed condition,
 including `transition_timeout`, `hover_not_ready`, `lift_fan_fault`,
-`wheel_settle_timeout` and `wheel_deployment_fault`. Safety treats any
+`track_settle_timeout` and `track_deployment_fault` (Version 1:
+`wheel_settle_timeout` and `wheel_deployment_fault`). Safety treats any
 non-empty fault as `HOLD`. Normal internal `TRANSITION` activity is not a fault
 and does not create a new external topic or safety state.
 

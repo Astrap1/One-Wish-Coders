@@ -7,7 +7,46 @@
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
     <include><uri>model://terrain</uri><name>fixed_terrain</name><pose>0 0 0 0 0.08 0</pose></include>
-    <include><uri>model://mangrove_imported</uri><name>mangrove_imported</name></include>
+    <!-- Dense irregular mangrove grove: 7-15 m tall, with safe spacing between canopies. -->
+    <include><uri>model://mangrove_01_7m</uri><name>mangrove_01</name><pose>-32 -30 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_02_8m</uri><name>mangrove_02</name><pose>-17 -29 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_03_10m</uri><name>mangrove_03</name><pose>-2 -31 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_04_11m</uri><name>mangrove_04</name><pose>14 -29 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_05_13m</uri><name>mangrove_05</name><pose>30 -30 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_06_14m</uri><name>mangrove_06</name><pose>-30 -13 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_07_15m</uri><name>mangrove_07</name><pose>-14 -12 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_08_12m</uri><name>mangrove_08</name><pose>2 -14 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_09_11m</uri><name>mangrove_09</name><pose>18 -12 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_10_9m</uri><name>mangrove_10</name><pose>33 -14 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_01_7m</uri><name>mangrove_11</name><pose>-29 5 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_02_8m</uri><name>mangrove_12</name><pose>-13 4 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_03_10m</uri><name>mangrove_13</name><pose>4 6 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_04_11m</uri><name>mangrove_14</name><pose>20 5 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_05_13m</uri><name>mangrove_15</name><pose>34 6 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_06_14m</uri><name>mangrove_16</name><pose>-24 23 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_07_15m</uri><name>mangrove_17</name><pose>-6 25 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_08_12m</uri><name>mangrove_18</name><pose>13 23 0 0 0 0</pose></include>
+    <include><uri>model://mangrove_09_11m</uri><name>mangrove_19</name><pose>30 25 0 0 0 0</pose></include>
+    <!-- Denser scattered Rock.glb obstacles placed between the mangrove rows. -->
+    <include><uri>model://rock_imported</uri><name>rock_01</name><pose>-25 -21 0 0 0 0.35</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_02</name><pose>-7 -22 0 0 0 1.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_03</name><pose>10 -21 0 0 0 2.10</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_04</name><pose>27 -21 0 0 0 2.75</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_05</name><pose>-23 -3 0 0 0 0.80</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_06</name><pose>-5 -3 0 0 0 1.85</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_07</name><pose>11 -2 0 0 0 4.00</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_08</name><pose>27 -3 0 0 0 5.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_09</name><pose>-22 14 0 0 0 0.50</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_10</name><pose>-4 14 0 0 0 2.40</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_11</name><pose>16 14 0 0 0 3.60</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_12</name><pose>28 17 0 0 0 5.80</pose></include>
+    <!-- Additional enlarged rocks fill the sparse left side. -->
+    <include><uri>model://rock_imported</uri><name>rock_left_01</name><pose>-36 -23 0 0 0 0.40</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_02</name><pose>-11 -22 0 0 0 1.50</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_03</name><pose>-36 -4 0 0 0 2.30</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_04</name><pose>-10 -3 0 0 0 3.10</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_05</name><pose>-35 15 0 0 0 4.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_06</name><pose>-9 16 0 0 0 5.40</pose></include>
     <!-- The terrain model below is the full 50 x 50 m inclined platform. -->
     <!-- Broad coastal water sheet rises over the low side of the inclined terrain. -->
     <model name="coastal_water">
@@ -15,9 +54,9 @@
       <static>false</static>
       <link name="water_link">
         <gravity>false</gravity>
-        <visual name="rising_water_volume"><pose>0 0 -0.25 0 0 0</pose><geometry><box><size>60 80 0.50</size></box></geometry><material><ambient>0.04 0.12 0.11 1</ambient><diffuse>0.12 0.30 0.27 1</diffuse><specular>0.20 0.32 0.28 1</specular><pbr><metal><albedo_map>model://terrain/materials/tidal_water.png</albedo_map><roughness>0.18</roughness><metalness>0.0</metalness></metal></pbr></material></visual>
+        <visual name="rising_water_volume"><pose>0 0 -0.25 0 0 0</pose><geometry><box><size>120 120 0.50</size></box></geometry><material><ambient>0.04 0.12 0.11 1</ambient><diffuse>0.12 0.30 0.27 1</diffuse><specular>0.20 0.32 0.28 1</specular><pbr><metal><albedo_map>model://terrain/materials/tidal_water.png</albedo_map><roughness>0.18</roughness><metalness>0.0</metalness></metal></pbr></material></visual>
       </link>
-      <plugin filename="libtide_visual_system.so" name="tidal_vehicle_simulation::TideVisualSystem"><initial_level_m>0.02</initial_level_m><rise_m>4.80</rise_m><duration_s>30.0</duration_s></plugin>
+      <plugin filename="libtide_visual_system.so" name="tidal_vehicle_simulation::TideVisualSystem"><initial_level_m>0.02</initial_level_m><rise_m>2.40</rise_m><duration_s>30.0</duration_s></plugin>
     </model>
   </world>
 </sdf>

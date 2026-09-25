@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<sdf version="1.10">
+  <model name="rock_imported">
+    <pose>0 0 0 0 0 0</pose>
+    <static>true</static>
+    <link name="rock_visual_link">
+      <!-- Re-center the GLB node and rotate its Y-up asset into Gazebo Z-up. -->
+      <pose>-2.29 4.02 -0.15 1.5708 0 0</pose>
+      <visual name="rock_glb_visual">
+        <geometry><mesh><uri>meshes/Rock.glb</uri><scale>2.5 2.5 2.5</scale></mesh></geometry>
+      </visual>
+    </link>
+    <link name="rock_collision_link">
+      <!-- Larger collision shape touches the mud and remains LiDAR-detectable. -->
+      <pose>0 0 0.75 0 0 0</pose>
+      <collision name="rock_collision">
+        <geometry><sphere><radius>1.0</radius></sphere></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

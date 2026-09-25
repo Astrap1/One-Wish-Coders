@@ -1,0 +1,278 @@
+[0.171s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install', '--packages-select', 'tidal_vehicle_simulation']
+[0.171s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=14, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=['tidal_vehicle_simulation'], packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x77bc36c881a0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x77bc36db0920>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x77bc36db0920>>)
+[0.232s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.233s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.233s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.233s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.233s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.233s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.233s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/tiffy/One-Wish-Coders'
+[0.233s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.233s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.233s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.234s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.234s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.234s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.234s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.234s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.234s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.260s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.260s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extensions ['ignore', 'ignore_ament_install']
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'ignore'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'ignore_ament_install'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extensions ['colcon_pkg']
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'colcon_pkg'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extensions ['colcon_meta']
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'colcon_meta'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extensions ['ros']
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'ros'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extensions ['cmake', 'python']
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'cmake'
+[0.261s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'python'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extensions ['python_setup_py']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(assets) by extension 'python_setup_py'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extensions ['ignore', 'ignore_ament_install']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'ignore'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'ignore_ament_install'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extensions ['colcon_pkg']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'colcon_pkg'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extensions ['colcon_meta']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'colcon_meta'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extensions ['ros']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'ros'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extensions ['cmake', 'python']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'cmake'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'python'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extensions ['python_setup_py']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws) by extension 'python_setup_py'
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/build) by extensions ['ignore', 'ignore_ament_install']
+[0.262s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/build) by extension 'ignore'
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/build) ignored
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/install) by extensions ['ignore', 'ignore_ament_install']
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/install) by extension 'ignore'
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/install) ignored
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/log) by extensions ['ignore', 'ignore_ament_install']
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/log) by extension 'ignore'
+[0.263s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/log) ignored
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extensions ['ignore', 'ignore_ament_install']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'ignore'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'ignore_ament_install'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extensions ['colcon_pkg']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'colcon_pkg'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extensions ['colcon_meta']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'colcon_meta'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extensions ['ros']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'ros'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extensions ['cmake', 'python']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'cmake'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'python'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extensions ['python_setup_py']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src) by extension 'python_setup_py'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extensions ['ignore', 'ignore_ament_install']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extension 'ignore'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extension 'ignore_ament_install'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extensions ['colcon_pkg']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extension 'colcon_pkg'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extensions ['colcon_meta']
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extension 'colcon_meta'
+[0.264s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extensions ['ros']
+[0.265s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy) by extension 'ros'
+[0.268s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy' with type 'ros.ament_python' and name 'tidal_vehicle_autonomy'
+[0.268s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extensions ['ignore', 'ignore_ament_install']
+[0.268s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extension 'ignore'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extension 'ignore_ament_install'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extensions ['colcon_pkg']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extension 'colcon_pkg'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extensions ['colcon_meta']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extension 'colcon_meta'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extensions ['ros']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup) by extension 'ros'
+[0.269s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup' with type 'ros.ament_cmake' and name 'tidal_vehicle_bringup'
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extensions ['ignore', 'ignore_ament_install']
+[0.269s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extension 'ignore'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extension 'ignore_ament_install'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extensions ['colcon_pkg']
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extension 'colcon_pkg'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extensions ['colcon_meta']
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extension 'colcon_meta'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extensions ['ros']
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_description) by extension 'ros'
+[0.270s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_description' with type 'ros.ament_cmake' and name 'tidal_vehicle_description'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extensions ['ignore', 'ignore_ament_install']
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extension 'ignore'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extension 'ignore_ament_install'
+[0.270s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extensions ['colcon_pkg']
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extension 'colcon_pkg'
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extensions ['colcon_meta']
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extension 'colcon_meta'
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extensions ['ros']
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation) by extension 'ros'
+[0.271s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation' with type 'ros.ament_python' and name 'tidal_vehicle_evaluation'
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extensions ['ignore', 'ignore_ament_install']
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extension 'ignore'
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extension 'ignore_ament_install'
+[0.271s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extensions ['colcon_pkg']
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extension 'colcon_pkg'
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extensions ['colcon_meta']
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extension 'colcon_meta'
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extensions ['ros']
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces) by extension 'ros'
+[0.272s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces' with type 'ros.ament_cmake' and name 'tidal_vehicle_interfaces'
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extensions ['ignore', 'ignore_ament_install']
+[0.272s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extension 'ignore'
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extension 'ignore_ament_install'
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extensions ['colcon_pkg']
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extension 'colcon_pkg'
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extensions ['colcon_meta']
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extension 'colcon_meta'
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extensions ['ros']
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator) by extension 'ros'
+[0.273s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator' with type 'ros.ament_python' and name 'tidal_vehicle_operator'
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extensions ['ignore', 'ignore_ament_install']
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extension 'ignore'
+[0.273s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extension 'ignore_ament_install'
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extensions ['colcon_pkg']
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extension 'colcon_pkg'
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extensions ['colcon_meta']
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extension 'colcon_meta'
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extensions ['ros']
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety) by extension 'ros'
+[0.274s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety' with type 'ros.ament_python' and name 'tidal_vehicle_safety'
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extensions ['ignore', 'ignore_ament_install']
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extension 'ignore'
+[0.274s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extension 'ignore_ament_install'
+[0.275s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extensions ['colcon_pkg']
+[0.275s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extension 'colcon_pkg'
+[0.275s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extensions ['colcon_meta']
+[0.275s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extension 'colcon_meta'
+[0.275s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extensions ['ros']
+[0.275s] Level 1:colcon.colcon_core.package_identification:_identify(autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation) by extension 'ros'
+[0.276s] DEBUG:colcon.colcon_core.package_identification:Package 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation' with type 'ros.ament_cmake' and name 'tidal_vehicle_simulation'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['ignore', 'ignore_ament_install']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'ignore'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'ignore_ament_install'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['colcon_pkg']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'colcon_pkg'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['colcon_meta']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'colcon_meta'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['ros']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'ros'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['cmake', 'python']
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'cmake'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'python'
+[0.276s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extensions ['python_setup_py']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(docs) by extension 'python_setup_py'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.277s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.277s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.277s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.277s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.277s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.277s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_bringup' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_bringup'
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_description' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_description'
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_interfaces' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces'
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_autonomy' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_autonomy'
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_evaluation' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_evaluation'
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_operator' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_operator'
+[0.305s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'tidal_vehicle_safety' in 'autonomous_tidal_vehicle_ws/src/tidal_vehicle_safety'
+[0.306s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.306s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.310s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 321 installed packages in /opt/ros/jazzy
+[0.311s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'cmake_target' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'cmake_clean_cache' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'cmake_clean_first' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'cmake_force_configure' from command line to 'False'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'ament_cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'catkin_cmake_args' from command line to 'None'
+[0.365s] Level 5:colcon.colcon_core.verb:set package 'tidal_vehicle_simulation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.365s] DEBUG:colcon.colcon_core.verb:Building package 'tidal_vehicle_simulation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation', 'merge_install': False, 'path': '/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation', 'symlink_install': True, 'test_result_base': None}
+[0.365s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.367s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.368s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation' with build type 'ament_cmake'
+[0.368s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation'
+[0.371s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.372s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.372s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.438s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation -- -j14 -l14
+[0.534s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation' returned '0': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation -- -j14 -l14
+[0.548s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation
+[0.585s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(tidal_vehicle_simulation)
+[0.586s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation' returned '0': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation
+[0.589s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation' for CMake module files
+[0.590s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation' for CMake config files
+[0.590s] Level 1:colcon.colcon_core.shell:create_environment_hook('tidal_vehicle_simulation', 'cmake_prefix_path')
+[0.590s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/cmake_prefix_path.ps1'
+[0.591s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/cmake_prefix_path.dsv'
+[0.591s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/cmake_prefix_path.sh'
+[0.593s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib'
+[0.593s] Level 1:colcon.colcon_core.shell:create_environment_hook('tidal_vehicle_simulation', 'ld_library_path_lib')
+[0.594s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/ld_library_path_lib.ps1'
+[0.594s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/ld_library_path_lib.dsv'
+[0.594s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/ld_library_path_lib.sh'
+[0.595s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/bin'
+[0.595s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/pkgconfig/tidal_vehicle_simulation.pc'
+[0.595s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/python3.12/site-packages'
+[0.595s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/bin'
+[0.596s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.ps1'
+[0.597s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.dsv'
+[0.599s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.sh'
+[0.600s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.bash'
+[0.601s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.zsh'
+[0.601s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/colcon-core/packages/tidal_vehicle_simulation)
+[0.602s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(tidal_vehicle_simulation)
+[0.602s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation' for CMake module files
+[0.603s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation' for CMake config files
+[0.603s] Level 1:colcon.colcon_core.shell:create_environment_hook('tidal_vehicle_simulation', 'cmake_prefix_path')
+[0.604s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/cmake_prefix_path.ps1'
+[0.604s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/cmake_prefix_path.dsv'
+[0.605s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/cmake_prefix_path.sh'
+[0.606s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib'
+[0.606s] Level 1:colcon.colcon_core.shell:create_environment_hook('tidal_vehicle_simulation', 'ld_library_path_lib')
+[0.606s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/ld_library_path_lib.ps1'
+[0.606s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/ld_library_path_lib.dsv'
+[0.607s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/hook/ld_library_path_lib.sh'
+[0.607s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/bin'
+[0.607s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/pkgconfig/tidal_vehicle_simulation.pc'
+[0.608s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/python3.12/site-packages'
+[0.608s] Level 1:colcon.colcon_core.environment:checking '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/bin'
+[0.608s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.ps1'
+[0.609s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.dsv'
+[0.610s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.sh'
+[0.611s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.bash'
+[0.611s] INFO:colcon.colcon_core.shell:Creating package script '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.zsh'
+[0.611s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/colcon-core/packages/tidal_vehicle_simulation)
+[0.615s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[0.617s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[0.617s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[0.617s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[0.653s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[0.653s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[0.653s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[0.653s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[0.654s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.Notifications was not provided by any .service files
+[0.655s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[0.655s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tiffy/One-Wish-Coders/install/local_setup.ps1'
+[0.656s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/tiffy/One-Wish-Coders/install/_local_setup_util_ps1.py'
+[0.657s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tiffy/One-Wish-Coders/install/setup.ps1'
+[0.658s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tiffy/One-Wish-Coders/install/local_setup.sh'
+[0.660s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/tiffy/One-Wish-Coders/install/_local_setup_util_sh.py'
+[0.661s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tiffy/One-Wish-Coders/install/setup.sh'
+[0.662s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tiffy/One-Wish-Coders/install/local_setup.bash'
+[0.662s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tiffy/One-Wish-Coders/install/setup.bash'
+[0.666s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tiffy/One-Wish-Coders/install/local_setup.zsh'
+[0.677s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tiffy/One-Wish-Coders/install/setup.zsh'

@@ -1,0 +1,31 @@
+safety_supervisor:
+  ros__parameters:
+    command_timeout_s: 0.5
+    telemetry_timeout_s: 1.0
+    path_replan_timeout_s: 2.0
+    return_path_timeout_s: 2.0
+    caution_tide_risk: 0.60
+    return_tide_risk: 0.75
+    hold_tide_risk: 0.85
+    caution_return_margin_percent: 20.0
+    return_margin_percent: 12.0
+    hold_return_margin_percent: 0.0
+    caution_mobility_health_percent: 75.0
+    return_mobility_health_percent: 60.0
+    hold_mobility_health_percent: 35.0
+    tide_return_time_buffer_s: 30.0
+    cruise_linear_speed_limit_mps: 2.0
+    caution_linear_speed_limit_mps: 0.8
+    return_linear_speed_limit_mps: 1.0
+    home_x_m: 0.0
+    home_y_m: 0.0
+    home_yaw_rad: 0.0
+    home_tolerance_m: 2.0
+    route_sample_spacing_m: 0.5
+    no_go_cost: 100
+    base_energy_percent_per_m: 0.05
+    terrain_cost_energy_weight: 0.5
+    mobility_degradation_weight: 0.7
+    return_nominal_speed_mps: 1.0
+    minimum_return_buffer_percent: 8.0
+    return_energy_contingency_ratio: 0.20

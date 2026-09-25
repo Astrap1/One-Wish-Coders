@@ -19,7 +19,14 @@ Operator interface and evaluation consume telemetry from every layer.
 
 ## Authority model
 
-The planner proposes a path. The mission manager decides whether delivery is still worthwhile. The safety supervisor has final authority: it can reduce speed, command a hold or force a return when the vehicle no longer has a safe operating margin.
+The planner proposes a path. Autonomy owns route generation and emits explicit
+delivery/return lifecycle events. The safety supervisor keeps an internal
+mission phase (`PRELAUNCH`, `OUTBOUND`, `DELIVERED`, `RETURNING`) and has final
+authority: it can reduce speed, command a hold or force a return when the
+vehicle no longer has a safe operating margin. A safety return request causes
+Autonomy to generate a fresh `/return_path` to the fixed HOME zone; Safety
+calculates the energy/time margin against the latest terrain map and holds
+position until that route is validated.
 
 ## Simulation boundary
 

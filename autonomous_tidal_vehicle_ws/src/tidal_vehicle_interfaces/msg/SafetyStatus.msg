@@ -2,3 +2,6 @@ std_msgs/Header header
 string state
 string reason
 bool return_required
+float32 estimated_return_energy_percent
+float32 return_margin_percent
+float32 estimated_return_time_s

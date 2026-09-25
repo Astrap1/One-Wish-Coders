@@ -50,12 +50,12 @@ ROS 2 autonomy
   ├─ local perception: LiDAR → obstacle map
   ├─ terrain-aware global planner
   ├─ local avoidance and route replanning
-  ├─ mission manager: delivery, tide window and return reserve
+  ├─ mission manager: delivery, tide window and return route
   ├─ safety supervisor: CRUISE / CAUTION / HOLD / RETURN
   └─ vehicle controller: approved speed and heading commands
 
 Operator and evaluation
-  ├─ dashboard: map, route, health, tide, payload and safety state
+  ├─ dashboard: map, outbound/return route, health, tide, payload and safety state
   ├─ scenario runner: faults and repeatable mission conditions
   └─ metrics: completion, duration, replans, clearance and return margin
 ```
@@ -70,7 +70,12 @@ The final demo will run the same vehicle through three repeatable scenarios:
 2. **Blocked route:** Detect debris or dense roots, create a local obstacle map and replan around the hazard.
 3. **Rising tide:** Water levels change the terrain-cost map during the mission, requiring a visible replan, hold or safety-driven return.
 
-We will show a 3D vehicle-camera view and a mission console with route, LiDAR obstacles, battery/return reserve, tide risk, payload status and safety state. We may also compare terrain capability profiles for a wheeled rover, boat and air-cushion vehicle to communicate the operational niche; this comparison is not a claim that three complete autonomous systems have been built.
+We will show a 3D vehicle-camera view and a mission console with outbound and
+return routes, LiDAR obstacles, battery, Safety-calculated return energy/margin/ETA,
+tide risk, payload status and safety state. We may also compare terrain capability
+profiles for a wheeled rover, boat and air-cushion vehicle to communicate the
+operational niche; this comparison is not a claim that three complete autonomous
+systems have been built.
 
 ## Team workstreams
 

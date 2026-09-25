@@ -9,6 +9,7 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
+        ("share/" + package_name + "/config", ["config/safety_params.yaml"]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -16,4 +17,9 @@ setup(
     maintainer_email="team@example.com",
     description="Authoritative safety supervisor and fallback state machine.",
     license="Apache-2.0",
+    entry_points={
+        "console_scripts": [
+            "safety_supervisor = tidal_vehicle_safety.safety_supervisor:main",
+        ],
+    },
 )

@@ -18,4 +18,13 @@ Terrain cost-map encoding is fixed as follows:
 1. Load a semantic terrain-cost map and publish a route to a mission goal.
 2. Consume `/scan` and create a local obstacle representation.
 3. Replan around an injected obstacle.
-4. Respect the return-energy constraint provided by vehicle health and terrain state.
+4. Respect the Safety return instruction while publishing current outbound and return routes against terrain state.
+
+## Safety-return integration
+
+Autonomy subscribes to `/safety_status`. When `return_required=true`, it must
+latch the request, stop proposing the outbound route, and publish a freshly
+computed, stamped `/return_path` from the current pose to HOME. Recalculate and
+republish both outbound and return paths whenever the terrain cost map changes.
+Autonomy must not clear a safety return request; only `mission_reset` starts a
+new outbound mission.

@@ -2,6 +2,10 @@
 autonomous_tidal_vehicle_ws/build/
 autonomous_tidal_vehicle_ws/install/
 autonomous_tidal_vehicle_ws/log/
+# ...and the same directories if colcon is run from the repository root by mistake
+/build/
+/install/
+/log/
 
 # Python artefacts
 __pycache__/

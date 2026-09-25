@@ -3,13 +3,15 @@
 vehicle_mobility:
   ros__parameters:
     use_sim_time: true
-    mode_policy: hover_only        # hover_only | terrain_auto (terrain_auto: HOVER->GROUND not yet validated)
+    mode_policy: hover_only        # hover_only | terrain_auto (terrain_auto: HOVER->WHEEL not yet validated)
     cmd_timeout_s: 0.5             # /cmd_vel older than this -> stop
     max_speed_mps: 2.5             # hover top speed is ~2.9 m/s at full thrust
     max_yaw_rate_rps: 1.0
     spinup_s: 1.5                  # lift fan spin-up before the legs fold
     fold_s: 1.6                    # leg fold / unfold time
     firm_dwell_s: 3.0              # terrain_auto: firm ground needed before landing on wheels
+    transition_timeout_s: 10.0     # no hover-ready status by then -> stay stopped, fault hover_not_ready
+    telemetry_rate_hz: 10.0        # /vehicle_health and placeholder /terrain_state (Safety times out at 1.0 s wall clock)
     battery_capacity_wh: 500.0
     initial_battery_percent: 100.0
     idle_w: 20.0                   # computer + sensors

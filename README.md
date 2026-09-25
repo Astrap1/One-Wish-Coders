@@ -14,7 +14,7 @@ The project is not claiming that an operational hovercraft has already been vali
 
 ## Proposed approach
 
-We model a compact autonomous air-cushion vehicle that will use retractable tracks over firm shore, then transition to air-cushion travel over wet mud and shallow water while carrying a protected payload. Rather than relying on perfect autonomy, the design combines route planning, local sensing, high-level operator supervision and an independent safety layer. The current simulated Vehicle Version 1 is intentionally hover-only; tracked operation and TRACK--HOVER transitions are Version 2 work, not a current demo claim.
+We model a compact autonomous air-cushion vehicle (about 2.5 m long and 1.5 m wide, rated for a 30 kg payload) that will use retractable tracks over firm shore, then transition to air-cushion travel over wet mud and shallow water while carrying a protected payload. Rather than relying on perfect autonomy, the design combines route planning, local sensing, high-level operator supervision and an independent safety layer. The current simulated Vehicle Version 1 is intentionally hover-only; tracked operation and TRACK--HOVER transitions are Version 2 work, not a current demo claim.
 
 The vehicle receives a delivery goal, terrain information, tide state and a return-energy reserve. It plans a low-risk route, detects nearby obstacles with simulated LiDAR, replans when necessary and returns or holds when the mission is no longer safe.
 

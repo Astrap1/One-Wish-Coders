@@ -24,7 +24,7 @@ The vehicle controller uses three internal mobility modes:
 
 Mode selection is internal to Person 4's controller. It switches to TRACK when the vehicle reaches firm land (cost `0`--`19`) or a slope steeper than the hover slope limit (working value 6°), and back to HOVER on mud or shallow water (cost `20`--`89`) below that limit. A short dwell time prevents chattering at terrain boundaries.
 
-These mobility modes are separate from Person 2's safety states and must not replace or rename `CRUISE`, `CAUTION`, `HOLD` or `RETURN`. They do not introduce new external commands or topics. The existing command authority remains:
+These mobility modes are separate from Person 2's safety states and must not replace or rename `CRUISE`, `CAUTION`, `HOLD` or `RETURN`. They do not introduce new external commands or topics, with one agreed exception: the vehicle controller publishes the current mode read-only on `/vehicle/mode` so the operator view can show it. No node may command the vehicle through that topic. The existing command authority remains:
 
 1. Person 1 publishes route and motion proposals through `/planned_path` and `/cmd_vel_proposed`; autonomy does not directly command track speeds, fan RPM or cushion load share.
 2. Person 2 applies the existing safety and mission logic and remains the only publisher of `/cmd_vel`.
@@ -50,7 +50,7 @@ The terrain cost map supplies the shared route and mobility interpretation:
 Autonomy plans with these costs and Safety estimates the return energy/time using
 the same bands. A path that crosses a `90+` or `-1` cell is invalid.
 
-### Vehicle Version 2 (in design)
+### Vehicle Version 2 (in design; the demo vehicle)
 
 Version 1 is frozen in `assets/vehicle_blender/version_1/`: a 1.2 × 0.7 m, 25 kg air-cushion vehicle on four wheels with swing-up legs. It remains the simulated model (`tidal_vehicle_description/models/hovercraft/`) until Version 2 replaces it. Version 2 is built in `assets/vehicle_blender/version_2/` with the same pipeline (Blender script → `link_frames.json` → `gen_description.py` → SDF/URDF).
 
@@ -68,6 +68,17 @@ First-order sizing for Version 2. These are stated design assumptions, not valid
 | Height and stability | Hull top ≤ ≈ 1.0 m, centre of mass ≤ ≈ 0.5 m above ground | Keeps centre-of-mass height to beam ≈ 0.33 so a compartmented skirt stays roll-stable on the cushion. The rest of the 1.5 m is the sensor mast. A solid 1.5 m-tall hull would be roll-unstable on the cushion and is not the intent. |
 
 Conclusion: the dimensions are physically plausible for an electric, 300 kg-class craft, provided the hull stays low and the 1.5 m height is mostly the mast. Air-cushion-assisted tracked vehicles have been studied for soft terrain such as marsh and snow, but performance in Singapore mangrove mud needs physical testing.
+
+Agreed Version 2 design decisions:
+
+- **Demo vehicle.** Version 2 is the vehicle for the final demonstration. Version 1 stays installed as the fallback, and the launch file selects between them with `vehicle:=v2` (default once it passes its tests) or `vehicle:=v1`.
+- **Payload.** Rated at 30 kg in a sealed box. The design can carry up to about 80 kg at reduced performance: cushion pressure rises to about 1.07 kPa, lift power by about 26%, and thrust-to-weight falls to about 0.12, so top speed, braking and slope margins shrink.
+- **Tracks.** Two inboard tracks under the hull, inside the skirt footprint, retracting vertically into hull wells. The overall width stays 1.5 m.
+- **Propulsion.** Two rear ducted fans with rudders, as in Version 1, scaled to about 200 N each. Reversible for braking.
+- **LiDAR.** On a mast at the vehicle's centre, directly above `base_link`, so its horizontal position matches the odometry position that Autonomy's obstacle projection assumes. The lift fan is offset forward to make room.
+- **Mode switching.** Uses the working values above: hover slope limit 6°, track slope limit 20°, cushion load share 0–20% on firm level ground and up to about 60% on slopes, with a dwell time. The controller may raise the load share while turning in TRACK mode, which lowers the tracks' skid-turning resistance.
+- **Style.** The same as Version 1: olive hull, black skirt, orange payload box.
+- **Manoeuvring (stated estimates).** Braking in HOVER relies on reverse thrust: about 1.2 m to stop from 1 m/s and about 4 m from 2 m/s, including fan spool-down. That is within the 8 m LiDAR planning range, and it is why Safety's `CAUTION` speed cap matters near obstacles. In TRACK mode the track length-to-gauge ratio is about 1.45, inside the 1.0–1.8 range where skid steering works well. Autonomy's 1.7 m obstacle inflation needs gaps of at least about 3.4 m, so root and debris gaps in the corridor world should respect that. Real-world side wind (about 150 N at 10 m/s on the hull side) is not simulated.
 
 Simulation risk to retire first: Gazebo Harmonic's track systems (`TrackController`/`TrackedVehicle`) need contact-surface-motion support from the physics engine, and Version 1 runs DART with the Bullet collision detector for the air-cushion ray casts. Prove tracks work on that combination before building the rest of Version 2. The fallback is a row of road wheels under a visual track.
 
@@ -162,20 +173,20 @@ The HOME values must match Person 2's safety parameters. Live simulated-odometry
 
 ## Role 4: Vehicle simulation and integration status
 
-- **Version 1 delivered** on branch `feat/vehicle-sim-hovercraft` (draft pull request into `main`). It contains the procedural Blender model, the generated SDF/URDF, the Gazebo plugins (`hover::AirCushion`, `hover::TerrainZones`, `hover::ScriptedCommands`), `vehicle_mobility_node`, `lidar_scan_node`, the `ros_gz` bridge and the one-command launch `ros2 launch tidal_vehicle_bringup sim.launch.py`. Full description: `docs/VEHICLE_SIMULATION.md`.
+- **Version 1 delivered to `main`.** It contains the procedural Blender model, the generated SDF/URDF, the Gazebo plugins (`hover::AirCushion`, `hover::TerrainZones`, `hover::ScriptedCommands`), `vehicle_mobility_node`, `lidar_scan_node`, the `ros_gz` bridge and the one-command launch `ros2 launch tidal_vehicle_bringup sim.launch.py`. Full description: `docs/VEHICLE_SIMULATION.md`.
 - **Gazebo side verified:** 25 of 25 headless acceptance checks pass on Gazebo Harmonic 8.15, covering hover-gap hold, speed and turning, the water → mud → bank crossing, debris clearance, `/cmd_vel` tracking and the mud A/B test in which wheels bog down and hover crosses.
-- **ROS 2 side not yet run.** The first WSL integration check (bridge, `robot_state_publisher`, `/scan`, `/vehicle_health`, Foxglove) is the next milestone.
-- `/odom` is ground truth in the `map` frame with child `base_link`, so it satisfies Autonomy's matching-frame requirement. `/terrain_costmap` comes from Person 3's tide manager; until that exists, `vehicle_mobility_node` publishes only a constant placeholder `/terrain_state`.
+- **ROS 2 side not yet run.** Person 1 or Person 5 will run the first WSL integration check (bridge, `robot_state_publisher`, `/scan`, `/vehicle_health`, Foxglove).
+- **Version 1 controller aligned with this guide:** modes are named `WHEEL`, `TRANSITION` and `HOVER`; HOVER propulsion waits for an explicit hover-ready status and reports `hover_not_ready` after a 10 s timeout; `/vehicle/mode` is read-only operator status; `/vehicle_health` publishes at 10 Hz so Safety's 1.0 s wall-clock freshness check holds when the simulation runs slowly. Version 1 stays `hover_only`, which matches Safety's `track_mode_enabled: false`.
+- **Moved to the Version 2 controller:** terrain- and slope-based mode selection, the settled-on-tracks check and the `track_*` transition faults.
 
-Follow-up fixes to bring the Version 1 controller in line with this guide:
+Integration with the tidal corridor world (Person 3), to resolve with Person 3 before the Stage 2 exit gate:
 
-1. Rename the controller's `GROUND`/`TO_HOVER`/`TO_GROUND` modes to `TRACK` (`WHEEL` on Version 1), `TRANSITION` and `HOVER`.
-2. Require an explicit hover-ready status from the air-cushion plugin before HOVER propulsion. The current check also accepts a missing status.
-3. Confirm the vehicle has settled on its ground gear (hull height and suspension load) before ground motion. The current hover-to-ground sequence is timed only.
-4. Report transition failures through `/vehicle_health.fault` using the names in `docs/INTERFACES.md`.
-5. Decide with Person 5 whether the mode stays visible to the operator (`/vehicle/mode`) or becomes internal, then update `docs/INTERFACES.md` to match.
-6. Switch the default mode policy from `hover_only` to terrain- and slope-based selection, then run the deferred hover-to-ground transition test.
-7. Agree with Person 2 on the `/vehicle_health` and `/terrain_state` publish rate relative to Safety's 1.0 s wall-clock freshness timeout when the simulation runs slower than real time.
+1. **One launch path.** `tidal_vehicle_simulation/launch/environment.launch.py` starts the world and `tide_manager.py` separately from `sim.launch.py`. The corridor world and the tide manager will be folded into `sim.launch.py` (`world:=tidal_corridor`), which stays the single documented launch.
+2. **Physics engine.** `worlds/tidal_corridor.sdf` uses ODE. The air-cushion plugin needs DART with the Bullet collision detector for its ray casts, as in the vehicle test worlds.
+3. **Vehicle spawn and terrain zones.** The world does not yet include the vehicle or a `hover::TerrainZones` block for its mud and water areas. The vehicle spawns at HOME (0, 0), which matches Safety and Autonomy.
+4. **Map frame.** `tide_manager.py` stamps `/terrain_costmap` and `/terrain_state` with frame `world`. `/odom` and the planner use `map`, and the planner refuses mismatched frames. They need one frame (`map`, per `docs/INTERFACES.md`).
+5. **Single `/terrain_state` publisher.** When `tide_manager.py` runs, the vehicle's placeholder (`publish_terrain_state`) must be off.
+6. **Build output in git.** Commits `66798ca` and `365f76d` added root-level `build/`, `install/` and `log/` directories (about 1,100 files). `AGENTS.md` forbids committing them; build from `autonomous_tidal_vehicle_ws/` instead.
 
 ## Three-day build plan
 

@@ -6,22 +6,29 @@ Turns the safety-approved /cmd_vel into commands for the Gazebo vehicle and
 reports raw vehicle telemetry.
 
   /cmd_vel (geometry_msgs/Twist)  ── HOVER mode ──►  /vehicle/cmd_vel_hover  (fans, via AirCushion)
-                                  ── GROUND mode ─►  /vehicle/cmd_vel_wheels (wheels, via DiffDrive)
+                                  ── WHEEL mode ──►  /vehicle/cmd_vel_wheels (wheels, via DiffDrive)
 
 Mode policy (parameter `mode_policy`):
   hover_only    (default) lift fan on and legs folded at start-up; the vehicle
                 always drives on its cushion. Simplest, most reliable for the demo.
-  terrain_auto  GROUND on firm terrain; switches to HOVER on MUD / WATER and back
-                to GROUND after `firm_dwell_s` on firm ground. The transitions are
+  terrain_auto  WHEEL on firm terrain; switches to HOVER on MUD / WATER and back
+                to WHEEL after `firm_dwell_s` on firm ground. The transitions are
                 scripted sequences (fan spin-up → fold legs, or unfold → fan off).
-                NOTE: the HOVER→GROUND transition while moving is not yet
+                NOTE: the HOVER→WHEEL transition while moving is not yet
                 validated in tests; use hover_only for demos until it is.
 
-While a transition runs, both command outputs are held at zero.
+Mobility modes follow AGENTS.md: WHEEL | TRANSITION | HOVER (Version 2 replaces
+WHEEL with TRACK). While in TRANSITION both command outputs are held at zero.
+A transition to HOVER completes only once the AirCushion plugin reports
+hover_state == "HOVER"; if that takes longer than `transition_timeout_s` the
+vehicle stays stopped in TRANSITION and /vehicle_health.fault reports
+`hover_not_ready`.
 
 Also publishes:
-  /vehicle/mode    (std_msgs/String)  GROUND | TO_HOVER | HOVER | TO_GROUND
-  /vehicle_health  (tidal_vehicle_interfaces/VehicleHealth)  raw telemetry:
+  /vehicle/mode    (std_msgs/String)  WHEEL | TRANSITION | HOVER, read-only
+                   status for the operator view (not a command input)
+  /vehicle_health  (tidal_vehicle_interfaces/VehicleHealth)  raw telemetry at
+                   `telemetry_rate_hz` (10 Hz):
                    battery from a simple power model (lift fan, thrust, wheels),
                    mobility health, link and payload flags. Fault injection by
                    the evaluation workstream can override via parameters.
@@ -41,50 +48,63 @@ FOLDED = math.pi / 2
 # Pure logic (no ROS imports) so it can be unit-tested without a ROS install
 # ---------------------------------------------------------------------------
 class ModeMachine:
-    """GROUND ⇄ HOVER sequencing. step() returns the actuator targets."""
+    """WHEEL ⇄ HOVER sequencing through TRANSITION. step() returns the actuator targets.
 
-    def __init__(self, policy="hover_only", spinup_s=1.5, fold_s=1.6, firm_dwell_s=3.0):
+    `mode` is the public mobility mode (WHEEL | TRANSITION | HOVER); `target` is
+    the mode a TRANSITION is heading to. `fault` is "" or a /vehicle_health
+    fault name from docs/INTERFACES.md.
+    """
+
+    def __init__(self, policy="hover_only", spinup_s=1.5, fold_s=1.6, firm_dwell_s=3.0,
+                 transition_timeout_s=10.0):
         self.policy = policy
         self.spinup_s, self.fold_s, self.firm_dwell_s = spinup_s, fold_s, firm_dwell_s
-        self.mode = "GROUND"
+        self.transition_timeout_s = transition_timeout_s
+        self.mode, self.target = "WHEEL", "WHEEL"
         self.phase_t = 0.0
         self.firm_t = 0.0
         self.hover_enabled = False
         self.legs = 0.0
+        self.fault = ""
         if policy == "hover_only":
-            self._enter("TO_HOVER")
+            self._begin("HOVER")
 
-    def _enter(self, mode):
-        self.mode, self.phase_t = mode, 0.0
+    def _begin(self, target):
+        self.mode, self.target, self.phase_t = "TRANSITION", target, 0.0
+
+    def _finish(self):
+        self.mode, self.phase_t, self.fault = self.target, 0.0, ""
 
     def step(self, dt, terrain="FIRM", hover_state=""):
         self.phase_t += dt
         self.firm_t = self.firm_t + dt if terrain == "FIRM" else 0.0
-        if self.mode == "GROUND":
+        if self.mode == "WHEEL":
             self.hover_enabled, self.legs = False, 0.0
             if self.policy == "terrain_auto" and terrain in ("MUD", "WATER"):
-                self._enter("TO_HOVER")
-        elif self.mode == "TO_HOVER":
-            self.hover_enabled = True                       # 1) lift fan on
-            if self.phase_t >= self.spinup_s:
-                self.legs = FOLDED                          # 2) fold legs
-            if self.phase_t >= self.spinup_s + self.fold_s and hover_state in ("HOVER", ""):
-                self._enter("HOVER")                        # 3) riding on the cushion
+                self._begin("HOVER")
         elif self.mode == "HOVER":
             self.hover_enabled, self.legs = True, FOLDED
             if self.policy == "terrain_auto" and self.firm_t >= self.firm_dwell_s:
-                self._enter("TO_GROUND")
-        elif self.mode == "TO_GROUND":
+                self._begin("WHEEL")
+        elif self.target == "HOVER":                        # TRANSITION → HOVER
+            self.hover_enabled = True                       # 1) lift fan on
+            if self.phase_t >= self.spinup_s:
+                self.legs = FOLDED                          # 2) fold legs
+            if self.phase_t >= self.spinup_s + self.fold_s and hover_state == "HOVER":
+                self._finish()                              # 3) hover-ready: riding on the cushion
+            elif self.phase_t >= self.transition_timeout_s:
+                self.fault = "hover_not_ready"              # stay stopped until the cushion is up
+        else:                                               # TRANSITION → WHEEL
             self.legs = 0.0                                 # 1) unfold legs (still hovering)
             if self.phase_t >= self.fold_s:
                 self.hover_enabled = False                  # 2) lift fan off
             if self.phase_t >= self.fold_s + self.spinup_s:
-                self._enter("GROUND")
+                self._finish()
         return self.hover_enabled, self.legs
 
     @property
     def drive_mode(self):
-        return self.mode if self.mode in ("GROUND", "HOVER") else None
+        return self.mode if self.mode in ("WHEEL", "HOVER") else None
 
 
 class Battery:
@@ -106,7 +126,7 @@ class Battery:
             v = abs(v_cmd)
             thrust = self.b1 * v + self.b2 * v * v + 20.0 * abs(w_cmd)   # N, both fans
             p += self.k_thrust * thrust
-        elif mode == "GROUND" and (abs(v_cmd) > 1e-3 or abs(w_cmd) > 1e-3):
+        elif mode == "WHEEL" and (abs(v_cmd) > 1e-3 or abs(w_cmd) > 1e-3):
             p += self.wheels_w
         self.percent = max(0.0, self.percent - 100.0 * p * dt / self.cap_j)
         return self.percent, p
@@ -138,7 +158,9 @@ def main():
             self.payload_secured = p("payload_secured", True).value
             self.fault = p("fault", "").value
             self.modes = ModeMachine(policy, p("spinup_s", 1.5).value, p("fold_s", 1.6).value,
-                                     p("firm_dwell_s", 3.0).value)
+                                     p("firm_dwell_s", 3.0).value,
+                                     p("transition_timeout_s", 10.0).value)
+            telemetry_rate = p("telemetry_rate_hz", 10.0).value
             self.battery = Battery(p("battery_capacity_wh", 500.0).value, p("idle_w", 20.0).value,
                                    p("lift_fan_w", 300.0).value, p("thrust_w_per_n", 7.0).value,
                                    p("wheels_w", 60.0).value,
@@ -161,7 +183,7 @@ def main():
             self.pub_tstate = self.create_publisher(TerrainState, "/terrain_state", 10)
             self.dt = 0.05
             self.create_timer(self.dt, self.tick)
-            self.create_timer(0.5, self.publish_health)
+            self.create_timer(1.0 / telemetry_rate, self.publish_health)
             self.get_logger().info(f"mobility: mode_policy={policy}")
 
         def on_cmd(self, msg):
@@ -187,7 +209,7 @@ def main():
             out.linear.x, out.angular.z = v, w
             dm = self.modes.drive_mode
             self.pub_hover.publish(out if dm == "HOVER" else zero)
-            self.pub_wheels.publish(out if dm == "GROUND" else zero)
+            self.pub_wheels.publish(out if dm == "WHEEL" else zero)
             self.pub_mode.publish(String(data=self.modes.mode))
             self.battery.step(self.dt, en, dm, v if dm else 0.0, w if dm else 0.0)
 
@@ -197,7 +219,8 @@ def main():
             h.header.stamp, h.header.frame_id = now, "base_link"
             h.battery_percent = float(self.battery.percent)
             h.mobility_health_percent = float(self.mobility_health)
-            h.link_ok, h.payload_secured, h.fault = bool(self.link_ok), bool(self.payload_secured), self.fault
+            h.link_ok, h.payload_secured = bool(self.link_ok), bool(self.payload_secured)
+            h.fault = self.fault or self.modes.fault      # injected fault wins over mode faults
             self.pub_health.publish(h)
             if self.pub_terrain:                  # placeholder until the tide manager exists
                 t = TerrainState()

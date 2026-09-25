@@ -1,6 +1,8 @@
 """Tests for the public mobility modes and transition safeguards."""
 
 import importlib.util
+import math
+import math
 from pathlib import Path
 
 SCRIPT = (
@@ -75,3 +77,101 @@ def test_terrain_auto_uses_three_public_modes() -> None:
     modes.step(0.1, terrain="FIRM", hover_state="SPIN_DOWN")
     modes.step(0.1, terrain="FIRM", hover_state="OFF")
     assert modes.mode == "TRACK"
+
+
+# --- Version 2: retractable tracks with cushion load sharing ---------------
+def _tracks(policy: str = "terrain_auto", **kw) -> "ModeMachine":
+    args = dict(
+        policy=policy, gear="tracks", retract_position=0.25, fold_s=0.2,
+        firm_dwell_s=0.2, settle_s=0.2, transition_timeout_s=2.0,
+        track_share_firm=0.2, track_share_slope=0.6, hover_slope_limit_deg=6.0,
+        settle_gap_m=0.03, settle_gap_tolerance_m=0.008,
+    )
+    args.update(kw)
+    return ModeMachine(**args)
+
+
+def test_tracks_hover_waits_for_ready_before_retracting() -> None:
+    modes = _tracks(policy="hover_only")
+    assert modes.mode == "TRANSITION"
+
+    modes.step(0.1, hover_state="SPIN_UP", gear_pos=0.0)
+    assert modes.hover_enabled and modes.lift_share is None
+    assert modes.legs == 0.0          # tracks stay down until hover-ready
+
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.0)
+    assert modes.legs == 0.25         # now retract
+    assert modes.mode == "TRANSITION"
+
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.25)
+    assert modes.mode == "HOVER"
+    assert modes.drive_mode == "HOVER"
+
+
+def test_tracks_start_on_tracks_with_firm_load_share() -> None:
+    modes = _tracks()
+    modes.step(0.1, terrain="FIRM", gap=0.03, gear_pos=0.0)
+    assert modes.mode == "TRACK"
+    assert modes.drive_mode == "TRACK"
+    assert modes.lift_share == 0.2 and modes.hover_enabled
+
+
+def test_tracks_hover_to_track_deploys_then_settles_on_measured_gap() -> None:
+    modes = _tracks()
+    modes.step(0.1, terrain="MUD", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", hover_state="HOVER", gear_pos=0.25)
+    assert modes.mode == "HOVER"
+
+    for _ in range(3):                # firm ground for longer than the dwell
+        modes.step(0.1, terrain="FIRM", hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    assert modes.mode == "TRANSITION" and modes.legs == 0.0
+    assert modes.lift_share is None   # still fully hovering while deploying
+    assert modes.drive_mode is None
+
+    modes.step(0.1, terrain="FIRM", hover_state="HOVER", gap=0.05, gear_pos=0.0)
+    assert modes.lift_share == 0.2    # tracks down: lower the lift
+    for _ in range(3):                # still hovering: not settled
+        modes.step(0.1, terrain="FIRM", hover_state="LOAD_SHARE", gap=0.05, gear_pos=0.0)
+    assert modes.mode == "TRANSITION"
+    for _ in range(3):                # gap at the on-track height for settle_s
+        modes.step(0.1, terrain="FIRM", hover_state="LOAD_SHARE", gap=0.031, gear_pos=0.0)
+    assert modes.mode == "TRACK"
+
+
+def test_tracks_steep_slope_selects_track_with_slope_share() -> None:
+    modes = _tracks()
+    modes.step(0.1, terrain="MUD", slope_deg=9.0, gap=0.03, gear_pos=0.0)
+    assert modes.mode == "TRACK"      # mud but too steep to hover
+    assert modes.lift_share == 0.6
+
+
+def test_tracks_settle_timeout_reports_fault() -> None:
+    modes = _tracks(transition_timeout_s=0.6)
+    modes.step(0.1, terrain="MUD", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", hover_state="HOVER", gear_pos=0.25)
+    for _ in range(3):
+        modes.step(0.1, terrain="FIRM", hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    for _ in range(8):                # deployed, but never settles on the tracks
+        modes.step(0.1, terrain="FIRM", hover_state="LOAD_SHARE", gap=0.06, gear_pos=0.0)
+    assert modes.fault == "track_settle_timeout"
+    assert modes.drive_mode is None
+
+
+def test_costmap_bands_select_mobility_terrain() -> None:
+    terrain_from_costs = MODULE.terrain_from_costs
+    assert terrain_from_costs([10, 12, 19]) == "FIRM"
+    assert terrain_from_costs([10, 30]) == "MUD"          # hover terrain ahead
+    assert terrain_from_costs([10, 95, -1]) == "FIRM"     # no-go / unknown ignored
+    assert terrain_from_costs([-1, 100]) is None
+
+
+def test_costmap_lookahead_samples_along_heading() -> None:
+    sample = MODULE.sample_costmap
+    # 10 x 1 strip, 1 m cells from x = 0: firm until x = 3, then water
+    info = (1.0, 10, 1, 0.0, 0.0)
+    data = [10, 10, 10, 30, 30, 30, 30, 30, 30, 30]
+    assert sample(info, data, 0.5, 0.5, 0.0, 2.0) == [10, 10, 10, 10, 10]
+    assert 30 in sample(info, data, 1.0, 0.5, 0.0, 2.5)   # water 2.5 m ahead
+    assert sample(info, data, 1.0, 0.5, math.pi, 2.5) == [10, 10, 10]  # facing away

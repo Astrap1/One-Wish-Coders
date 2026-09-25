@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<!-- Integration world derived from transition_test; actuator commands come only from ROS. -->
+<!-- Integration world derived from transition_test; actuator commands come only from ROS.
+     The vehicle (Version 1 or 2) is spawned by sim.launch.py. -->
 <sdf version="1.9">
   <world name="integration_test">
     <physics name="1ms" type="dart">
@@ -30,6 +31,7 @@
         <default_density>1000</default_density>
         <density_change><above_depth>0.0</above_depth><density>1.2</density></density_change>
       </graded_buoyancy><enable>hovercraft::base_link</enable><enable>hovercraft::skirt</enable>
+      <enable>hovercraft_v2::base_link</enable><enable>hovercraft_v2::skirt</enable>
     </plugin>
     <plugin filename="tidal_vehicle_plugins" name="hover::TerrainZones">
       <ground_height>0.0</ground_height>
@@ -124,11 +126,7 @@
         </visual>
       </link>
     </model>
-    <include>
-      <uri>model://hovercraft</uri>
-      <name>hovercraft</name>
-      <pose>0 0 0.002 0 0 0.0</pose>
-    </include>
+    <!-- The vehicle is spawned at HOME by sim.launch.py (vehicle:=v1 | v2). -->
     <model name="backdrop"><static>true</static><pose>10 0 -0.32 0 0 0</pose>
       <link name="link"><visual name="v"><geometry><box><size>300 300 0.02</size></box></geometry>
         <material><ambient>0.13 0.19 0.10 1</ambient><diffuse>0.13 0.19 0.10 1</diffuse></material></visual></link></model>

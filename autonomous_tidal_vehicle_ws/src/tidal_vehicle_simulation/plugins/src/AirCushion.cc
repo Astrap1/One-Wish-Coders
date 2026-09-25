@@ -312,9 +312,16 @@ class AirCushion : public System,
       coll = std::clamp(coll, collMin, collMax);
       // yaw: differential thrust (R - L) acting on the 2 x 0.175 m fan spacing
       const double arm = std::max(std::abs(this->thrustPt[0].Y()), 0.05);
-      const double diff = (this->bYaw * rRef) / arm + this->yawKp * (rRef - w.Z());
-      cmdL = 0.5 * coll - 0.5 * diff;
-      cmdR = 0.5 * coll + 0.5 * diff;
+      double diff = (this->bYaw * rRef) / arm + this->yawKp * (rRef - w.Z());
+      // Collective (speed / braking) has priority: limit the differential so
+      // both fans stay inside [-0.5, 1] x max thrust. Otherwise a hard turn
+      // clips the reversing fan and the pair pushes forward while pivoting.
+      const double half = 0.5 * coll;
+      const double dMax = 2.0 * std::max(0.0, std::min(this->maxThrust - half,
+                                                       half + 0.5 * this->maxThrust));
+      diff = std::clamp(diff, -dMax, dMax);
+      cmdL = half - 0.5 * diff;
+      cmdR = half + 0.5 * diff;
     }
     else if (std::isfinite(hdg))
     {
@@ -351,6 +358,7 @@ class AirCushion : public System,
     math::Vector3d fTot, tTot;
     double fCushion = 0.0;
     std::array<double, 4> gap{};
+    double groundGapSum = 0.0, waterGapSum = 0.0;
     for (size_t i = 0; i < 4; ++i)
     {
       const math::Vector3d rW = pose.Rot().RotateVector(this->corners[i]);
@@ -375,6 +383,8 @@ class AirCushion : public System,
       }
       const double gWater = pW.Z() - reg.WaterLevel(pW.X(), pW.Y());
       gap[i] = std::min(gGround, gWater);
+      groundGapSum += gGround;
+      waterGapSum += gWater;
       this->prevGap[i] = gap[i];
 
       const auto vpOpt = this->hull.WorldLinearVelocity(_ecm, this->corners[i]);
@@ -411,7 +421,11 @@ class AirCushion : public System,
     // --- Glide drag while riding on the cushion ------------------------------
     const math::Vector3d vxy(v.X(), v.Y(), 0);
     const double speed = vxy.Length();
-    const Terrain terrain = reg.Classify(pose.Pos().X(), pose.Pos().Y());
+    // Over water only where the water surface is above the ground measured
+    // under the skirt (a large tide zone floods sloping terrain gradually).
+    Terrain terrain = reg.Classify(pose.Pos().X(), pose.Pos().Y());
+    if (terrain == Terrain::WATER && waterGapSum >= groundGapSum)
+      terrain = reg.ClassifyLand(pose.Pos().X(), pose.Pos().Y());
     if (support > 0.05)
     {
       // Over water the cushion also pushes a spray/wave "hump" drag

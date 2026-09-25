@@ -53,6 +53,7 @@ install(PROGRAMS
   scripts/tide_manager.py
   scripts/collision_test_teleop.py
   scripts/gen_test_worlds.py
+  scripts/gen_test_worlds_v2.py
   DESTINATION lib/${PROJECT_NAME})
 
 if(ament_cmake_FOUND)

@@ -89,7 +89,7 @@ class TideManager(Node):
 
         state = TerrainState()
         state.header.stamp = self.get_clock().now().to_msg()
-        state.header.frame_id = "world"
+        state.header.frame_id = "map"
         state.tide_state = tide_state
         state.tide_risk = float(risk)
         state.water_level_m = float(self.last_level)
@@ -102,7 +102,7 @@ class TideManager(Node):
     def _make_costmap(self, fraction: float, risk: float) -> OccupancyGrid:
         grid = OccupancyGrid()
         grid.header.stamp = self.get_clock().now().to_msg()
-        grid.header.frame_id = "world"
+        grid.header.frame_id = "map"
         grid.info.resolution = 1.0
         grid.info.width = 50
         grid.info.height = 50

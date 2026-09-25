@@ -14,7 +14,7 @@ The project is not claiming that an operational hovercraft has already been vali
 
 ## Proposed approach
 
-We model a compact autonomous air-cushion vehicle that travels over firm shore, wet mud and shallow water while carrying a protected payload. Rather than relying on perfect autonomy, the design combines route planning, local sensing, high-level operator supervision and an independent safety layer.
+We model a compact autonomous air-cushion vehicle that uses wheels over firm shore, then transitions to air-cushion travel over wet mud and shallow water while carrying a protected payload. Rather than relying on perfect autonomy, the design combines route planning, local sensing, high-level operator supervision and an independent safety layer.
 
 The vehicle receives a delivery goal, terrain information, tide state and a return-energy reserve. It plans a low-risk route, detects nearby obstacles with simulated LiDAR, replans when necessary and returns or holds when the mission is no longer safe.
 
@@ -44,7 +44,7 @@ The prototype uses **Gazebo** for the 3D environment and **ROS 2** for subsystem
 Gazebo tidal corridor
   ├─ firm shore, soft mud, shallow water, mangrove roots and debris
   ├─ changing terrain-risk/tide zones
-  └─ vehicle model: hull, skirt, cargo pod, fan visuals and sensors
+  └─ vehicle model: hull, skirt, cargo pod, wheels, lift/propulsion fans and sensors
 
 ROS 2 autonomy
   ├─ local perception: LiDAR → obstacle map
@@ -60,7 +60,7 @@ Operator and evaluation
   └─ metrics: completion, duration, replans, clearance and return margin
 ```
 
-The simulator will model tide as changing terrain risk and traversability, rather than attempting full computational fluid dynamics. Vehicle mobility will similarly use a stated engineering abstraction for thrust, braking, turning, terrain-dependent speed, battery consumption and simulated degradation. This keeps the demo technically honest while making the mission behaviour credible and testable.
+The simulator will model tide as changing terrain risk and traversability, rather than attempting full computational fluid dynamics. Vehicle mobility will similarly use a stated engineering abstraction: wheels on firm shore; stopped, controlled transitions between modes; and air-cushion travel over mud and shallow water. It will model terrain-dependent speed, battery consumption and simulated degradation without claiming validated hovercraft physics. This keeps the demo technically honest while making the mission behaviour credible and testable.
 
 ## Planned demonstration
 

@@ -31,15 +31,19 @@ ends within the configured HOME tolerance.
 ## Return estimate and safety precedence
 
 Safety—not simulation—calculates the estimated return energy, return margin and
-return ETA. It samples `/return_path` at 0.5 m intervals against the current
-terrain cost map, applies terrain and mobility multipliers, then adds the larger
-of an 8 percentage-point buffer or 20% contingency. These are transparent
-simulation assumptions, not field-validated vehicle-performance claims.
+return ETA. It samples `/return_path` at 0.5 m intervals against the shared
+terrain-cost bands: wheels on firm shore (`0`--`19`), hover over mud/shallow
+water (`20`--`59`) and conservative hover in elevated-risk cells (`60`--`89`).
+Every wheel--hover transition adds declared transition time and energy. Safety
+then adds the larger of an 8 percentage-point buffer or 20% contingency. These
+are transparent simulation assumptions, not field-validated vehicle-performance
+claims.
 
 The supervisor applies the following precedence:
 
 1. `HOLD` for stale telemetry, a non-traversable corridor, invalid return path,
-   exhausted return margin or critical mobility degradation.
+   exhausted return margin, critical mobility degradation or any non-empty
+   vehicle-controller fault.
 2. `RETURN` when the tide/return time window, return margin, mobility health or
    communications link no longer supports continuing outbound.
 3. `CAUTION` for elevated tide, a narrowing return margin or degraded mobility.

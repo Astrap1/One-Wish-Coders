@@ -34,10 +34,18 @@ class GridCostmap:
 class ReturnEstimatorConfig:
     sample_spacing_m: float
     no_go_cost: int
-    base_energy_percent_per_m: float
+    wheel_cost_max: int
+    elevated_hover_cost_min: int
+    wheel_energy_percent_per_m: float
+    hover_energy_percent_per_m: float
+    wheel_nominal_speed_mps: float
+    hover_nominal_speed_mps: float
+    elevated_hover_energy_multiplier: float
+    elevated_hover_speed_multiplier: float
+    mode_transition_time_s: float
+    mode_transition_energy_percent: float
     terrain_cost_energy_weight: float
     mobility_degradation_weight: float
-    nominal_speed_mps: float
     minimum_buffer_percent: float
     contingency_ratio: float
 
@@ -50,6 +58,7 @@ class ReturnEstimate:
     estimated_energy_percent: float = float("nan")
     margin_percent: float = float("nan")
     eta_s: float = float("nan")
+    mode_transition_count: int = 0
 
 
 def path_ends_at_home(path: Sequence[Point2], home: Point2, tolerance_m: float) -> bool:
@@ -79,7 +88,11 @@ def estimate_return(
         return ReturnEstimate(False, "Terrain cost map is invalid.")
     if not 0.0 < mobility_health_percent <= 100.0:
         return ReturnEstimate(False, "Mobility health cannot support an estimate.")
-    if config.sample_spacing_m <= 0 or config.nominal_speed_mps <= 0:
+    if (
+        config.sample_spacing_m <= 0
+        or config.wheel_nominal_speed_mps <= 0
+        or config.hover_nominal_speed_mps <= 0
+    ):
         return ReturnEstimate(False, "Return-estimator configuration is invalid.")
 
     terrain_multiplier_base = 1.0 + config.mobility_degradation_weight * (
@@ -88,6 +101,8 @@ def estimate_return(
     total_length_m = 0.0
     raw_energy_percent = 0.0
     eta_s = 0.0
+    transition_count = 0
+    previous_mode: str | None = None
 
     for start, end in _segments(path):
         segment_x = end[0] - start[0]
@@ -109,13 +124,19 @@ def estimate_return(
             if cost >= config.no_go_cost:
                 return ReturnEstimate(False, "Return route crosses a no-go terrain cell.")
 
+            mode = _mode_for_cost(cost, config)
+            if previous_mode is not None and mode != previous_mode:
+                raw_energy_percent += config.mode_transition_energy_percent
+                eta_s += config.mode_transition_time_s
+                transition_count += 1
+            previous_mode = mode
+
             terrain_multiplier = terrain_multiplier_base * (
                 1.0 + config.terrain_cost_energy_weight * min(cost, 100) / 100.0
             )
-            raw_energy_percent += (
-                sample_length * config.base_energy_percent_per_m * terrain_multiplier
-            )
-            eta_s += sample_length / (config.nominal_speed_mps / terrain_multiplier)
+            energy_per_m, speed_mps = _mode_rates(mode, cost, config)
+            raw_energy_percent += sample_length * energy_per_m * terrain_multiplier
+            eta_s += sample_length / (speed_mps / terrain_multiplier)
             total_length_m += sample_length
 
     if len(path) == 1:
@@ -135,8 +156,27 @@ def estimate_return(
         estimated_energy_percent,
         battery_percent - estimated_energy_percent,
         eta_s,
+        transition_count,
     )
 
 
 def _segments(path: Sequence[Point2]) -> list[tuple[Point2, Point2]]:
     return list(zip(path, path[1:]))
+
+
+def _mode_for_cost(cost: int, config: ReturnEstimatorConfig) -> str:
+    return "WHEEL" if cost <= config.wheel_cost_max else "HOVER"
+
+
+def _mode_rates(
+    mode: str, cost: int, config: ReturnEstimatorConfig
+) -> tuple[float, float]:
+    if mode == "WHEEL":
+        return config.wheel_energy_percent_per_m, config.wheel_nominal_speed_mps
+
+    energy_per_m = config.hover_energy_percent_per_m
+    speed_mps = config.hover_nominal_speed_mps
+    if cost >= config.elevated_hover_cost_min:
+        energy_per_m *= config.elevated_hover_energy_multiplier
+        speed_mps *= config.elevated_hover_speed_multiplier
+    return energy_per_m, speed_mps

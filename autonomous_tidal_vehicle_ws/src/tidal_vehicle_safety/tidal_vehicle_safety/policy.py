@@ -39,6 +39,7 @@ class PolicySnapshot:
     return_path_timed_out: bool
     link_ok: bool
     payload_secured: bool
+    fault: str
     mobility_health_percent: float
     tide_risk: float
     seconds_until_corridor_unsafe: float
@@ -59,6 +60,12 @@ def evaluate(snapshot: PolicySnapshot, config: PolicyConfig) -> Decision:
         return Decision(HOLD, "Awaiting a mission goal and current telemetry.")
     if not snapshot.telemetry_fresh:
         return Decision(HOLD, "Vehicle health or terrain telemetry is stale.")
+    if snapshot.fault:
+        return Decision(
+            HOLD,
+            f"Vehicle controller reported {snapshot.fault}; holding position.",
+            snapshot.phase is MissionPhase.RETURNING,
+        )
 
     if snapshot.phase is MissionPhase.RETURNING:
         if not snapshot.corridor_traversable or snapshot.tide_risk >= config.hold_tide_risk:

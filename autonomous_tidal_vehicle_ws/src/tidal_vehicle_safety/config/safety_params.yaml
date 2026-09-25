@@ -22,10 +22,18 @@ safety_supervisor:
     home_yaw_rad: 0.0
     home_tolerance_m: 2.0
     route_sample_spacing_m: 0.5
-    no_go_cost: 100
-    base_energy_percent_per_m: 0.05
+    no_go_cost: 90
+    wheel_cost_max: 19
+    elevated_hover_cost_min: 60
+    wheel_energy_percent_per_m: 0.025
+    hover_energy_percent_per_m: 0.05
+    wheel_nominal_speed_mps: 1.0
+    hover_nominal_speed_mps: 0.7
+    elevated_hover_energy_multiplier: 1.25
+    elevated_hover_speed_multiplier: 0.70
+    mode_transition_time_s: 5.0
+    mode_transition_energy_percent: 1.0
     terrain_cost_energy_weight: 0.5
     mobility_degradation_weight: 0.7
-    return_nominal_speed_mps: 1.0
     minimum_return_buffer_percent: 8.0
     return_energy_contingency_ratio: 0.20

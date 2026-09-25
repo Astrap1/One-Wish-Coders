@@ -30,6 +30,19 @@ These mobility modes are separate from Person 2's safety states and must not rep
 
 A wheel-to-hover transition must stop horizontal motion, ramp the lift fan and wait for hover-ready status before propulsion begins. A hover-to-wheel transition must stop horizontal motion, reduce lift in a controlled way and confirm that the vehicle has settled onto its wheels before wheel motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
 
+### Shared terrain-cost semantics
+
+The terrain cost map supplies the shared route and mobility interpretation:
+
+- `0`--`19`: firm shore; the controller uses **WHEEL** mode.
+- `20`--`59`: mud or shallow water; the controller uses **HOVER** mode.
+- `60`--`89`: elevated-risk mud or shallow water; the controller uses **HOVER** mode with conservative speed/energy assumptions.
+- `90`--`100`: no-go terrain.
+- `-1`: unknown terrain; treated as no-go.
+
+Autonomy plans with these costs and Safety estimates the return energy/time using
+the same bands. A path that crosses a `90+` or `-1` cell is invalid.
+
 ## Team roles
 
 | Person | Role | Owns | Does not own |
@@ -44,7 +57,7 @@ A wheel-to-hover transition must stop horizontal motion, ramp the lift fan and w
 
 - Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal` and `/terrain_state` and publishes `/planned_path` only.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
-- Agreed planner interpretation of `/terrain_costmap`: `0`--`89` traversable with increasing risk, `90`--`100` no-go, and `-1` unknown/no-go.
+- Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-wheel terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
 - The planner replans after cost-map, goal or terrain-state updates, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
 - The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames.

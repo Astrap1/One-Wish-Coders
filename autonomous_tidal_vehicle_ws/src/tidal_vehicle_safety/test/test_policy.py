@@ -18,6 +18,7 @@ def _snapshot(**changes) -> PolicySnapshot:
         "return_path_timed_out": False,
         "link_ok": True,
         "payload_secured": True,
+        "fault": "",
         "mobility_health_percent": 100.0,
         "tide_risk": 0.2,
         "seconds_until_corridor_unsafe": 300.0,
@@ -45,6 +46,13 @@ def test_time_to_unsafe_forces_return_before_hard_tide_limit():
 def test_invalid_return_path_and_critical_fault_hold_position():
     assert evaluate(_snapshot(estimate=ReturnEstimate(False, "blocked")), _config()).state == HOLD
     assert evaluate(_snapshot(mobility_health_percent=30.0), _config()).state == HOLD
+
+
+def test_vehicle_controller_fault_holds_position():
+    decision = evaluate(_snapshot(fault="hover_not_ready"), _config())
+
+    assert decision.state == HOLD
+    assert "hover_not_ready" in decision.reason
 
 
 def test_returning_holds_until_a_fresh_valid_path_is_available():

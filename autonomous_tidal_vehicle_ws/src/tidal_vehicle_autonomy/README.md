@@ -26,7 +26,7 @@ Global-planner LiDAR parameters:
 
 | Parameter | Default | Meaning |
 | --- | ---: | --- |
-| obstacle_inflation_radius_m | 1.7 m | Estimated vehicle half-diagonal plus about 0.25 m clearance. |
+| obstacle_inflation_radius_m | 0.75 m | Version 1 vehicle half-diagonal plus a small clearance; recalibrate for Version 2. |
 | obstacle_max_range_m | 8.0 m | Farthest scan return used by local planning. |
 
 Return behavior:

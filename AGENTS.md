@@ -6,6 +6,7 @@ This repository is building a Gazebo and ROS 2 demonstration of an autonomous ai
 
 - Target stack: **ROS 2 Jazzy**, **Gazebo Harmonic** and `ros_gz`.
 - The live demonstration must work from one documented launch path owned by the vehicle simulation and integration lead.
+- The shared demo launch is `ros2 launch tidal_vehicle_bringup sim.launch.py`; it defaults to the tidal corridor with its dynamic tide manager. Use `headless:=true` for the WSL2/Foxglove demonstration path.
 - The safety supervisor is the only component permitted to publish `/cmd_vel`.
 - Topic and message changes must be made with the matching update to `docs/INTERFACES.md`.
 - Do not commit local PDFs, generated `build/`, `install/`, `log/`, recordings or experiment outputs.
@@ -14,7 +15,7 @@ See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system bound
 
 ## Vehicle configuration and mobility modes
 
-The simulated vehicle is a **hovercraft-dominant amphibious vehicle with a complete retractable tracked undercarriage and controlled air-cushion load sharing** (Vehicle Version 2, below). It has an inflatable, segmented air-cushion skirt, a lift fan, two rear ducted propulsion fans with rudders and two retractable rubber tracks. Its working size is 2.5 m long, 1.5 m wide and 1.5 m high overall, which matches the planning footprint Autonomy already uses; Person 4's final collision geometry remains authoritative. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, track or hovercraft physics.
+The current demonstration vehicle is **Version 1**: a hovercraft-dominant amphibious vehicle with a retractable wheeled undercarriage. It is the vehicle model in Gazebo today. **Version 2** is the planned tracked, air-cushion-load-sharing vehicle described below; do not claim track behaviour in the live demo until its model and controller are integrated. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, wheel, track or hovercraft physics.
 
 The vehicle controller uses three internal mobility modes:
 
@@ -32,7 +33,7 @@ These mobility modes are separate from Person 2's safety states and must not rep
 
 A track-to-hover transition must stop horizontal motion, ramp the lift fan, wait for hover-ready status, then retract the tracks before propulsion begins. A hover-to-track transition must stop horizontal motion, deploy the tracks, reduce lift in a controlled way to the target load share and confirm that the vehicle has settled onto its tracks before track motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
 
-Safety's ground-mode return-energy parameters are `track_cost_max`, `track_energy_percent_per_m` and `track_nominal_speed_mps`. The common launch sets Safety's `track_mode_enabled` to true for `vehicle:=v2` and false for the Version 1 fallback, which runs `hover_only`.
+Safety's ground-mode return-energy parameters are `track_cost_max`, `track_energy_percent_per_m` and `track_nominal_speed_mps`. They currently model firm-shore ground travel and should be recalibrated for the Version 2 tracks. The common launch sets Safety's `track_mode_enabled` to true for `vehicle:=v2` and false for the Version 1 fallback, which runs `hover_only`.
 
 ### Shared terrain-cost semantics
 
@@ -141,10 +142,10 @@ Default LiDAR parameters are:
 
 | Parameter | Default | Purpose |
 | --- | ---: | --- |
-| `obstacle_inflation_radius_m` | `1.7 m` | Cover the estimated half-diagonal of the vehicle plus about 0.25 m clearance. |
+| `obstacle_inflation_radius_m` | `0.75 m` | Cover the Version 1 vehicle's half-diagonal plus a small clearance; recalibrate for Version 2. |
 | `obstacle_max_range_m` | `8.0 m` | Ignore detections beyond the useful local planning distance. |
 
-For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 1.7 m circular inflation is based on an approximately 2.5 m by 1.5 m vehicle footprint plus about 0.25 m clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when available.
+For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 0.75 m circular inflation is based on Version 1's approximately 1.2 m by 0.7 m footprint plus a small clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when Version 2 is available.
 
 ### Return mission implementation details
 
@@ -164,7 +165,7 @@ Default return parameters are:
 | `goal_event_tolerance_m` | `0.3 m` | Distance from a path endpoint that triggers a mission event. |
 | `return_path_refresh_rate_hz` | `2.0 Hz` | Keep Safety's validated return route fresh without resetting the follower. |
 
-The HOME values must match Person 2's safety parameters. The final sensor transform and Person 3's changing tide map still need integration. Autonomy does not publish `/cmd_vel`.
+The HOME values must match Person 2's safety parameters. The changing map-frame tide map is integrated through the shared launcher; Person 1 and Person 4 should tune the final sensor transform and route geometry against the corridor before the demo. Autonomy does not publish `/cmd_vel`.
 
 ## Role 4: Vehicle simulation and integration status
 
@@ -179,14 +180,17 @@ The HOME values must match Person 2's safety parameters. The final sensor transf
 
   The Version 1 regression checks are unchanged.
 - **ROS 2 integration verified** (headless, integration world with `tide:=false`). An autonomous goal across water and mud produced `delivery_confirmed` then `mission_complete`. Version 2 started on its tracks at HOME, switched to HOVER 2.5 m before the water, and returned to TRACK at HOME. Safety remained the sole `/cmd_vel` publisher. The Version 1 fallback completes the same mission.
-- **Tidal corridor:** Version 2 spawns at HOME, parks on its tracks, crosses the channel in HOVER and reaches delivery. Open issues are listed below.
+- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors, buoyancy and terrain zones. The launch spawns the vehicle at map-frame HOME, and the tide manager is the sole dynamic `/terrain_state` and `/terrain_costmap` publisher. Version 2 parks on its tracks, crosses the channel in HOVER and reaches delivery; open issues are listed below. `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
 
 Open integration items:
 
-1. **Corridor incline.** The corridor terrain is tilted 4.6° (`fixed_terrain` pitch 0.08 rad). On the return leg Version 2 creeps downhill in TRACK mode even with its tracks stopped, and it takes about 3 m to stop from cruise before a pivot. The track/skirt contact with the heightmap needs investigating. Version 1 does not reach the delivery point on this terrain at all. A flatter shore (less than about 2°) would suit both vehicles.
+1. **Corridor incline.** The corridor collision surface is tilted 4.6° (`demo_terrain` pitch 0.08 rad). In runs on the earlier heightmap collision, Version 2 crept downhill in TRACK mode on the return leg even with its tracks stopped, and took about 3 m to stop from cruise before a pivot; Version 1 did not reach the delivery point. Re-check on the new `terrain_demo` box collision. A flatter shore (less than about 2°) would suit both vehicles.
 2. **Tide timing.** `scenario_defaults.yaml` floods the corridor in 30 s of sim time, so a normal delivery cannot finish before the tide cuts off HOME. Scenario 1 needs the tide held, or a slower rise, with the rising tide triggered for scenario 3.
 3. **Rendering load.** The mangrove and rock meshes are heavy for the LiDAR and camera. Check the real-time factor on the demo laptop's GPU.
 4. **Sensor transform.** Autonomy should use the Version 2 LiDAR transform (centre mast, 1.44 m) once the shared TF work lands. Until then its "LiDAR at odometry position" assumption holds for Version 2.
+5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
+6. Tune the corridor map rectangles, HOME/delivery coordinates and obstacle inflation so that the generated path matches the visibly safe route through the world.
+7. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
 
 ## Three-day build plan
 

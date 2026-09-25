@@ -12,7 +12,11 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-The workspace is a skeleton at this stage. Buildable description and interface packages are present; Gazebo plugins, launch orchestration and autonomy nodes will be added by their respective workstreams.
+The vehicle model, Gazebo plugins, ROS bridge and one-command launch are in place (see `../docs/VEHICLE_SIMULATION.md`):
+
+```bash
+ros2 launch tidal_vehicle_bringup sim.launch.py
+```
 
 ## Package map
 

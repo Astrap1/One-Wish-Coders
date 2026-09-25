@@ -1,0 +1,92 @@
+# ros_gz_bridge topic map for the vehicle "hovercraft".
+# WORLD is replaced by the world name at launch (tidal_vehicle_bringup/launch/sim.launch.py);
+# the world's <world name="..."> must equal its file name (without .sdf).
+# Public topic names follow docs/INTERFACES.md. Keep the two in sync.
+
+# ---------------- time -------------------------------------------------------
+- ros_topic_name: /clock
+  gz_topic_name: /clock
+  ros_type_name: rosgraph_msgs/msg/Clock
+  gz_type_name: gz.msgs.Clock
+  direction: GZ_TO_ROS
+
+# ---------------- state and TF (Gazebo -> ROS) ------------------------------
+- ros_topic_name: /odom                     # ground-truth odometry, frame map -> base_link
+  gz_topic_name: /model/hovercraft/odometry
+  ros_type_name: nav_msgs/msg/Odometry
+  gz_type_name: gz.msgs.Odometry
+  direction: GZ_TO_ROS
+- ros_topic_name: /tf                       # map -> base_link (joints come from robot_state_publisher)
+  gz_topic_name: /model/hovercraft/pose
+  ros_type_name: tf2_msgs/msg/TFMessage
+  gz_type_name: gz.msgs.Pose_V
+  direction: GZ_TO_ROS
+- ros_topic_name: /joint_states
+  gz_topic_name: /world/WORLD/model/hovercraft/joint_state
+  ros_type_name: sensor_msgs/msg/JointState
+  gz_type_name: gz.msgs.Model
+  direction: GZ_TO_ROS
+
+# ---------------- sensors ----------------------------------------------------
+- ros_topic_name: /points                   # 16-channel 3D LiDAR (lidar_link); /scan is derived from it
+  gz_topic_name: /world/WORLD/model/hovercraft/link/lidar_link/sensor/lidar_3d/scan/points
+  ros_type_name: sensor_msgs/msg/PointCloud2
+  gz_type_name: gz.msgs.PointCloudPacked
+  direction: GZ_TO_ROS
+- ros_topic_name: /imu
+  gz_topic_name: /world/WORLD/model/hovercraft/link/base_link/sensor/imu/imu
+  ros_type_name: sensor_msgs/msg/Imu
+  gz_type_name: gz.msgs.IMU
+  direction: GZ_TO_ROS
+- ros_topic_name: /gps/fix
+  gz_topic_name: /world/WORLD/model/hovercraft/link/base_link/sensor/navsat/navsat
+  ros_type_name: sensor_msgs/msg/NavSatFix
+  gz_type_name: gz.msgs.NavSat
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/image_raw
+  gz_topic_name: /world/WORLD/model/hovercraft/link/camera_link/sensor/front_camera/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/camera_info
+  gz_topic_name: /world/WORLD/model/hovercraft/link/camera_link/sensor/front_camera/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+
+# ---------------- vehicle internals (Gazebo <-> mobility node) --------------
+- ros_topic_name: /vehicle/hover_state      # OFF | SPIN_UP | FAN_ON_NO_SUPPORT | HOVER | SPIN_DOWN
+  gz_topic_name: /model/hovercraft/hover_state
+  ros_type_name: std_msgs/msg/String
+  gz_type_name: gz.msgs.StringMsg
+  direction: GZ_TO_ROS
+- ros_topic_name: /vehicle/cushion_gap      # mean skirt gap (m)
+  gz_topic_name: /model/hovercraft/cushion_gap
+  ros_type_name: std_msgs/msg/Float64
+  gz_type_name: gz.msgs.Double
+  direction: GZ_TO_ROS
+- ros_topic_name: /vehicle/terrain_truth    # FIRM | MUD | WATER under the vehicle (ground truth)
+  gz_topic_name: /model/hovercraft/terrain
+  ros_type_name: std_msgs/msg/String
+  gz_type_name: gz.msgs.StringMsg
+  direction: GZ_TO_ROS
+- ros_topic_name: /vehicle/cmd_vel_hover    # HOVER mode: fan velocity control
+  gz_topic_name: /model/hovercraft/cmd_vel_hover
+  ros_type_name: geometry_msgs/msg/Twist
+  gz_type_name: gz.msgs.Twist
+  direction: ROS_TO_GZ
+- ros_topic_name: /vehicle/cmd_vel_wheels   # GROUND mode: wheel skid-steer
+  gz_topic_name: /model/hovercraft/cmd_vel
+  ros_type_name: geometry_msgs/msg/Twist
+  gz_type_name: gz.msgs.Twist
+  direction: ROS_TO_GZ
+- ros_topic_name: /vehicle/hover_enabled    # lift fan on/off
+  gz_topic_name: /model/hovercraft/hover_enabled
+  ros_type_name: std_msgs/msg/Bool
+  gz_type_name: gz.msgs.Boolean
+  direction: ROS_TO_GZ
+- ros_topic_name: /vehicle/legs_cmd         # 0 = legs down, 1.5708 = folded
+  gz_topic_name: /model/hovercraft/legs_cmd
+  ros_type_name: std_msgs/msg/Float64
+  gz_type_name: gz.msgs.Double
+  direction: ROS_TO_GZ

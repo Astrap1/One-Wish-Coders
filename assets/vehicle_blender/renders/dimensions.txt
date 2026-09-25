@@ -1,0 +1,52 @@
+=== Per-link world bounding boxes (ground mode, metres) ===
+hull               origin (+0.000, +0.000, +0.300)  size (+1.212, +0.825, +0.580)  tris 14796
+skirt              origin (+0.000, +0.000, +0.190)  size (+1.200, +0.700, +0.153)  tris 3008
+lift_fan           origin (+0.140, +0.000, +0.390)  size (+0.264, +0.271, +0.040)  tris 460
+thrust_fan_left    origin (-0.475, +0.175, +0.500)  size (+0.052, +0.209, +0.199)  tris 436
+thrust_fan_right   origin (-0.475, -0.175, +0.500)  size (+0.052, +0.209, +0.199)  tris 436
+rudder_left        origin (-0.600, +0.175, +0.500)  size (+0.067, +0.010, +0.236)  tris 216
+rudder_right       origin (-0.600, -0.175, +0.500)  size (+0.067, +0.010, +0.236)  tris 216
+wheel_leg_fl       origin (+0.440, +0.380, +0.360)  size (+0.068, +0.068, +0.186)  tris 1612
+wheel_leg_fr       origin (+0.440, -0.380, +0.360)  size (+0.068, +0.068, +0.186)  tris 1612
+wheel_leg_rl       origin (-0.440, +0.380, +0.360)  size (+0.068, +0.068, +0.186)  tris 1612
+wheel_leg_rr       origin (-0.440, -0.380, +0.360)  size (+0.068, +0.068, +0.186)  tris 1612
+wheel_shock_fl     origin (+0.440, +0.380, +0.150)  size (+0.068, +0.104, +0.180)  tris 368
+wheel_shock_fr     origin (+0.440, -0.380, +0.150)  size (+0.068, +0.104, +0.180)  tris 368
+wheel_shock_rl     origin (-0.440, +0.380, +0.150)  size (+0.068, +0.104, +0.180)  tris 368
+wheel_shock_rr     origin (-0.440, -0.380, +0.150)  size (+0.068, +0.104, +0.180)  tris 368
+wheel_fl           origin (+0.440, +0.450, +0.150)  size (+0.302, +0.090, +0.302)  tris 1964
+wheel_fr           origin (+0.440, -0.450, +0.150)  size (+0.302, +0.090, +0.302)  tris 1964
+wheel_rl           origin (-0.440, +0.450, +0.150)  size (+0.302, +0.090, +0.302)  tris 1964
+wheel_rr           origin (-0.440, -0.450, +0.150)  size (+0.302, +0.090, +0.302)  tris 1964
+payload_box        origin (-0.215, +0.000, +0.390)  size (+0.376, +0.274, +0.232)  tris 1764
+lidar              origin (+0.400, +0.000, +0.750)  size (+0.103, +0.103, +0.076)  tris 1284
+camera             origin (+0.552, +0.000, +0.440)  size (+0.062, +0.085, +0.056)  tris 352
+
+OVERALL bbox min (-0.655, -0.495, -0.001) max (+0.605, +0.495, +0.790) size (+1.260, +0.990, +0.791)
+TOTAL triangles: 38744
+
+=== Section 2 spec checks ===
+[PASS] Hull/skirt footprint length                   1.200 m  (spec 1.2 ± 0.01)
+[PASS] Hull/skirt footprint width                    0.700 m  (spec 0.7 ± 0.01)
+[PASS] Hull top (bow bay) height, hover mode         0.440 m  (spec 0.45 ± 0.02)
+[PASS] LiDAR centre height, hover mode (mast +0.10)    0.690 m  (spec 0.7 ± 0.02)
+[PASS] Wheel diameter (larger, per team request)     0.302 m  (spec 0.3 ± 0.005)
+[PASS] Wheels touch ground (min z)                  -0.001 m  (spec 0.0 ± 0.002)
+[PASS] Payload box length (core)                     0.354 m  (spec 0.35 ± 0.01)
+[PASS] Payload box width (core)                      0.254 m  (spec 0.25 ± 0.01)
+[PASS] Payload box height (core)                     0.200 m  (spec 0.2 ± 0.01)
+[PASS] Ground clearance (skirt bottom on wheels)     0.100 m  (spec 0.1 ± 0.005)
+[PASS] Suspension travel (droop + bump)              0.080 m  (spec 0.08 ± 0.0)
+[PASS] Static sag = corner load / k                  0.030 m  (spec 0.03 ± 0.004)
+[PASS] Total mass                                   25.000 kg  (spec 25.0 ± 0.01)
+[PASS] Triangle budget                               38744 tri  (spec < 50000)
+
+=== Derived ===
+Cushion area (rounded footprint)   0.797 m^2   (plan's rectangle estimate 0.84 m^2)
+Cushion pressure  25 kg * 9.81 / A = 308 Pa (plan ~290 Pa)
+Hover mode: skirt gap 0.040 m; folded wheels' lowest point +0.109 m above skirt bottom (must be > 0)
+Hover mode: fore/aft gap between folded front and rear wheels 0.098 m (must be > 0)
+Ground mode: payload top z = 0.590 m, LiDAR beam plane z = 0.750 m
+
+Meshes + link_frames.json written to autonomous_tidal_vehicle_ws/src/tidal_vehicle_description/models/hovercraft
+OVERALL: ALL CHECKS PASS

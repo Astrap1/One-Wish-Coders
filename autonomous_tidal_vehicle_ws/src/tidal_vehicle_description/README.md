@@ -1,13 +1,11 @@
 # `tidal_vehicle_description`
 
-Owns the SDF/URDF representation of the air-cushion vehicle, its collision/visual meshes, sensor mounts and RViz display configuration.
+The air-cushion vehicle's description. See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
 
-## Deliverables
+- `models/hovercraft/` — Gazebo model (`model.sdf`, `model.config`), Blender-exported meshes and `link_frames.json`
+- `urdf/hovercraft.urdf` — ROS robot description with the same links and joints (for `robot_state_publisher`, RViz and Foxglove)
+- `scripts/gen_description.py` — regenerates both from `link_frames.json`. Run it after `assets/vehicle_blender/build_vehicle.py`. Never edit the generated files by hand.
+- `config/sensors.yaml` — sensor frames, topics and rates
+- `rviz/hovercraft.rviz` — RViz view (Fixed Frame `map`)
 
-- `urdf/` — Xacro/URDF source when a ROS robot description is needed.
-- `models/` — Gazebo model folders and `model.sdf` files.
-- `meshes/` — Blender-exported visual and collision meshes.
-- `config/sensors.yaml` — Shared sensor-frame and update-rate assumptions.
-- `rviz/` — Operator-facing visualisation configuration.
-
-The vehicle should expose a hull, skirt, protected payload pod, LiDAR, IMU and camera mount. Detailed aerodynamic modelling is outside this package's initial scope.
+Frames: `base_link` (hull), `lidar_link`, `camera_link`, `imu_link`, plus the moving parts (`wheel_leg_*`, `wheel_shock_*`, `wheel_*`, fans, rudders).

@@ -20,3 +20,7 @@ recordings/
 results/
 *.bag
 *.db3
+
+# Vehicle test tooling
+tools/vehicle_tests/gz_sink/build/
+*.blend1

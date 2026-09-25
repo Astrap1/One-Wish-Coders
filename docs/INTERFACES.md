@@ -4,20 +4,40 @@ These are the initial contracts between workstreams. Topic names and message typ
 
 | Topic | Publisher | Consumer | Initial type | Purpose |
 | --- | --- | --- | --- | --- |
-| `/scan` | Simulation | Autonomy | `sensor_msgs/LaserScan` | Near-field obstacle sensing used for the planner's temporary obstacle overlay. |
-| `/imu` | Simulation | Autonomy | `sensor_msgs/Imu` | Orientation and motion sensing. |
-| `/odom` | Simulation | Autonomy, Safety, Operator | `nav_msgs/Odometry` | Vehicle position and velocity. |
-| `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. |
+| `/scan` | Simulation (`lidar_scan_node`) | Autonomy | `sensor_msgs/LaserScan` | Near-field obstacle sensing used for the planner's temporary obstacle overlay. 2D scan in `lidar_link`, 720 bins, derived from `/points` (closest return per bearing between ~7 cm and 1.2 m above ground; the vehicle's own body is filtered out). 10 Hz. |
+| `/imu` | Simulation | Autonomy | `sensor_msgs/Imu` | Orientation and motion sensing. Frame `imu_link`, 50 Hz. |
+| `/odom` | Simulation (Gazebo OdometryPublisher) | Autonomy, Safety, Operator | `nav_msgs/Odometry` | Vehicle position and velocity. Ground truth (idealised), `header.frame_id: map`, `child_frame_id: base_link`, 50 Hz. Valid in both hover and ground mode. |
+| `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. Until the environment workstream's tide manager exists, `vehicle_mobility_node` publishes a constant low-tide placeholder at 2 Hz (`publish_terrain_state: true`); switch it off when the real publisher lands. |
 | `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current terrain-risk map after the simulated tide update. |
-| `/vehicle_health` | Simulation | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health. |
+| `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health. 2 Hz. Battery from a stated power model (lift fan, thrust, wheels); mobility/link/payload/fault are parameters for fault injection. |
 | `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. |
 | `/planned_path` | Autonomy | Operator, Safety | `nav_msgs/Path` | Proposed route. |
 | `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Fresh route from current pose to the fixed HOME zone. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
-| `/cmd_vel` | Safety | Simulation | `geometry_msgs/Twist` | Safety-approved motion command. |
+| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Routed to the fans in HOVER mode or the wheels in GROUND mode. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
 | `/scenario_event` | Evaluation | Simulation, Safety | `std_msgs/String` | Controlled fault or scenario event. |
+| `/points` | Simulation | Autonomy, Operator | `sensor_msgs/PointCloud2` | 16-channel 3D LiDAR, frame `lidar_link`, 10 Hz, 0.3–30 m. |
+| `/camera/image_raw`, `/camera/camera_info` | Simulation | Operator | `sensor_msgs/Image`, `CameraInfo` | Front camera, frame `camera_link`, 640×480 at 15 Hz. |
+| `/gps/fix` | Simulation | Operator | `sensor_msgs/NavSatFix` | Simulated GNSS (world origin at Sungei Buloh, 1.4466 N 103.7300 E), 10 Hz. |
+| `/tf`, `/tf_static` | Simulation, `robot_state_publisher` | All | `tf2_msgs/TFMessage` | `map → base_link` from odometry; `base_link →` every vehicle part and sensor from the URDF and `/joint_states`. |
+| `/joint_states` | Simulation | `robot_state_publisher` | `sensor_msgs/JointState` | Legs, suspension, wheels, fans, rudders. |
+| `/robot_description` | `robot_state_publisher` | Operator (RViz / Foxglove) | `std_msgs/String` | Vehicle URDF (meshes as `package://tidal_vehicle_description/...`). |
+| `/vehicle/mode` | Simulation (`vehicle_mobility_node`) | Operator, Evaluation | `std_msgs/String` | `GROUND`, `TO_HOVER`, `HOVER` or `TO_GROUND`. |
+| `/clock` | Simulation | All | `rosgraph_msgs/Clock` | Simulation time; every node runs with `use_sim_time: true`. |
+
+Topics under `/vehicle/*` other than `/vehicle/mode` are internal to the vehicle simulation (mobility node ⇄ Gazebo) and are not a cross-workstream contract. They are listed in `tidal_vehicle_bringup/config/ros_gz_bridge.yaml`.
+
+## Frames
+
+```text
+map ──(/odom, /tf: ground-truth pose)──► base_link ──► lidar_link, camera_link, imu_link,
+                                                       skirt, payload_box, fans, rudders,
+                                                       wheel_leg_* ► wheel_shock_* ► wheel_*
+```
+
+`/odom`, `/terrain_costmap`, `/mission_goal` and `/planned_path` all use `map`. Odometry is ground truth, so there is no separate `odom` frame. `base_link` is the hull at its centre: 0.30 m above ground on wheels, 0.24 m when hovering. Frame names match `tidal_vehicle_description/config/sensors.yaml`.
 
 ## Safety states
 

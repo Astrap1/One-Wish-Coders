@@ -1,0 +1,10 @@
+# Keep Linux line endings for everything text, even when edited on Windows
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+# Binary assets
+*.blend binary
+*.glb binary
+*.png binary
+*.jpg binary
+*.mp4 binary

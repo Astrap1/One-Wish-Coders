@@ -1,0 +1,34 @@
+# Mobility and sensing assumptions for the air-cushion vehicle. These are stated
+# simulation assumptions, not measured vehicle data (see docs/VEHICLE_SIMULATION.md).
+vehicle_mobility:
+  ros__parameters:
+    use_sim_time: true
+    mode_policy: hover_only        # hover_only | terrain_auto (terrain_auto: HOVER->GROUND not yet validated)
+    cmd_timeout_s: 0.5             # /cmd_vel older than this -> stop
+    max_speed_mps: 2.5             # hover top speed is ~2.9 m/s at full thrust
+    max_yaw_rate_rps: 1.0
+    spinup_s: 1.5                  # lift fan spin-up before the legs fold
+    fold_s: 1.6                    # leg fold / unfold time
+    firm_dwell_s: 3.0              # terrain_auto: firm ground needed before landing on wheels
+    battery_capacity_wh: 500.0
+    initial_battery_percent: 100.0
+    idle_w: 20.0                   # computer + sensors
+    lift_fan_w: 300.0
+    thrust_w_per_n: 7.0            # electrical W per N of fan thrust
+    wheels_w: 60.0
+    mobility_health_percent: 100.0 # fault-injection hooks (ros2 param set ...)
+    link_ok: true
+    payload_secured: true
+    fault: ""
+    publish_terrain_state: true    # placeholder /terrain_state until the tide manager publishes it
+    map_frame: map
+
+lidar_scan:
+  ros__parameters:
+    use_sim_time: true
+    bins: 720                      # 0.5 deg
+    min_height_m: -0.62            # relative to lidar_link: ~7 cm above ground when hovering
+    max_height_m: 0.50
+    range_min_m: 0.3
+    range_max_m: 30.0
+    self_box_m: [-1.10, 0.25, -0.52, 0.52]   # vehicle body in lidar_link (x0, x1, y0, y1)

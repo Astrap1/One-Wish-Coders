@@ -16,4 +16,10 @@ setup(
     maintainer_email="team@example.com",
     description="Operator interface, visualisation and telemetry tooling.",
     license="Apache-2.0",
+    entry_points={
+        "console_scripts": [
+            "operator_dashboard = tidal_vehicle_operator.operator_dashboard_node:main",
+            "browser_dashboard = tidal_vehicle_operator.web_dashboard_node:main",
+        ],
+    },
 )

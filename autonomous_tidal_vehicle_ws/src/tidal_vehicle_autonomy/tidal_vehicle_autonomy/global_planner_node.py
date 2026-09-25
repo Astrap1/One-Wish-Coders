@@ -23,7 +23,10 @@ class GlobalPlannerNode(Node):
         super().__init__("global_planner")
         self.declare_parameter("blocked_cost_threshold", 90)
         self.declare_parameter("require_matching_frame", True)
-        self.declare_parameter("obstacle_inflation_radius_m", 1.7)
+        # Version 1 is approximately 1.2 m by 0.7 m. Use its half-diagonal
+        # plus a small clearance; the former Version-2-sized 1.7 m radius
+        # could close the entire demonstrator corridor from a few returns.
+        self.declare_parameter("obstacle_inflation_radius_m", 0.75)
         self.declare_parameter("obstacle_max_range_m", 8.0)
         self.declare_parameter("home_x_m", 0.0)
         self.declare_parameter("home_y_m", 0.0)

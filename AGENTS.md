@@ -133,10 +133,10 @@ Default LiDAR parameters are:
 
 | Parameter | Default | Purpose |
 | --- | ---: | --- |
-| `obstacle_inflation_radius_m` | `1.7 m` | Cover the estimated half-diagonal of the vehicle plus about 0.25 m clearance. |
+| `obstacle_inflation_radius_m` | `0.75 m` | Cover the Version 1 vehicle's half-diagonal plus a small clearance; recalibrate for Version 2. |
 | `obstacle_max_range_m` | `8.0 m` | Ignore detections beyond the useful local planning distance. |
 
-For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 1.7 m circular inflation is based on an approximately 2.5 m by 1.5 m vehicle footprint plus about 0.25 m clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when available.
+For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 0.75 m circular inflation is based on Version 1's approximately 1.2 m by 0.7 m footprint plus a small clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when Version 2 is available.
 
 ### Return mission implementation details
 

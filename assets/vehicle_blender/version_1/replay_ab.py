@@ -7,7 +7,7 @@ twice, drives both copies from those logs frame by frame and renders a
 side-by-side lane view with a small overlay label. The motion is exactly
 the simulated motion. Blender only does the drawing.
 
-    blender --background --python assets/vehicle_blender/replay_ab.py -- \
+    blender --background --python assets/vehicle_blender/version_1/replay_ab.py -- \
         --ground results/mud_ab_test/hover_hc_ground.csv \
         --hover  results/mud_ab_test/hover_hc_hover.csv \
         --out results/mud_ab_frames --fps 12 --res 960x540 --samples 8

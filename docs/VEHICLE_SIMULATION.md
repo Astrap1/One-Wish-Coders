@@ -1,12 +1,12 @@
 # Vehicle simulation (Person 4: vehicle simulation and integration)
 
-This describes the air-cushion vehicle: model, physics abstraction, sensors, ROS interface and the one-command launch. The public topics are in [`INTERFACES.md`](INTERFACES.md).
+This describes **Version 1** of the air-cushion vehicle (wheeled; Version 2 with a tracked undercarriage is in design, see `AGENTS.md`): model, physics abstraction, sensors, ROS interface and the one-command launch. The public topics are in [`INTERFACES.md`](INTERFACES.md).
 
 ## 1. Where things live
 
 | Path | What |
 |---|---|
-| `assets/vehicle_blender/build_vehicle.py` | Procedural Blender model. It writes the `.blend`, preview renders, one mesh per part and `link_frames.json`. |
+| `assets/vehicle_blender/version_1/build_vehicle.py` | Procedural Blender model for **Version 1** (frozen; see `assets/vehicle_blender/README.md`). It writes the `.blend`, preview renders, one mesh per part and `link_frames.json`. |
 | `tidal_vehicle_description/models/hovercraft/` | Gazebo model: `model.sdf`, meshes, `link_frames.json` |
 | `tidal_vehicle_description/urdf/hovercraft.urdf` | The same vehicle for ROS (`robot_state_publisher`, RViz, Foxglove) |
 | `tidal_vehicle_description/scripts/gen_description.py` | Builds `model.sdf` and the URDF from `link_frames.json`, so they can't drift apart |
@@ -46,7 +46,7 @@ The model is code, so nobody hand-exports meshes. Run the script with Windows Bl
 
 ```powershell
 & "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background `
-  --python \\wsl.localhost\Ubuntu-24.04\home\<you>\One-Wish-Coders\assets\vehicle_blender\build_vehicle.py
+  --python \\wsl.localhost\Ubuntu-24.04\home\<you>\One-Wish-Coders\assets\vehicle_blender\version_1\build_vehicle.py
 ```
 
 Then regenerate the description in WSL:

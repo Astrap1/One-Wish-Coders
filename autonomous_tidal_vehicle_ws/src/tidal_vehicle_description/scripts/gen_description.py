@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 gen_description.py — build the vehicle description from the link_frames.json
-that assets/vehicle_blender/build_vehicle.py exports:
+that assets/vehicle_blender/version_1/build_vehicle.py exports:
 
   models/hovercraft/model.sdf + model.config   Gazebo model (physics, sensors, plugins)
   urdf/hovercraft.urdf                          ROS robot description (robot_state_publisher,
@@ -392,7 +392,7 @@ def main():
   <version>0.2</version>
   <sdf version="1.9">model.sdf</sdf>
   <author><name>One Wish Coders</name></author>
-  <description>Unmanned air-cushion logistics vehicle: air cushion + retractable wheel legs with coil-over suspension, sealed payload box, 3D LiDAR, camera, IMU, GNSS. Generated from Blender (assets/vehicle_blender/build_vehicle.py).</description>
+  <description>Unmanned air-cushion logistics vehicle: air cushion + retractable wheel legs with coil-over suspension, sealed payload box, 3D LiDAR, camera, IMU, GNSS. Generated from Blender (assets/vehicle_blender/version_1/build_vehicle.py).</description>
 </model>
 """)
     if not args.no_urdf:

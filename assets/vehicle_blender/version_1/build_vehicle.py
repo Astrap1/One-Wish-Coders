@@ -5,13 +5,13 @@ hovercraft (Phase 1 of the build plan).
 Run headless from the repo root (WSL, or Windows Blender pointed at the WSL
 path \\wsl.localhost\<distro>\home\<you>\One-Wish-Coders\...):
 
-    blender --background --python assets/vehicle_blender/build_vehicle.py
-    blender --background --python assets/vehicle_blender/build_vehicle.py -- --no-render
+    blender --background --python assets/vehicle_blender/version_1/build_vehicle.py
+    blender --background --python assets/vehicle_blender/version_1/build_vehicle.py -- --no-render
 
 Outputs (all regenerated on every run, so the script is idempotent):
-    assets/vehicle_blender/hovercraft.blend                editable model
-    assets/vehicle_blender/renders/*.png                   preview renders
-    assets/vehicle_blender/renders/dimensions.txt          bbox / spec log
+    assets/vehicle_blender/version_1/hovercraft.blend      editable model
+    assets/vehicle_blender/version_1/renders/*.png         preview renders
+    assets/vehicle_blender/version_1/renders/dimensions.txt  bbox / spec log
     autonomous_tidal_vehicle_ws/src/tidal_vehicle_description/models/hovercraft/
         meshes/<link>.dae, meshes/<link>.glb               one file per link
         link_frames.json                                   link origins, joints,
@@ -1085,7 +1085,7 @@ def export_all(links, tags, repo):
                 f.unlink()
     J, C = joint_table(), collision_table()
     data = {
-        "generated_by": "assets/vehicle_blender/build_vehicle.py",
+        "generated_by": "assets/vehicle_blender/version_1/build_vehicle.py",
         "blender_version": bpy.app.version_string,
         "units": "metres, kilograms, radians",
         "axes": "REP-103: +X forward, +Y left, +Z up",
@@ -1162,7 +1162,8 @@ def main():
     if eu is None or _HERE is None:              # live session: just build
         return links
 
-    repo = _HERE.parents[1]
+    # Repo root = first ancestor holding AGENTS.md (robust to the version_N/ nesting).
+    repo = next(p for p in _HERE.parents if (p / "AGENTS.md").exists())
     renders_dir = _HERE / "renders"
     lines, ok = measure(links, tags)
     model_dir = export_all(links, tags, repo)

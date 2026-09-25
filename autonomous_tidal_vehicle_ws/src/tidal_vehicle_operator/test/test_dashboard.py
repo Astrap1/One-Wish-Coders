@@ -76,3 +76,17 @@ def test_build_dashboard_payload_contains_state_and_summary() -> None:
     assert payload["battery_percent"] == 72.5
     assert "CRUISE" in payload["summary"]
     assert payload["return_required"] is False
+
+
+def test_build_dashboard_payload_exposes_status_class_for_ui_theming() -> None:
+    payload = build_dashboard_payload(
+        mission_state="HOLD",
+        return_required=False,
+        planned_route_points=0,
+        return_route_points=0,
+        battery_percent=0.0,
+        return_margin_percent=0.0,
+        reason="Awaiting telemetry.",
+    )
+
+    assert payload["status_class"] == "hold"

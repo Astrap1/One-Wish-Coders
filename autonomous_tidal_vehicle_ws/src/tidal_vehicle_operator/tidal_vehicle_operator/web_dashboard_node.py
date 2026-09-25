@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import math
 import threading
+import time
 
 from geometry_msgs.msg import PoseStamped, Twist
-from nav_msgs.msg import Path
+from nav_msgs.msg import Odometry, Path
+from sensor_msgs.msg import LaserScan
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -38,6 +41,14 @@ class BrowserDashboardNode(Node):
         self._tide_rate_m_per_minute = 0.0
         self._seconds_until_corridor_unsafe = 0.0
         self._corridor_traversable = False
+        self._nearest_obstacle_m = 0.0
+        self._nearby_obstacle_samples = 0
+        self._hold_started_s: float | None = None
+        self._speed_mps = 0.0
+        self._vehicle_x = 0.0
+        self._vehicle_y = 0.0
+        self._planned_path: list[dict[str, float]] = []
+        self._return_path: list[dict[str, float]] = []
 
         self.create_subscription(String, "/mission_event", self._on_mission_event, 10)
         self.create_subscription(SafetyStatus, "/safety_status", self._on_safety_status, 10)
@@ -45,8 +56,10 @@ class BrowserDashboardNode(Node):
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
         self.create_subscription(Path, "/planned_path", self._on_planned_path, 10)
         self.create_subscription(Path, "/return_path", self._on_return_path, 10)
+        self.create_subscription(LaserScan, "/scan", self._on_scan, 10)
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd_vel, 10)
+        self.create_subscription(Odometry, "/odom", self._on_odom, 10)
         self.create_timer(1.0, self._publish_state)
 
     def _on_mission_event(self, message: String) -> None:
@@ -65,6 +78,19 @@ class BrowserDashboardNode(Node):
         self._estimated_return_energy_percent = float(message.estimated_return_energy_percent)
         self._estimated_return_time_s = float(message.estimated_return_time_s)
         self._reason = message.reason
+        if message.state == "HOLD" and self._hold_started_s is None:
+            self._hold_started_s = time.monotonic()
+        elif message.state != "HOLD":
+            self._hold_started_s = None
+        self._publish_state()
+
+    def _on_scan(self, message: LaserScan) -> None:
+        valid_ranges = [
+            value for value in message.ranges
+            if math.isfinite(value) and message.range_min <= value <= message.range_max
+        ]
+        self._nearest_obstacle_m = min(valid_ranges, default=0.0)
+        self._nearby_obstacle_samples = sum(value < 5.0 for value in valid_ranges)
         self._publish_state()
 
     def _on_vehicle_health(self, message: VehicleHealth) -> None:
@@ -86,10 +112,19 @@ class BrowserDashboardNode(Node):
 
     def _on_planned_path(self, message: Path) -> None:
         self._planned_route_points = len(message.poses)
+        self._planned_path = [{"x": pose.pose.position.x, "y": pose.pose.position.y} for pose in message.poses]
         self._publish_state()
 
     def _on_return_path(self, message: Path) -> None:
         self._return_route_points = len(message.poses)
+        self._return_path = [{"x": pose.pose.position.x, "y": pose.pose.position.y} for pose in message.poses]
+        self._publish_state()
+
+    def _on_odom(self, message: Odometry) -> None:
+        velocity = message.twist.twist.linear
+        self._speed_mps = math.hypot(float(velocity.x), float(velocity.y))
+        self._vehicle_x = float(message.pose.pose.position.x)
+        self._vehicle_y = float(message.pose.pose.position.y)
         self._publish_state()
 
     def _on_mission_goal(self, _: PoseStamped) -> None:
@@ -122,6 +157,17 @@ class BrowserDashboardNode(Node):
                 "tide_rate_m_per_minute": self._tide_rate_m_per_minute,
                 "seconds_until_corridor_unsafe": self._seconds_until_corridor_unsafe,
                 "corridor_traversable": self._corridor_traversable,
+                "nearest_obstacle_m": self._nearest_obstacle_m,
+                "nearby_obstacle_samples": self._nearby_obstacle_samples,
+                "hold_duration_s": (
+                    time.monotonic() - self._hold_started_s
+                    if self._hold_started_s is not None else 0.0
+                ),
+                "speed_mps": self._speed_mps,
+                "vehicle_x": self._vehicle_x,
+                "vehicle_y": self._vehicle_y,
+                "planned_path": self._planned_path,
+                "return_path": self._return_path,
             },
         )
         update_dashboard_state(**payload)

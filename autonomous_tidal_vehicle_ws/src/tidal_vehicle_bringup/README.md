@@ -3,10 +3,22 @@
 This package is owned by the integration lead. It provides the one-command system launch.
 
 ```bash
-ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test mode_policy:=hover_only
+ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true
 ```
 
-The launch starts Gazebo, the ROS-Gazebo bridge, robot state publisher, LiDAR conversion, vehicle mobility, the temporary static terrain map, global planner, path follower, safety supervisor, Foxglove bridge and optional RViz.
+This launches the tidal corridor by default: its Gazebo terrain zones, moving water
+visual and `tide_manager` provide the authoritative, changing map-frame terrain
+state and cost map. The launch then starts the ROS-Gazebo bridge, robot state
+publisher, LiDAR conversion, vehicle mobility, global planner, path follower,
+safety supervisor and Foxglove bridge.
+
+For a static vehicle-only test world, explicitly select it and disable the tide
+manager. The vehicle's low-tide placeholder terrain state and static cost map are
+then enabled:
+
+```bash
+ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
+```
 
 The default integration world has no scripted vehicle commands. The complete command chain is `/cmd_vel_proposed` from Autonomy, approval on `/cmd_vel` from Safety, then internal wheel or fan commands from the mobility node. Safety must remain the only `/cmd_vel` publisher.
 

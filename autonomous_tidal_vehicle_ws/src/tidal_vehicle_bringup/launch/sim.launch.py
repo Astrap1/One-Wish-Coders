@@ -10,8 +10,9 @@ Starts:
     /camera/image_raw + vehicle-internal /vehicle/* topics
   * robot_state_publisher (URDF from tidal_vehicle_description) -> /robot_description, joint TFs
   * lidar_scan_node       /points -> /scan
-  * vehicle_mobility_node /cmd_vel -> hover fans or wheels; /vehicle_health; placeholder /terrain_state
-  * terrain_costmap_node   static integration map until Person 3's tide manager is ready
+  * vehicle_mobility_node /cmd_vel -> hover fans or wheels; /vehicle_health
+  * tide_manager           dynamic terrain state and costmap for tidal_corridor
+    (or terrain_costmap_node for explicit non-tidal integration worlds)
   * global_planner + path_follower + safety_supervisor
   * foxglove_bridge on ws://0.0.0.0:8765 (Foxglove Desktop on Windows: ws://localhost:8765)
   * RViz (optional)
@@ -26,9 +27,10 @@ from ament_index_python.packages import get_package_prefix, get_package_share_di
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, OpaqueFunction,
                             SetEnvironmentVariable)
-from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def _prepend(var, *paths):
@@ -53,6 +55,8 @@ def _setup(context):
     urdf = (desc_share / "urdf" / "hovercraft.urdf").read_text()
     params = str(sim_share / "config" / "vehicle_mobility.yaml")
     safety_params = str(safety_share / "config" / "safety_params.yaml")
+    scenario_params = str(sim_share / "config" / "scenario_defaults.yaml")
+    tide_enabled = LaunchConfiguration("tide")
 
     gz_cmd = ["gz", "sim", "-r", str(world_file)]
     if headless:
@@ -72,9 +76,24 @@ def _setup(context):
              output="screen", parameters=[params]),
         Node(package="tidal_vehicle_simulation", executable="vehicle_mobility_node.py",
              name="vehicle_mobility", output="screen",
-             parameters=[params, {"mode_policy": LaunchConfiguration("mode_policy")}]),
+             parameters=[
+                 params,
+                 {
+                     "mode_policy": LaunchConfiguration("mode_policy"),
+                     # Tide manager is the only terrain-state publisher in the
+                     # tidal corridor. Keep the placeholder for test worlds.
+                     "publish_terrain_state": ParameterValue(
+                         PythonExpression(["'", tide_enabled,
+                                           "'.lower() not in ['true', '1', 'yes']"]),
+                         value_type=bool),
+                 },
+             ]),
         Node(package="tidal_vehicle_simulation", executable="terrain_costmap_node.py",
-             name="terrain_costmap", output="screen", parameters=[params]),
+             name="terrain_costmap", output="screen", parameters=[params],
+             condition=UnlessCondition(tide_enabled)),
+        Node(package="tidal_vehicle_simulation", executable="tide_manager.py",
+             name="tide_manager", output="screen", parameters=[scenario_params],
+             condition=IfCondition(tide_enabled)),
         Node(package="tidal_vehicle_autonomy", executable="global_planner",
              name="global_planner", output="screen", parameters=[{"use_sim_time": True}]),
         Node(package="tidal_vehicle_autonomy", executable="path_follower",
@@ -94,8 +113,10 @@ def _setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument("world", default_value="vehicle_tests/integration_test",
+        DeclareLaunchArgument("world", default_value="tidal_corridor",
                               description="world under tidal_vehicle_simulation/worlds, without .sdf"),
+        DeclareLaunchArgument("tide", default_value="true",
+                              description="run the tide manager instead of the static integration map"),
         DeclareLaunchArgument("mode_policy", default_value="hover_only",
                               description="hover_only | terrain_auto"),
         DeclareLaunchArgument("headless", default_value="false"),

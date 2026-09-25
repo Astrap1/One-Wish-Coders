@@ -1,6 +1,7 @@
 # Scenario values are simulation assumptions, not claims about field performance.
 tide_manager:
   ros__parameters:
+    use_sim_time: true
     initial_state: low
     scenario_duration_s: 30.0
     initial_water_level_m: 0.02
@@ -9,3 +10,21 @@ tide_manager:
     replan_risk_threshold: 0.60
     corridor_unsafe_risk_threshold: 0.85
     publish_period_s: 0.5
+    # The map and SDF TerrainZones describe the same planned corridor.
+    frame_id: map
+    map_resolution_m: 1.0
+    map_width_cells: 80
+    map_height_cells: 60
+    map_origin_x_m: -40.0
+    map_origin_y_m: -30.0
+    firm_cost: 10
+    mud_cost: 45
+    water_cost: 55
+    channel_min_x_m: 4.0
+    channel_max_x_m: 18.0
+    channel_min_y_m: -8.0
+    channel_max_y_m: 8.0
+    mud_min_x_m: 18.0
+    mud_max_x_m: 32.0
+    mud_min_y_m: -8.0
+    mud_max_y_m: 8.0

@@ -34,11 +34,12 @@ class GridCostmap:
 class ReturnEstimatorConfig:
     sample_spacing_m: float
     no_go_cost: int
-    wheel_cost_max: int
+    track_mode_enabled: bool
+    track_cost_max: int
     elevated_hover_cost_min: int
-    wheel_energy_percent_per_m: float
+    track_energy_percent_per_m: float
     hover_energy_percent_per_m: float
-    wheel_nominal_speed_mps: float
+    track_nominal_speed_mps: float
     hover_nominal_speed_mps: float
     elevated_hover_energy_multiplier: float
     elevated_hover_speed_multiplier: float
@@ -90,7 +91,7 @@ def estimate_return(
         return ReturnEstimate(False, "Mobility health cannot support an estimate.")
     if (
         config.sample_spacing_m <= 0
-        or config.wheel_nominal_speed_mps <= 0
+        or config.track_nominal_speed_mps <= 0
         or config.hover_nominal_speed_mps <= 0
     ):
         return ReturnEstimate(False, "Return-estimator configuration is invalid.")
@@ -165,14 +166,22 @@ def _segments(path: Sequence[Point2]) -> list[tuple[Point2, Point2]]:
 
 
 def _mode_for_cost(cost: int, config: ReturnEstimatorConfig) -> str:
-    return "WHEEL" if cost <= config.wheel_cost_max else "HOVER"
+    """Select the declared return-estimation mode for a cost-map cell.
+
+    Version 1 of the Gazebo vehicle is intentionally hover-only, so it must
+    estimate firm-shore segments with the hover profile. Enable TRACK only when
+    the Version 2 tracked vehicle and its transitions are validated.
+    """
+    if config.track_mode_enabled and cost <= config.track_cost_max:
+        return "TRACK"
+    return "HOVER"
 
 
 def _mode_rates(
     mode: str, cost: int, config: ReturnEstimatorConfig
 ) -> tuple[float, float]:
-    if mode == "WHEEL":
-        return config.wheel_energy_percent_per_m, config.wheel_nominal_speed_mps
+    if mode == "TRACK":
+        return config.track_energy_percent_per_m, config.track_nominal_speed_mps
 
     energy_per_m = config.hover_energy_percent_per_m
     speed_mps = config.hover_nominal_speed_mps

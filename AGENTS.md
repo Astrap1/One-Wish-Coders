@@ -32,7 +32,10 @@ These mobility modes are separate from Person 2's safety states and must not rep
 
 A track-to-hover transition must stop horizontal motion, ramp the lift fan, wait for hover-ready status, then retract the tracks before propulsion begins. A hover-to-track transition must stop horizontal motion, deploy the tracks, reduce lift in a controlled way to the target load share and confirm that the vehicle has settled onto its tracks before track motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
 
-Version 1 used wheels, and this section called its ground mode **WHEEL**. Safety's ground-mode return-energy parameters (`wheel_cost_max`, `wheel_energy_percent_per_m`, `wheel_nominal_speed_mps`) stand in for TRACK mode until Person 2 renames them.
+Safety's planned-V2 ground-mode return-energy parameters are `track_cost_max`,
+`track_energy_percent_per_m` and `track_nominal_speed_mps`. Until Version 2 is
+validated, Version 1 runs `hover_only` and Safety keeps `track_mode_enabled:
+false`, estimating the entire return route with its HOVER profile.
 
 ### Shared terrain-cost semantics
 

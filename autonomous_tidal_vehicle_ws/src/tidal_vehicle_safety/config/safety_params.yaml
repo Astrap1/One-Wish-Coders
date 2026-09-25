@@ -23,11 +23,14 @@ safety_supervisor:
     home_tolerance_m: 2.0
     route_sample_spacing_m: 0.5
     no_go_cost: 90
-    wheel_cost_max: 19
+    # Version 1 is hover-only. Enable only when the Version 2 tracked vehicle
+    # and its TRACK<->HOVER transitions are validated in Gazebo.
+    track_mode_enabled: false
+    track_cost_max: 19
     elevated_hover_cost_min: 60
-    wheel_energy_percent_per_m: 0.025
+    track_energy_percent_per_m: 0.025
     hover_energy_percent_per_m: 0.05
-    wheel_nominal_speed_mps: 1.0
+    track_nominal_speed_mps: 1.0
     hover_nominal_speed_mps: 0.7
     elevated_hover_energy_multiplier: 1.25
     elevated_hover_speed_multiplier: 0.70

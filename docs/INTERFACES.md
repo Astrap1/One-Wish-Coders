@@ -9,12 +9,12 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/odom` | Simulation (Gazebo OdometryPublisher) | Autonomy, Safety, Operator | `nav_msgs/Odometry` | Vehicle position and velocity. Ground truth (idealised), `header.frame_id: map`, `child_frame_id: base_link`, 50 Hz. Valid in both hover and ground mode. |
 | `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. Until the environment workstream's tide manager exists, `vehicle_mobility_node` publishes a constant low-tide placeholder at 2 Hz (`publish_terrain_state: true`); switch it off when the real publisher lands. |
 | `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current terrain-risk map after the simulated tide update. |
-| `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health. 2 Hz. Battery from a stated power model (lift fan, thrust, wheels); mobility/link/payload/fault are parameters for fault injection. |
+| `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health. 2 Hz. Version 1 battery uses a stated power model (lift fan, thrust, wheels); Version 2 will use the equivalent track model. Mobility/link/payload/fault are parameters for fault injection. |
 | `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. |
 | `/planned_path` | Autonomy | Path follower, Operator, Safety | `nav_msgs/Path` | Active proposed route: outbound normally, HOME route while return is latched. |
 | `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Fresh route from current pose to the fixed HOME zone. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
-| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Routed to the fans in HOVER mode or the wheels in GROUND mode. A command older than 0.5 s means stop. |
+| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 1 demo routing is HOVER-only; Version 2 will route the same command to HOVER fans or TRACK drive internally. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
 | `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
@@ -56,9 +56,11 @@ Safety:
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
 
-Safety samples these bands along `/return_path`: track (Version 1: wheel) and
-hover segments use different declared energy/speed assumptions, and each
-ground--hover mode change adds transition energy and time to the return ETA.
+Safety samples these bands along `/return_path`: TRACK and HOVER segments use
+different declared energy/speed assumptions, and each TRACK--HOVER mode change
+adds transition energy and time to the return ETA. The current Version 1
+`hover_only` demo disables TRACK estimation, so all route segments use the
+HOVER assumptions until Version 2 transitions are validated.
 
 ## Vehicle-fault semantics
 

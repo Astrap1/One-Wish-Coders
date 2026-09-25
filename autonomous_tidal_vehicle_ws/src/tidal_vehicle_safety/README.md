@@ -32,12 +32,19 @@ ends within the configured HOME tolerance.
 
 Safety—not simulation—calculates the estimated return energy, return margin and
 return ETA. It samples `/return_path` at 0.5 m intervals against the shared
-terrain-cost bands: wheels on firm shore (`0`--`19`), hover over mud/shallow
+terrain-cost bands: tracks on firm shore (`0`--`19`), hover over mud/shallow
 water (`20`--`59`) and conservative hover in elevated-risk cells (`60`--`89`).
-Every wheel--hover transition adds declared transition time and energy. Safety
+Every TRACK--HOVER transition adds declared transition time and energy. Safety
 then adds the larger of an 8 percentage-point buffer or 20% contingency. These
 are transparent simulation assumptions, not field-validated vehicle-performance
 claims.
+
+The current Gazebo vehicle is **Version 1**, which has wheels and is deliberately
+launched with `hover_only`; it does not demonstrate tracked travel or mode
+transitions. Accordingly, `track_mode_enabled: false` is the default safety
+configuration and firm-shore route samples use the hover energy/speed profile.
+Enable TRACK estimation only together with the Version 2 tracked vehicle after
+its Gazebo transitions are validated.
 
 The supervisor applies the following precedence:
 

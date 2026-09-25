@@ -1,3 +1,4 @@
+from dataclasses import replace
 from math import isclose
 
 from tidal_vehicle_safety.return_estimator import (
@@ -12,11 +13,12 @@ def _config() -> ReturnEstimatorConfig:
     return ReturnEstimatorConfig(
         sample_spacing_m=0.5,
         no_go_cost=90,
-        wheel_cost_max=19,
+        track_mode_enabled=True,
+        track_cost_max=19,
         elevated_hover_cost_min=60,
-        wheel_energy_percent_per_m=1.0,
+        track_energy_percent_per_m=1.0,
         hover_energy_percent_per_m=2.0,
-        wheel_nominal_speed_mps=1.0,
+        track_nominal_speed_mps=1.0,
         hover_nominal_speed_mps=0.5,
         elevated_hover_energy_multiplier=1.25,
         elevated_hover_speed_multiplier=0.7,
@@ -60,7 +62,7 @@ def test_estimate_rejects_unknown_or_no_go_cells():
     assert not estimate_return([(1.0, 1.0), (3.0, 1.0)], _grid(blocked), 50.0, 100.0, _config()).valid
 
 
-def test_mixed_wheel_hover_route_accounts_for_transition_cost_and_time():
+def test_mixed_track_hover_route_accounts_for_transition_cost_and_time():
     terrain = [0] * 100
     for column in range(1, 10):
         terrain[column] = 20
@@ -73,6 +75,18 @@ def test_mixed_wheel_hover_route_accounts_for_transition_cost_and_time():
     assert estimate.mode_transition_count == 1
     assert estimate.eta_s > 5.0
     assert estimate.estimated_energy_percent > 8.0
+
+
+def test_hover_only_version_one_estimates_firm_shore_as_hover():
+    config = replace(_config(), track_mode_enabled=False)
+
+    estimate = estimate_return(
+        [(1.0, 1.0), (3.0, 1.0)], _grid(), 80.0, 100.0, config
+    )
+
+    assert estimate.valid
+    assert estimate.mode_transition_count == 0
+    assert isclose(estimate.eta_s, 4.0)
 
 
 def test_elevated_hover_band_costs_more_than_normal_hover():

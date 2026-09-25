@@ -6,6 +6,7 @@ This repository is building a Gazebo and ROS 2 demonstration of an autonomous ai
 
 - Target stack: **ROS 2 Jazzy**, **Gazebo Harmonic** and `ros_gz`.
 - The live demonstration must work from one documented launch path owned by the vehicle simulation and integration lead.
+- The shared demo launch is `ros2 launch tidal_vehicle_bringup sim.launch.py`; it defaults to the tidal corridor with its dynamic tide manager. Use `headless:=true` for the WSL2/Foxglove demonstration path.
 - The safety supervisor is the only component permitted to publish `/cmd_vel`.
 - Topic and message changes must be made with the matching update to `docs/INTERFACES.md`.
 - Do not commit local PDFs, generated `build/`, `install/`, `log/`, recordings or experiment outputs.
@@ -14,7 +15,7 @@ See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system bound
 
 ## Vehicle configuration and mobility modes
 
-The simulated vehicle is a **hovercraft-dominant amphibious vehicle with a complete retractable tracked undercarriage and controlled air-cushion load sharing** (Vehicle Version 2, below). It has an inflatable, segmented air-cushion skirt, a lift fan, two rear ducted propulsion fans with rudders and two retractable rubber tracks. Its working size is 2.5 m long, 1.5 m wide and 1.5 m high overall, which matches the planning footprint Autonomy already uses; Person 4's final collision geometry remains authoritative. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, track or hovercraft physics.
+The current demonstration vehicle is **Version 1**: a hovercraft-dominant amphibious vehicle with a retractable wheeled undercarriage. It is the vehicle model in Gazebo today. **Version 2** is the planned tracked, air-cushion-load-sharing vehicle described below; do not claim track behaviour in the live demo until its model and controller are integrated. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, wheel, track or hovercraft physics.
 
 The vehicle controller uses three internal mobility modes:
 
@@ -32,7 +33,7 @@ These mobility modes are separate from Person 2's safety states and must not rep
 
 A track-to-hover transition must stop horizontal motion, ramp the lift fan, wait for hover-ready status, then retract the tracks before propulsion begins. A hover-to-track transition must stop horizontal motion, deploy the tracks, reduce lift in a controlled way to the target load share and confirm that the vehicle has settled onto its tracks before track motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
 
-Version 1 used wheels, and this section called its ground mode **WHEEL**. Safety's ground-mode return-energy parameters (`wheel_cost_max`, `wheel_energy_percent_per_m`, `wheel_nominal_speed_mps`) stand in for TRACK mode until Person 2 renames them.
+Version 1 uses wheels while the shared API uses the forward-looking name **TRACK**. Safety's ground-mode return-energy parameters are already named `track_cost_max`, `track_energy_percent_per_m` and `track_nominal_speed_mps`; they currently model Version 1 firm-shore wheel travel and should be recalibrated when Version 2 tracks are available.
 
 ### Shared terrain-cost semantics
 
@@ -155,23 +156,23 @@ Default return parameters are:
 | `goal_event_tolerance_m` | `0.3 m` | Distance from a path endpoint that triggers a mission event. |
 | `return_path_refresh_rate_hz` | `2.0 Hz` | Keep Safety's validated return route fresh without resetting the follower. |
 
-The HOME values must match Person 2's safety parameters. The final sensor transform and Person 3's changing tide map still need integration. Autonomy does not publish `/cmd_vel`.
+The HOME values must match Person 2's safety parameters. The changing map-frame tide map is integrated through the shared launcher; Person 1 and Person 4 should tune the final sensor transform and route geometry against the corridor before the demo. Autonomy does not publish `/cmd_vel`.
 
 ## Role 4: Vehicle simulation and integration status
 
-- **Version 1 is merged on `main`.** It contains the wheeled procedural Blender model, generated SDF/URDF, Gazebo plugins, mobility and LiDAR nodes, ROS-Gazebo bridge and the common launcher. Full description: `docs/VEHICLE_SIMULATION.md`.
+- **Version 1 is merged on `main`.** It contains the wheeled procedural Blender model, generated SDF/URDF, Gazebo plugins, mobility and LiDAR nodes, ROS-Gazebo bridge and the common launcher. Its active simulated sensors are 3D LiDAR, IMU, front RGB camera and NavSat; `/odom` is idealised Gazebo ground truth. Full description: `docs/VEHICLE_SIMULATION.md`.
 - **Gazebo physics verified:** 25 of 25 headless acceptance checks pass on Gazebo Harmonic 8.15, covering hover-gap hold, speed and turning, water → mud → bank travel, debris clearance, command tracking and the mud wheel/hover comparison.
 - **ROS 2 integration verified in WSL:** all launch processes start, `/odom`, `/scan`, vehicle health and mode telemetry are live, LiDAR uses compatible sensor QoS, Safety is the sole `/cmd_vel` publisher, and all processes stop cleanly.
-- The default `vehicle_tests/integration_test` world contains no scripted motion. ROS is its only actuator source, and its static `/terrain_costmap` supports repeatable vehicle and autonomy integration.
-- Person 3's tidal corridor, tide manager, animated water and mangrove assets are now on `main`, but that environment still runs through a separate launch path and is not yet compatible with the vehicle stack.
+- The default `tidal_corridor` world now launches through `tidal_vehicle_bringup/sim.launch.py`. It contains the vehicle at map-frame HOME, DART/Bullet physics, sensors, buoyancy and terrain zones; its tide manager is the sole dynamic `/terrain_state` and `/terrain_costmap` publisher.
+- `vehicle_tests/integration_test` remains the static, no-scripted-motion regression world. Run it explicitly with `world:=vehicle_tests/integration_test tide:=false`; only then are the vehicle's low-tide terrain placeholder and static cost map enabled.
 - The public mobility modes are `TRACK`, `TRANSITION` and `HOVER`. Version 1 implements TRACK with wheels. Horizontal commands are zero during TRANSITION; HOVER requires explicit plugin readiness, and transition failures are reported in `/vehicle_health.fault`.
-- `hover_only` remains the Version 1 demo default, matching Safety's `track_mode_enabled: false`. Vehicle health and placeholder terrain telemetry publish at 10 Hz; Safety evaluates freshness in simulation time.
+- `hover_only` remains the Version 1 demo default, matching Safety's `track_mode_enabled: false`. Vehicle health publishes at 10 Hz. In the corridor, tide state and terrain cost map publish in the shared `map` frame from the tide manager; Safety evaluates freshness in simulation time.
 
-Remaining integration work:
+Next integration work:
 
-1. Fold Person 3's `environment.launch.py` and tide manager into the single common launcher under `world:=tidal_corridor`.
-2. Change the corridor physics from ODE to the DART/Bullet combination required by the air-cushion ray casts, spawn the vehicle at HOME and add the terrain-zone plugin.
-3. Change the tide manager frame from `world` to `map` and disable the vehicle's placeholder `/terrain_state` whenever the tide manager runs.
+1. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
+2. Tune corridor map rectangles, HOME/delivery coordinates, sensor transforms and obstacle inflation so the generated path matches the visibly safe route through the world.
+3. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned/return paths, terrain-cost map, battery, safety reason and tide-window fields.
 4. Remove committed root-level generated `build/`, `install/` and `log/` output and keep builds under `autonomous_tidal_vehicle_ws/`.
 5. Replace Version 1's timed wheel-settling check with measured ground-gear readiness before enabling terrain-selected TRACK motion.
 6. Integrate and validate the planned 2.5 m Version 2 tracked vehicle before enabling track-mode return estimates.

@@ -28,3 +28,9 @@ See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
 hovercraft, DART/Bullet physics, sensors, buoyancy and terrain-zone plugin. Its
 channel/mud rectangles exactly match the tide manager cost map. The tide manager,
 not the vehicle placeholder, provides `/terrain_state` and `/terrain_costmap`.
+
+For the live corridor, `models/terrain_demo/` retains the authored terrain mesh
+as a visual and uses an inclined box as the physics collision surface. The
+terrain zones and cost map—not that collision surface—represent firm shore, mud
+and shallow-water traversal behaviour. This is a deliberate performance
+abstraction for repeatable DART/Bullet demonstrations.

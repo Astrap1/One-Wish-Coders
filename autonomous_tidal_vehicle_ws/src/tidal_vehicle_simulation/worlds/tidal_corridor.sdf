@@ -15,7 +15,11 @@
     <plugin filename="gz-sim-buoyancy-system" name="gz::sim::systems::Buoyancy"><graded_buoyancy><default_density>1000</default_density><density_change><above_depth>0.0</above_depth><density>1.2</density></density_change></graded_buoyancy><enable>hovercraft::base_link</enable><enable>hovercraft::skirt</enable></plugin>
     <!-- Must match tide_manager's channel and mud rectangles exactly. -->
     <plugin filename="tidal_vehicle_plugins" name="hover::TerrainZones"><ground_height>0.0</ground_height><zone><name>tidal_channel</name><type>WATER</type><min>4 -8</min><max>18 8</max><level>0.0</level></zone><zone><name>mudflat</name><type>MUD</type><min>18 -8</min><max>32 8</max></zone></plugin>
-    <include><uri>model://terrain</uri><name>fixed_terrain</name><pose>0 0 0 0 0.08 0</pose></include>
+    <!-- Detailed terrain visual with a deliberately simple DART/Bullet collision
+         surface. TerrainZones and the dynamic cost map carry the mission
+         traversal semantics; this prevents the decorative heightmap from
+         consuming the entire real-time budget. -->
+    <include><uri>model://terrain_demo</uri><name>demo_terrain</name><pose>0 0 0 0 0.08 0</pose></include>
     <!-- HOME: firm shore staging zone, shared with Safety's default map-frame pose. -->
     <include><uri>model://hovercraft</uri><name>hovercraft</name><pose>0 0 0.25 0 0 0</pose></include>
     <!-- Dense irregular mangrove grove: 7-15 m tall, with safe spacing between canopies. -->

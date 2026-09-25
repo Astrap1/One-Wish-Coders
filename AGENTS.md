@@ -12,6 +12,24 @@ This repository is building a Gazebo and ROS 2 demonstration of an autonomous ai
 
 See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system boundary and contracts.
 
+## Vehicle configuration and mobility modes
+
+The simulated vehicle has an inflatable air-cushion skirt, a lift fan, rear propulsion fans and wheels. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt or hovercraft physics.
+
+The vehicle controller uses three internal mobility modes:
+
+- **WHEEL** — used on firm ground. The lift fan is off or idling, the vehicle rests on its wheels, and the wheels execute the safety-approved motion command.
+- **TRANSITION** — used while changing between wheel and hover operation. Horizontal motion stops, the lift fan ramps up or down, and the controller waits until the vehicle is either hover-ready or settled onto its wheels.
+- **HOVER** — used over mud and shallow water. The lift fan maintains the simulated air cushion, the wheels are unloaded or ignored, and the rear propulsion fans execute the safety-approved forward and turning command.
+
+These mobility modes are separate from Person 2's safety states and must not replace or rename `CRUISE`, `CAUTION`, `HOLD` or `RETURN`. They do not introduce new external commands or topics. The existing command authority remains:
+
+1. Person 1 publishes route and motion proposals through `/planned_path` and `/cmd_vel_proposed`; autonomy does not directly command wheel speeds or fan RPM.
+2. Person 2 applies the existing safety and mission logic and remains the only publisher of `/cmd_vel`.
+3. Person 4 consumes the safety-approved `/cmd_vel` and owns the internal wheel, lift-fan and propulsion-fan control, including command limits, fan ramping, hover-ready checks and mobility-mode transitions.
+
+A wheel-to-hover transition must stop horizontal motion, ramp the lift fan and wait for hover-ready status before propulsion begins. A hover-to-wheel transition must stop horizontal motion, reduce lift in a controlled way and confirm that the vehicle has settled onto its wheels before wheel motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
+
 ## Team roles
 
 | Person | Role | Owns | Does not own |

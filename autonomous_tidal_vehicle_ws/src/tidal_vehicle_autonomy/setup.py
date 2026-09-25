@@ -11,6 +11,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
     ],
     install_requires=["setuptools"],
+    tests_require=["pytest"],
     zip_safe=True,
     entry_points={
         "console_scripts": ["global_planner = tidal_vehicle_autonomy.global_planner_node:main"],

@@ -62,4 +62,4 @@ The simulation publishes a new terrain state and cost map whenever the simulated
 - `90`--`100`: no-go terrain or obstacle.
 - `-1`: unknown terrain, treated as no-go by autonomy.
 
-Until the common TF tree is integrated, `/terrain_costmap`, `/odom` and `/mission_goal` must have matching frame IDs. The global planner will publish only `/planned_path`; `/cmd_vel_proposed` remains a later path-following component.
+Until the common TF tree is integrated, `/terrain_costmap`, `/odom`, `/mission_goal` and `/planned_path` must have matching frame IDs. The global planner publishes `/planned_path`; the path follower combines it with `/odom` and publishes `/cmd_vel_proposed`. The safety supervisor remains the only publisher of `/cmd_vel`.

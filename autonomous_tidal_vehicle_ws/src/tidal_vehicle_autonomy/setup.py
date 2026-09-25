@@ -14,7 +14,10 @@ setup(
     tests_require=["pytest"],
     zip_safe=True,
     entry_points={
-        "console_scripts": ["global_planner = tidal_vehicle_autonomy.global_planner_node:main"],
+        "console_scripts": [
+            "global_planner = tidal_vehicle_autonomy.global_planner_node:main",
+            "path_follower = tidal_vehicle_autonomy.path_follower_node:main",
+        ],
     },
     maintainer="One Wish Coders",
     maintainer_email="team@example.com",

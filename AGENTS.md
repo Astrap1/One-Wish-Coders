@@ -45,12 +45,44 @@ A wheel-to-hover transition must stop horizontal motion, ramp the lift fan and w
 - Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal` and `/terrain_state` and publishes `/planned_path` only.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
 - Agreed planner interpretation of `/terrain_costmap`: `0`--`89` traversable with increasing risk, `90`--`100` no-go, and `-1` unknown/no-go.
-- The planner replans after cost-map, goal or terrain-state updates, and refuses to combine mismatched frames until the shared TF tree is available.
-- Added five unit tests for direct routing, risk avoidance, unknown terrain, blocked diagonal corners and grid/world conversions.
-- Verified the interface and autonomy packages build in WSL; `global_planner` starts successfully.
+- The planner replans after cost-map, goal or terrain-state updates, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe.
+- Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
+- The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames.
+- Added eleven ROS-independent planner/follower tests and two ROS topic integration tests.
+- Verified the autonomy package builds in WSL and both `global_planner` and `path_follower` start successfully.
 
-`/cmd_vel_proposed`, LiDAR-based local obstacle response and simulated-odometry integration remain the next Role 1 milestones. The planner does not publish `/cmd_vel`.
+### Path follower implementation details
 
+`path_follower` is split into a ROS-independent control core and a ROS 2 wrapper. The wrapper receives `/planned_path` and `/odom`, runs the controller at 10 Hz and publishes only `geometry_msgs/Twist` proposals on `/cmd_vel_proposed`. It sets `linear.x` for forward speed and `angular.z` for turning; all other `Twist` fields remain zero.
+
+For each control update, the follower:
+
+1. starts its search at the last reached portion of the path so progress does not move backwards;
+2. selects the first waypoint at least the lookahead distance from the current pose, or the final waypoint when none is farther away;
+3. calculates the shortest signed heading error between vehicle yaw and the selected waypoint;
+4. applies proportional turning and clamps the result to the angular-speed limit;
+5. stops forward motion when the heading error is large, otherwise reduces speed according to heading error and remaining goal distance; and
+6. publishes zero forward and angular motion inside the goal tolerance.
+
+Default path-follower parameters are:
+
+| Parameter | Default | Purpose |
+| --- | ---: | --- |
+| `control_rate_hz` | `10.0` | Keep proposed commands fresh for Safety. |
+| `max_linear_speed` | `0.8 m/s` | Bound the maximum forward proposal. |
+| `max_angular_speed` | `1.0 rad/s` | Bound the maximum turning proposal. |
+| `lookahead_distance` | `0.75 m` | Select a smoother target ahead on the path. |
+| `goal_tolerance` | `0.25 m` | Stop when the vehicle is close enough to the final waypoint. |
+| `heading_gain` | `1.5` | Convert heading error into turning speed. |
+| `slow_down_distance` | `1.0 m` | Reduce forward speed near the goal. |
+| `rotate_in_place_angle` | `0.7 rad` | Stop forward motion while correcting a large heading error. |
+| `odom_timeout` | `0.5 s` | Stop proposing motion when localisation is stale. |
+
+The follower proposes a zero command when the path is empty, odometry is missing or stale, frames do not match, or the goal is reached. The global planner publishes an empty path once when a new terrain map invalidates a previously published route. This prevents continued tracking of a stale route.
+
+The follower is independent of `WHEEL`, `TRANSITION` and `HOVER` actuator behaviour. Person 2 retains final command authority and remains the only publisher of `/cmd_vel`; Person 4 translates the approved body-motion command into wheel, lift-fan and propulsion-fan behaviour.
+
+LiDAR-based local obstacle response, live simulated-odometry tuning and Safety-requested return-path handling remain the next Role 1 milestones. Autonomy does not publish `/cmd_vel`.
 
 ## Three-day build plan
 

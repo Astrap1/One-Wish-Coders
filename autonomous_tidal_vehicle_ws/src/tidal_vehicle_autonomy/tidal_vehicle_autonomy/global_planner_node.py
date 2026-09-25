@@ -21,6 +21,7 @@ class GlobalPlannerNode(Node):
         self._pose: Odometry | None = None
         self._goal: PoseStamped | None = None
         self._last_path_cells: tuple[tuple[int, int], ...] | None = None
+        self._path_available = False
 
         self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
         self.create_subscription(Odometry, "/odom", self._on_odometry, 20)
@@ -69,7 +70,16 @@ class GlobalPlannerNode(Node):
         cells = plan_path(self._costmap, start, goal)
         if cells is None:
             self._last_path_cells = None
-            self.get_logger().warning(f"No safe route available after {reason}")
+            if self._path_available:
+                empty_path = Path()
+                empty_path.header = self._costmap_msg.header
+                self._path_publisher.publish(empty_path)
+                self._path_available = False
+                self.get_logger().warning(
+                    f"No safe route available after {reason}; cleared previous path"
+                )
+            else:
+                self.get_logger().warning(f"No safe route available after {reason}")
             return
         path_cells = tuple(cells)
         if path_cells == self._last_path_cells:
@@ -84,6 +94,7 @@ class GlobalPlannerNode(Node):
             pose.pose.orientation.w = 1.0
             path.poses.append(pose)
         self._path_publisher.publish(path)
+        self._path_available = True
         self.get_logger().info(f"Published {len(cells)}-cell route after {reason}")
 
     def _frames_match(self) -> bool:

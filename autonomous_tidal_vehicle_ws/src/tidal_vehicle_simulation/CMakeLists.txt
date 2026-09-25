@@ -22,11 +22,16 @@ find_package(gz-plugin2 REQUIRED COMPONENTS register)
 find_package(gz-transport13 REQUIRED)
 find_package(gz-msgs10 REQUIRED)
 
-# Tide visual system used by Person 3's corridor environment.
-add_library(tide_visual_system SHARED plugins/tide_visual_system.cpp)
-target_link_libraries(tide_visual_system PRIVATE
-  gz-sim8::gz-sim8 gz-plugin2::register)
-install(TARGETS tide_visual_system LIBRARY DESTINATION lib)
+# Tide visual system used by Person 3's corridor environment. It needs a
+# gz-sim 8 release with Model::SetStatic (the one ROS 2 Jazzy installs);
+# -DTIDAL_BUILD_TIDE_VISUAL=OFF skips it on older gz-sim 8 builds.
+option(TIDAL_BUILD_TIDE_VISUAL "Build Person 3's tide visual system" ON)
+if(TIDAL_BUILD_TIDE_VISUAL)
+  add_library(tide_visual_system SHARED plugins/tide_visual_system.cpp)
+  target_link_libraries(tide_visual_system PRIVATE
+    gz-sim8::gz-sim8 gz-plugin2::register)
+  install(TARGETS tide_visual_system LIBRARY DESTINATION lib)
+endif()
 
 # tidal_vehicle_plugins: hover::AirCushion (model), hover::TerrainZones and
 # hover::ScriptedCommands (world). Gazebo finds it through

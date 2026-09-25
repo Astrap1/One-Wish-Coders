@@ -89,6 +89,7 @@ TRACK_HALF = 0.70              # sprocket / idler centres at x = +/-0.70 (1.40 m
 TRACK_T = 0.022                # belt thickness
 GROUSER_H = 0.016              # cleat height on the outside of the belt
 TRACK_STROKE = 0.25            # vertical retract travel into the hull wells
+TRACK_LIMIT_MARGIN = 0.02      # joint-limit clearance beyond 0 and TRACK_STROKE
 
 # Lift fan (offset forward so the LiDAR mast sits on the centreline)
 LIFT_X = 0.45
@@ -812,7 +813,11 @@ def joint_table():
         J[f"rudder_{side}"] = ("hull", "revolute", (0, 0, 1),
                                (-math.radians(30), math.radians(30)))
         # Retract: the whole track unit slides straight up into its hull well.
-        J[f"track_{side}"] = ("hull", "prismatic", (0, 0, 1), (0.0, TRACK_STROKE),
+        # The limits leave TRACK_LIMIT_MARGIN either side of 0 and TRACK_STROKE:
+        # a velocity-controlled DART joint resting on a limit can stick, so the
+        # controller holds 0 / TRACK_STROKE without touching the stops.
+        J[f"track_{side}"] = ("hull", "prismatic", (0, 0, 1),
+                              (-TRACK_LIMIT_MARGIN, TRACK_STROKE + TRACK_LIMIT_MARGIN),
                               {"control": "position",
                                "note": f"0 = deployed (TRACK mode); {TRACK_STROKE} = "
                                        "retracted into the hull (HOVER mode)"})

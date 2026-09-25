@@ -467,8 +467,8 @@
           0,
           1
         ],
-        "lower": 0.0,
-        "upper": 0.25,
+        "lower": -0.02,
+        "upper": 0.27,
         "control": "position",
         "note": "0 = deployed (TRACK mode); 0.25 = retracted into the hull (HOVER mode)"
       }
@@ -554,8 +554,8 @@
           0,
           1
         ],
-        "lower": 0.0,
-        "upper": 0.25,
+        "lower": -0.02,
+        "upper": 0.27,
         "control": "position",
         "note": "0 = deployed (TRACK mode); 0.25 = retracted into the hull (HOVER mode)"
       }

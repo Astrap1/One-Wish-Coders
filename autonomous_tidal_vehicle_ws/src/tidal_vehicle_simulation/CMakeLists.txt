@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(tidal_vehicle_simulation)
 
+add_library(tide_visual_system SHARED plugins/tide_visual_system.cpp)
+target_link_libraries(tide_visual_system PRIVATE gz-sim8::gz-sim8)
+install(TARGETS tide_visual_system LIBRARY DESTINATION lib)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE)

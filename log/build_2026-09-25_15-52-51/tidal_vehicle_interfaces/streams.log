@@ -1,0 +1,266 @@
+[0.008s] Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces
+[0.113s] -- The C compiler identification is GNU 13.3.0
+[0.333s] -- The CXX compiler identification is GNU 13.3.0
+[0.498s] -- Detecting C compiler ABI info
+[0.603s] -- Detecting C compiler ABI info - done
+[0.609s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.609s] -- Detecting C compile features
+[0.609s] -- Detecting C compile features - done
+[0.642s] -- Detecting CXX compiler ABI info
+[0.760s] -- Detecting CXX compiler ABI info - done
+[0.765s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.765s] -- Detecting CXX compile features
+[0.766s] -- Detecting CXX compile features - done
+[0.782s] -- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.891s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[0.955s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.001s] -- Found rosidl_default_generators: 1.6.1 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+[1.008s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.122s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.173s] -- Found rosidl_adapter: 4.6.9 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+[1.178s] -- Found std_msgs: 5.3.8 (/opt/ros/jazzy/share/std_msgs/cmake)
+[1.640s] -- Found ament_cmake_ros: 0.12.1 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)
+[1.958s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[2.384s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.388s] -- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)
+[2.482s] -- Found PythonExtra: /usr/bin/python3  
+[2.783s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed 
+[2.843s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[2.857s] -- Configuring done (2.8s)
+[2.892s] -- Generating done (0.0s)
+[2.901s] -- Build files have been written to: /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces
+[2.909s] Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces
+[2.909s] Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces -- -j14 -l14
+[2.945s] [  1%] Generating Rust code for ROS interfaces
+[2.946s] [  3%] Generating type hashes for ROS interfaces
+[2.951s] [  3%] Built target ament_cmake_python_symlink_tidal_vehicle_interfaces
+[3.100s] [  3%] Built target tidal_vehicle_interfaces__rosidl_generator_type_description
+[3.110s] [  5%] Generating C code for ROS interfaces
+[3.120s] [  7%] Generating C++ code for ROS interfaces
+[3.133s] running egg_info
+[3.134s] creating tidal_vehicle_interfaces.egg-info
+[3.151s] writing tidal_vehicle_interfaces.egg-info/PKG-INFO
+[3.152s] writing dependency_links to tidal_vehicle_interfaces.egg-info/dependency_links.txt
+[3.152s] writing top-level names to tidal_vehicle_interfaces.egg-info/top_level.txt
+[3.152s] writing manifest file 'tidal_vehicle_interfaces.egg-info/SOURCES.txt'
+[3.152s] [  7%] Built target tidal_vehicle_interfaces__rs
+[3.193s] reading manifest file 'tidal_vehicle_interfaces.egg-info/SOURCES.txt'
+[3.193s] writing manifest file 'tidal_vehicle_interfaces.egg-info/SOURCES.txt'
+[3.218s] [  7%] Built target ament_cmake_python_build_tidal_vehicle_interfaces_egg
+[3.349s] [  7%] Built target tidal_vehicle_interfaces__cpp
+[3.394s] [  9%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/safety_status__description.c.o
+[3.395s] [ 10%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/safety_status__functions.c.o
+[3.396s] [ 12%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/terrain_state__description.c.o
+[3.396s] [ 14%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__functions.c.o
+[3.397s] [ 18%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c.o
+[3.397s] [ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c.o
+[3.397s] [ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/terrain_state__functions.c.o
+[3.398s] [ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c.o
+[3.398s] [ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__description.c.o
+[3.448s] [ 25%] Linking C shared library libtidal_vehicle_interfaces__rosidl_generator_c.so
+[3.495s] [ 25%] Built target tidal_vehicle_interfaces__rosidl_generator_c
+[3.504s] [ 27%] Generating C type support for eProsima Fast-RTPS
+[3.504s] [ 29%] Generating C type support dispatch for ROS interfaces
+[3.504s] [ 30%] Generating C++ type support dispatch for ROS interfaces
+[3.505s] [ 32%] Generating C++ type support for eProsima Fast-RTPS
+[3.505s] [ 34%] Generating C++ introspection for ROS interfaces
+[3.505s] [ 36%] Generating C introspection for ROS interfaces
+[3.736s] [ 38%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/tidal_vehicle_interfaces/msg/terrain_state__type_support.cpp.o
+[3.738s] [ 40%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/tidal_vehicle_interfaces/msg/safety_status__type_support.cpp.o
+[3.740s] [ 41%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/tidal_vehicle_interfaces/msg/vehicle_health__type_support.cpp.o
+[3.747s] [ 43%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/tidal_vehicle_interfaces/msg/terrain_state__type_support.cpp.o
+[3.748s] [ 45%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/tidal_vehicle_interfaces/msg/safety_status__type_support.cpp.o
+[3.751s] [ 47%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/tidal_vehicle_interfaces/msg/vehicle_health__type_support.cpp.o
+[3.765s] [ 49%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.cpp.o
+[3.768s] [ 50%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.cpp.o
+[3.775s] [ 52%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.cpp.o
+[3.800s] [ 54%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_c.so
+[3.831s] [ 56%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c.o
+[3.837s] [ 58%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c.o
+[3.837s] [ 60%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c.o
+[3.841s] [ 61%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/tidal_vehicle_interfaces/msg/detail/dds_fastrtps/terrain_state__type_support.cpp.o
+[3.846s] [ 63%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/tidal_vehicle_interfaces/msg/detail/dds_fastrtps/safety_status__type_support.cpp.o
+[3.846s] [ 65%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/tidal_vehicle_interfaces/msg/detail/dds_fastrtps/vehicle_health__type_support.cpp.o
+[3.871s] [ 67%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support_c.cpp.o
+[3.887s] [ 69%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support_c.cpp.o
+[3.892s] [ 70%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support_c.cpp.o
+[3.918s] [ 72%] Linking C shared library libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so
+[3.962s] [ 72%] Built target tidal_vehicle_interfaces__rosidl_typesupport_c
+[3.989s] [ 72%] Built target tidal_vehicle_interfaces__rosidl_typesupport_introspection_c
+[4.310s] [ 74%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.so
+[4.345s] [ 76%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_cpp.so
+[4.420s] [ 76%] Built target tidal_vehicle_interfaces__rosidl_typesupport_cpp
+[4.437s] [ 76%] Built target tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp
+[4.573s] [ 78%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.so
+[4.587s] [ 80%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.so
+[4.654s] [ 80%] Built target tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp
+[4.664s] [ 80%] Built target tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c
+[4.678s] [ 80%] Built target tidal_vehicle_interfaces
+[4.697s] [ 81%] Generating Python code for ROS interfaces
+[4.944s] [ 81%] Built target tidal_vehicle_interfaces__py
+[4.959s] [ 85%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_py.dir/rosidl_generator_py/tidal_vehicle_interfaces/msg/_safety_status_s.c.o
+[4.959s] [ 85%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_py.dir/rosidl_generator_py/tidal_vehicle_interfaces/msg/_terrain_state_s.c.o
+[4.960s] [ 87%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_py.dir/rosidl_generator_py/tidal_vehicle_interfaces/msg/_vehicle_health_s.c.o
+[5.076s] [ 89%] Linking C shared library libtidal_vehicle_interfaces__rosidl_generator_py.so
+[5.125s] [ 89%] Built target tidal_vehicle_interfaces__rosidl_generator_py
+[5.142s] [ 90%] Building C object CMakeFiles/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o
+[5.142s] [ 92%] Building C object CMakeFiles/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o
+[5.144s] [ 94%] Building C object CMakeFiles/tidal_vehicle_interfaces_s__rosidl_typesupport_c.dir/rosidl_generator_py/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_c.c.o
+[5.215s] [ 96%] Linking C shared module rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so
+[5.216s] [ 98%] Linking C shared module rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_c.so
+[5.218s] [100%] Linking C shared module rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.so
+[5.254s] [100%] Built target tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c
+[5.254s] [100%] Built target tidal_vehicle_interfaces_s__rosidl_typesupport_c
+[5.261s] [100%] Built target tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c
+[5.270s] Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces -- -j14 -l14
+[5.279s] Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces
+[5.284s] -- Install configuration: ""
+[5.284s] -- Execute custom install script
+[5.285s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/rosidl_interfaces/tidal_vehicle_interfaces
+[5.292s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/SafetyStatus.json
+[5.298s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/TerrainState.json
+[5.304s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/VehicleHealth.json
+[5.312s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__functions.h
+[5.318s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__struct.h
+[5.324s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.h
+[5.330s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__functions.h
+[5.336s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__struct.h
+[5.342s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.h
+[5.348s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__functions.h
+[5.354s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__struct.h
+[5.360s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.h
+[5.366s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_generator_c__visibility_control.h
+[5.372s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/safety_status.h
+[5.378s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/terrain_state.h
+[5.384s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/vehicle_health.h
+[5.391s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/library_path.sh
+[5.397s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/library_path.dsv
+[5.404s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_fastrtps_c.h
+[5.412s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_fastrtps_c.h
+[5.419s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_fastrtps_c.h
+[5.425s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[5.432s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_introspection_c.h
+[5.438s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_introspection_c.h
+[5.445s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_introspection_c.h
+[5.451s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[5.457s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__builder.hpp
+[5.464s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__struct.hpp
+[5.469s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__traits.hpp
+[5.475s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.hpp
+[5.483s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__builder.hpp
+[5.490s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__struct.hpp
+[5.497s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__traits.hpp
+[5.504s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.hpp
+[5.511s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__builder.hpp
+[5.517s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__struct.hpp
+[5.523s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__traits.hpp
+[5.529s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.hpp
+[5.535s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
+[5.541s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/safety_status.hpp
+[5.548s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/terrain_state.hpp
+[5.553s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/vehicle_health.hpp
+[5.560s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_fastrtps_cpp.hpp
+[5.565s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_fastrtps_cpp.hpp
+[5.571s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_fastrtps_cpp.hpp
+[5.577s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[5.584s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_introspection_cpp.hpp
+[5.590s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_introspection_cpp.hpp
+[5.596s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_introspection_cpp.hpp
+[5.602s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/pythonpath.sh
+[5.609s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/pythonpath.dsv
+[5.615s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/PKG-INFO
+[5.622s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/SOURCES.txt
+[5.627s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/dependency_links.txt
+[5.633s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/top_level.txt
+[5.640s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/__init__.py
+[5.646s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_c.c
+[5.652s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+[5.659s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_introspection_c.c
+[5.664s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/__init__.py
+[5.671s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_safety_status.py
+[5.677s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_safety_status_s.c
+[5.683s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_terrain_state.py
+[5.690s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_terrain_state_s.c
+[5.696s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_vehicle_health.py
+[5.702s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_vehicle_health_s.c
+[5.708s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_c.so
+[5.714s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.so
+[5.720s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so
+[5.727s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.so
+[5.727s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so
+[5.727s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_c.so
+[5.727s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/Cargo.toml
+[5.733s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/build.rs
+[5.740s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/src/lib.rs
+[5.746s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/src/msg.rs
+[5.751s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/src/msg/rmw.rs
+[5.758s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/SafetyStatus.idl
+[5.763s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/TerrainState.idl
+[5.769s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/VehicleHealth.idl
+[5.776s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/SafetyStatus.msg
+[5.782s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/TerrainState.msg
+[5.790s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/VehicleHealth.msg
+[5.800s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/package_run_dependencies/tidal_vehicle_interfaces
+[5.807s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/parent_prefix_path/tidal_vehicle_interfaces
+[5.814s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/ament_prefix_path.sh
+[5.819s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/ament_prefix_path.dsv
+[5.826s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/path.sh
+[5.833s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/path.dsv
+[5.839s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.bash
+[5.845s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.sh
+[5.851s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.zsh
+[5.856s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.dsv
+[5.863s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/package.dsv
+[5.870s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/packages/tidal_vehicle_interfaces
+[5.877s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake-extras.cmake
+[5.885s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake
+[5.891s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_include_directories-extras.cmake
+[5.898s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_libraries-extras.cmake
+[5.904s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_targets-extras.cmake
+[5.910s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[5.916s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[5.922s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake_aggregate_target-extras.cmake
+[5.928s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfacesConfig.cmake
+[5.934s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfacesConfig-version.cmake
+[5.940s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/package.xml
+[5.947s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_c.so
+[5.947s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_c.so" to ""
+[5.947s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.so
+[5.947s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.so" to ""
+[5.947s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so
+[5.948s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so" to ""
+[5.948s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_c.so
+[5.949s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_c.so" to ""
+[5.949s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.so
+[5.949s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.so" to ""
+[5.949s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.so
+[5.949s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.so" to ""
+[5.949s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_cpp.so
+[5.949s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_cpp.so" to ""
+[5.977s] Listing '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces'...
+[5.977s] Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/__init__.py'...
+[5.977s] Listing '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg'...
+[5.977s] Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/__init__.py'...
+[5.978s] Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_safety_status.py'...
+[5.978s] Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_terrain_state.py'...
+[5.978s] Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_vehicle_health.py'...
+[5.982s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_py.so
+[5.982s] -- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_py.so" to ""
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_cExport.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_cExport-noconfig.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cExport.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cExport.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cExport.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cExport-noconfig.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_cppExport.cmake
+[5.983s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cppExport.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cppExport.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cppExport.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cppExport-noconfig.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_pyExport.cmake
+[5.984s] -- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_pyExport-noconfig.cmake
+[5.985s] Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces

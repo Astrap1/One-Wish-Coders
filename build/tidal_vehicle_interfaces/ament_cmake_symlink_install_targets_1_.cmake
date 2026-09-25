@@ -1,0 +1,1 @@
+ament_cmake_symlink_install_targets("TARGET_FILES" "/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces/rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so" "TARGETS" "tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c" "DESTINATION" "lib/python3.12/site-packages/tidal_vehicle_interfaces")

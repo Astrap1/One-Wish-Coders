@@ -1,0 +1,4 @@
+source;share/tidal_vehicle_interfaces/local_setup.bash
+source;share/tidal_vehicle_interfaces/local_setup.dsv
+source;share/tidal_vehicle_interfaces/local_setup.sh
+source;share/tidal_vehicle_interfaces/local_setup.zsh

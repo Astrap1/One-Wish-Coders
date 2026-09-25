@@ -1,0 +1,10 @@
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/uninstall.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/tidal_vehicle_simulation_uninstall.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/tide_visual_system.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/test.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/edit_cache.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/rebuild_cache.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/list_install_components.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/install.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/install/local.dir
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation/CMakeFiles/install/strip.dir

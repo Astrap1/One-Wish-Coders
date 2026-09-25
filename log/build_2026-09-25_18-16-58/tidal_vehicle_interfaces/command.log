@@ -1,0 +1,4 @@
+Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces -- -j14 -l14
+Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces -- -j14 -l14
+Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces
+Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces

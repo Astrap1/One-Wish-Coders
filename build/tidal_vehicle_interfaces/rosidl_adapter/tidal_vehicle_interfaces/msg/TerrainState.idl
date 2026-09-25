@@ -1,0 +1,25 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from tidal_vehicle_interfaces/msg/TerrainState.msg
+// generated code does not contain a copyright notice
+
+#include "std_msgs/msg/Header.idl"
+
+module tidal_vehicle_interfaces {
+  module msg {
+    struct TerrainState {
+      std_msgs::msg::Header header;
+
+      string tide_state;
+
+      float tide_risk;
+
+      float water_level_m;
+
+      float tide_rate_m_per_minute;
+
+      float seconds_until_corridor_unsafe;
+
+      boolean corridor_traversable;
+    };
+  };
+};

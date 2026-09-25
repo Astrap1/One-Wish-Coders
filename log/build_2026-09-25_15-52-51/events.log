@@ -1,0 +1,780 @@
+[0.000000] (-) TimerEvent: {}
+[0.000238] (-) JobUnselected: {'identifier': 'tidal_vehicle_autonomy'}
+[0.000270] (-) JobUnselected: {'identifier': 'tidal_vehicle_bringup'}
+[0.000293] (-) JobUnselected: {'identifier': 'tidal_vehicle_description'}
+[0.000315] (-) JobUnselected: {'identifier': 'tidal_vehicle_evaluation'}
+[0.000336] (-) JobUnselected: {'identifier': 'tidal_vehicle_operator'}
+[0.000358] (-) JobUnselected: {'identifier': 'tidal_vehicle_safety'}
+[0.000380] (tidal_vehicle_interfaces) JobQueued: {'identifier': 'tidal_vehicle_interfaces', 'dependencies': OrderedDict()}
+[0.000403] (tidal_vehicle_simulation) JobQueued: {'identifier': 'tidal_vehicle_simulation', 'dependencies': OrderedDict({'tidal_vehicle_interfaces': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces'})}
+[0.000428] (tidal_vehicle_interfaces) JobStarted: {'identifier': 'tidal_vehicle_interfaces'}
+[0.006251] (tidal_vehicle_interfaces) JobProgress: {'identifier': 'tidal_vehicle_interfaces', 'progress': 'cmake'}
+[0.007137] (tidal_vehicle_interfaces) Command: {'cmd': ['/usr/bin/cmake', '/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces', '-DAMENT_CMAKE_SYMLINK_INSTALL=1', '-DCMAKE_INSTALL_PREFIX=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces'], 'cwd': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', 'env': OrderedDict({'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code', 'VSCODE_ESM_ENTRYPOINT': 'vs/workbench/api/node/extensionHostProcess', 'CODEX_CI': '1', 'GZ_SIM_RESOURCE_PATH': '/opt/ros/jazzy/share', 'USER': 'tiffy', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'VSCODE_NLS_CONFIG': '{"userLocale":"en","osLocale":"en","resolvedLanguage":"en","defaultMessagesFile":"/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/out/nls.messages.json","locale":"en","availableLanguages":{}}', 'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/share/gz:/opt/ros/jazzy/opt/sdformat_vendor/share/gz:/opt/ros/jazzy/opt/gz_gui_vendor/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_rendering_vendor/share/gz:/opt/ros/jazzy/opt/gz_plugin_vendor/share/gz:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz:/opt/ros/jazzy/opt/gz_common_vendor/share/gz', 'VSCODE_WSL_EXT_LOCATION': '/mnt/c/Users/tiffy/.vscode/extensions/ms-vscode-remote.remote-wsl-0.104.3', 'VSCODE_HANDLES_UNCAUGHT_ERRORS': 'true', 'DEBUG': 'release', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/lib:/opt/ros/jazzy/opt/gz_sensors_vendor/lib:/opt/ros/jazzy/opt/gz_physics_vendor/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/opt/gz_gui_vendor/lib:/opt/ros/jazzy/opt/gz_transport_vendor/lib:/opt/ros/jazzy/opt/gz_rendering_vendor/lib:/opt/ros/jazzy/opt/gz_plugin_vendor/lib:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/lib:/opt/ros/jazzy/opt/gz_msgs_vendor/lib:/opt/ros/jazzy/opt/gz_common_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_ogre_next_vendor/lib:/opt/ros/jazzy/opt/gz_dartsim_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib', 'HOME': '/home/tiffy', 'VSCODE_RECONNECTION_GRACE_TIME': '10800000', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-8c96b4f5-246a-4dc6-97c8-e7c961638d8b.sock', 'ROS_PYTHON_VERSION': '3', 'PAGER': 'cat', 'LC_CTYPE': 'C.UTF-8', 'NO_COLOR': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': '', 'WSL_DISTRO_NAME': 'Ubuntu-24.04', 'WAYLAND_DISPLAY': 'wayland-0', 'VSCODE_L10N_BUNDLE_LOCATION': '', 'CODEX_PERMISSION_PROFILE': ':workspace', 'APPLICATION_INSIGHTS_NO_STATSBEAT': 'true', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'tiffy', 'NAME': 'TiffsLaptop', 'WSL_INTEROP': '/run/WSL/429_interop', 'VSCODE_HANDLES_SIGPIPE': 'true', 'PULSE_SERVER': 'unix:/mnt/wslg/PulseServer', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'RUST_LOG': 'warn', 'TERM': 'xterm-256color', 'PATH': '/home/tiffy/.local/bin:/home/tiffy/.codex/tmp/arg0/codex-arg0L02NGw:/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/bin/remote-cli:/home/tiffy/.local/bin:/home/tiffy/.local/bin:/opt/ros/jazzy/opt/gz_msgs_vendor/bin:/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/opt/gz_ogre_next_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/tiffy/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/tiffy/.dotnet/tools:/snap/bin:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64', 'CODEX_VERSION': '0.155.0-alpha.16.3', 'CODEX_SESSION_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'CODEX_SANDBOX_NETWORK_DISABLED': '1', 'LANG': 'C.UTF-8', 'GH_PAGER': 'cat', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'SHELL': '/bin/bash', 'ELECTRON_RUN_AS_NODE': '1', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'CODEX_THREAD_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'GIT_PAGER': 'cat', 'PWD': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', 'LC_ALL': 'C.UTF-8', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/opt/ros/jazzy/opt/gz_sim_vendor/lib/python:/opt/ros/jazzy/opt/sdformat_vendor/lib/python:/opt/ros/jazzy/opt/gz_transport_vendor/lib/python:/opt/ros/jazzy/opt/gz_msgs_vendor/lib/python:/opt/ros/jazzy/opt/gz_math_vendor/lib/python:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'WSL2_GUI_APPS_ENABLED': '1', 'HOSTTYPE': 'x86_64', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy', 'WSLENV': 'VSCODE_WSL_EXT_LOCATION/up'}), 'shell': False}
+[0.099670] (-) TimerEvent: {}
+[0.113224] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- The C compiler identification is GNU 13.3.0\n'}
+[0.199876] (-) TimerEvent: {}
+[0.301553] (-) TimerEvent: {}
+[0.333127] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 13.3.0\n'}
+[0.401848] (-) TimerEvent: {}
+[0.498832] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.502120] (-) TimerEvent: {}
+[0.602318] (-) TimerEvent: {}
+[0.603625] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.608944] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.609413] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.609964] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.642183] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.702479] (-) TimerEvent: {}
+[0.760179] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.765576] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.765840] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.766116] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.782418] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)\n'}
+[0.803105] (-) TimerEvent: {}
+[0.891237] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter \n'}
+[0.903604] (-) TimerEvent: {}
+[0.955728] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Override CMake install command with custom implementation using symlinks instead of copying resources\n'}
+[1.001354] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.6.1 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)\n'}
+[1.003767] (-) TimerEvent: {}
+[1.008576] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[1.107537] (-) TimerEvent: {}
+[1.122780] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[1.173173] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found rosidl_adapter: 4.6.9 (/opt/ros/jazzy/share/rosidl_adapter/cmake)\n'}
+[1.178336] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found std_msgs: 5.3.8 (/opt/ros/jazzy/share/std_msgs/cmake)\n'}
+[1.208648] (-) TimerEvent: {}
+[1.308992] (-) TimerEvent: {}
+[1.411611] (-) TimerEvent: {}
+[1.511953] (-) TimerEvent: {}
+[1.612292] (-) TimerEvent: {}
+[1.640690] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.12.1 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)\n'}
+[1.712518] (-) TimerEvent: {}
+[1.812852] (-) TimerEvent: {}
+[1.913226] (-) TimerEvent: {}
+[1.958323] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[2.013659] (-) TimerEvent: {}
+[2.114063] (-) TimerEvent: {}
+[2.214477] (-) TimerEvent: {}
+[2.314699] (-) TimerEvent: {}
+[2.383852] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[2.388365] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)\n'}
+[2.414904] (-) TimerEvent: {}
+[2.481943] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found PythonExtra: /usr/bin/python3  \n'}
+[2.515129] (-) TimerEvent: {}
+[2.615413] (-) TimerEvent: {}
+[2.715895] (-) TimerEvent: {}
+[2.782820] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed \n'}
+[2.816275] (-) TimerEvent: {}
+[2.843084] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter \n'}
+[2.857415] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Configuring done (2.8s)\n'}
+[2.892880] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Generating done (0.0s)\n'}
+[2.901838] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Build files have been written to: /home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces\n'}
+[2.908228] (tidal_vehicle_interfaces) CommandEnded: {'returncode': 0}
+[2.909586] (tidal_vehicle_interfaces) JobProgress: {'identifier': 'tidal_vehicle_interfaces', 'progress': 'build'}
+[2.909635] (tidal_vehicle_interfaces) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', '--', '-j14', '-l14'], 'cwd': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', 'env': OrderedDict({'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code', 'VSCODE_ESM_ENTRYPOINT': 'vs/workbench/api/node/extensionHostProcess', 'CODEX_CI': '1', 'GZ_SIM_RESOURCE_PATH': '/opt/ros/jazzy/share', 'USER': 'tiffy', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'VSCODE_NLS_CONFIG': '{"userLocale":"en","osLocale":"en","resolvedLanguage":"en","defaultMessagesFile":"/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/out/nls.messages.json","locale":"en","availableLanguages":{}}', 'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/share/gz:/opt/ros/jazzy/opt/sdformat_vendor/share/gz:/opt/ros/jazzy/opt/gz_gui_vendor/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_rendering_vendor/share/gz:/opt/ros/jazzy/opt/gz_plugin_vendor/share/gz:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz:/opt/ros/jazzy/opt/gz_common_vendor/share/gz', 'VSCODE_WSL_EXT_LOCATION': '/mnt/c/Users/tiffy/.vscode/extensions/ms-vscode-remote.remote-wsl-0.104.3', 'VSCODE_HANDLES_UNCAUGHT_ERRORS': 'true', 'DEBUG': 'release', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/lib:/opt/ros/jazzy/opt/gz_sensors_vendor/lib:/opt/ros/jazzy/opt/gz_physics_vendor/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/opt/gz_gui_vendor/lib:/opt/ros/jazzy/opt/gz_transport_vendor/lib:/opt/ros/jazzy/opt/gz_rendering_vendor/lib:/opt/ros/jazzy/opt/gz_plugin_vendor/lib:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/lib:/opt/ros/jazzy/opt/gz_msgs_vendor/lib:/opt/ros/jazzy/opt/gz_common_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_ogre_next_vendor/lib:/opt/ros/jazzy/opt/gz_dartsim_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib', 'HOME': '/home/tiffy', 'VSCODE_RECONNECTION_GRACE_TIME': '10800000', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-8c96b4f5-246a-4dc6-97c8-e7c961638d8b.sock', 'ROS_PYTHON_VERSION': '3', 'PAGER': 'cat', 'LC_CTYPE': 'C.UTF-8', 'NO_COLOR': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': '', 'WSL_DISTRO_NAME': 'Ubuntu-24.04', 'WAYLAND_DISPLAY': 'wayland-0', 'VSCODE_L10N_BUNDLE_LOCATION': '', 'CODEX_PERMISSION_PROFILE': ':workspace', 'APPLICATION_INSIGHTS_NO_STATSBEAT': 'true', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'tiffy', 'NAME': 'TiffsLaptop', 'WSL_INTEROP': '/run/WSL/429_interop', 'VSCODE_HANDLES_SIGPIPE': 'true', 'PULSE_SERVER': 'unix:/mnt/wslg/PulseServer', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'RUST_LOG': 'warn', 'TERM': 'xterm-256color', 'PATH': '/home/tiffy/.local/bin:/home/tiffy/.codex/tmp/arg0/codex-arg0L02NGw:/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/bin/remote-cli:/home/tiffy/.local/bin:/home/tiffy/.local/bin:/opt/ros/jazzy/opt/gz_msgs_vendor/bin:/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/opt/gz_ogre_next_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/tiffy/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/tiffy/.dotnet/tools:/snap/bin:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64', 'CODEX_VERSION': '0.155.0-alpha.16.3', 'CODEX_SESSION_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'CODEX_SANDBOX_NETWORK_DISABLED': '1', 'LANG': 'C.UTF-8', 'GH_PAGER': 'cat', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'SHELL': '/bin/bash', 'ELECTRON_RUN_AS_NODE': '1', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'CODEX_THREAD_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'GIT_PAGER': 'cat', 'PWD': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', 'LC_ALL': 'C.UTF-8', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/opt/ros/jazzy/opt/gz_sim_vendor/lib/python:/opt/ros/jazzy/opt/sdformat_vendor/lib/python:/opt/ros/jazzy/opt/gz_transport_vendor/lib/python:/opt/ros/jazzy/opt/gz_msgs_vendor/lib/python:/opt/ros/jazzy/opt/gz_math_vendor/lib/python:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'WSL2_GUI_APPS_ENABLED': '1', 'HOSTTYPE': 'x86_64', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy', 'WSLENV': 'VSCODE_WSL_EXT_LOCATION/up'}), 'shell': False}
+[2.916471] (-) TimerEvent: {}
+[2.945717] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  1%] Generating Rust code for ROS interfaces\n'}
+[2.946505] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  3%] Generating type hashes for ROS interfaces\n'}
+[2.951683] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  3%] Built target ament_cmake_python_symlink_tidal_vehicle_interfaces\n'}
+[3.016700] (-) TimerEvent: {}
+[3.100357] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  3%] Built target tidal_vehicle_interfaces__rosidl_generator_type_description\n'}
+[3.110788] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  5%] Generating C code for ROS interfaces\n'}
+[3.116938] (-) TimerEvent: {}
+[3.120757] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  7%] Generating C++ code for ROS interfaces\n'}
+[3.133149] (tidal_vehicle_interfaces) StdoutLine: {'line': b'running egg_info\n'}
+[3.134193] (tidal_vehicle_interfaces) StdoutLine: {'line': b'creating tidal_vehicle_interfaces.egg-info\n'}
+[3.151569] (tidal_vehicle_interfaces) StdoutLine: {'line': b'writing tidal_vehicle_interfaces.egg-info/PKG-INFO\n'}
+[3.152145] (tidal_vehicle_interfaces) StdoutLine: {'line': b'writing dependency_links to tidal_vehicle_interfaces.egg-info/dependency_links.txt\n'}
+[3.152540] (tidal_vehicle_interfaces) StdoutLine: {'line': b'writing top-level names to tidal_vehicle_interfaces.egg-info/top_level.txt\n'}
+[3.152651] (tidal_vehicle_interfaces) StdoutLine: {'line': b"writing manifest file 'tidal_vehicle_interfaces.egg-info/SOURCES.txt'\n"}
+[3.152715] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  7%] Built target tidal_vehicle_interfaces__rs\n'}
+[3.193166] (tidal_vehicle_interfaces) StdoutLine: {'line': b"reading manifest file 'tidal_vehicle_interfaces.egg-info/SOURCES.txt'\n"}
+[3.193637] (tidal_vehicle_interfaces) StdoutLine: {'line': b"writing manifest file 'tidal_vehicle_interfaces.egg-info/SOURCES.txt'\n"}
+[3.217212] (-) TimerEvent: {}
+[3.218056] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  7%] Built target ament_cmake_python_build_tidal_vehicle_interfaces_egg\n'}
+[3.317487] (-) TimerEvent: {}
+[3.349202] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  7%] Built target tidal_vehicle_interfaces__cpp\n'}
+[3.394630] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[  9%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/safety_status__description.c.o\n'}
+[3.395339] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 10%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/safety_status__functions.c.o\n'}
+[3.396103] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 12%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/terrain_state__description.c.o\n'}
+[3.396301] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 14%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__functions.c.o\n'}
+[3.397132] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 18%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c.o\n'}
+[3.397563] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c.o\n'}
+[3.397872] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/terrain_state__functions.c.o\n'}
+[3.398011] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c.o\n'}
+[3.398196] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 23%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_c.dir/rosidl_generator_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__description.c.o\n'}
+[3.417781] (-) TimerEvent: {}
+[3.448429] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 25%] Linking C shared library libtidal_vehicle_interfaces__rosidl_generator_c.so\n'}
+[3.495013] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 25%] Built target tidal_vehicle_interfaces__rosidl_generator_c\n'}
+[3.503578] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 27%] Generating C type support for eProsima Fast-RTPS\n'}
+[3.504132] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 29%] Generating C type support dispatch for ROS interfaces\n'}
+[3.504590] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 30%] Generating C++ type support dispatch for ROS interfaces\n'}
+[3.505171] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 32%] Generating C++ type support for eProsima Fast-RTPS\n'}
+[3.505327] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 34%] Generating C++ introspection for ROS interfaces\n'}
+[3.505554] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 36%] Generating C introspection for ROS interfaces\n'}
+[3.518154] (-) TimerEvent: {}
+[3.618605] (-) TimerEvent: {}
+[3.719340] (-) TimerEvent: {}
+[3.736259] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 38%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/tidal_vehicle_interfaces/msg/terrain_state__type_support.cpp.o\n'}
+[3.738489] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 40%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/tidal_vehicle_interfaces/msg/safety_status__type_support.cpp.o\n'}
+[3.740414] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 41%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/tidal_vehicle_interfaces/msg/vehicle_health__type_support.cpp.o\n'}
+[3.747405] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 43%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/tidal_vehicle_interfaces/msg/terrain_state__type_support.cpp.o\n'}
+[3.748498] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 45%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/tidal_vehicle_interfaces/msg/safety_status__type_support.cpp.o\n'}
+[3.751242] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 47%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/tidal_vehicle_interfaces/msg/vehicle_health__type_support.cpp.o\n'}
+[3.764293] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 49%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.cpp.o\n'}
+[3.767900] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 50%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.cpp.o\n'}
+[3.775373] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 52%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.cpp.o\n'}
+[3.799996] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 54%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_c.so\n'}
+[3.819572] (-) TimerEvent: {}
+[3.831283] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 56%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c.o\n'}
+[3.833763] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 58%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c.o\n'}
+[3.837694] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 60%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c.o\n'}
+[3.841114] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 61%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/tidal_vehicle_interfaces/msg/detail/dds_fastrtps/terrain_state__type_support.cpp.o\n'}
+[3.846156] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 63%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/tidal_vehicle_interfaces/msg/detail/dds_fastrtps/safety_status__type_support.cpp.o\n'}
+[3.846464] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 65%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/tidal_vehicle_interfaces/msg/detail/dds_fastrtps/vehicle_health__type_support.cpp.o\n'}
+[3.871499] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 67%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support_c.cpp.o\n'}
+[3.887554] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 69%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support_c.cpp.o\n'}
+[3.892269] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 70%] Building CXX object CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support_c.cpp.o\n'}
+[3.912466] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 72%] Linking C shared library libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so\n'}
+[3.919747] (-) TimerEvent: {}
+[3.962514] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 72%] Built target tidal_vehicle_interfaces__rosidl_typesupport_c\n'}
+[3.989541] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 72%] Built target tidal_vehicle_interfaces__rosidl_typesupport_introspection_c\n'}
+[4.020016] (-) TimerEvent: {}
+[4.120860] (-) TimerEvent: {}
+[4.221573] (-) TimerEvent: {}
+[4.310211] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 74%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.so\n'}
+[4.321924] (-) TimerEvent: {}
+[4.344940] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 76%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_cpp.so\n'}
+[4.420078] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 76%] Built target tidal_vehicle_interfaces__rosidl_typesupport_cpp\n'}
+[4.422167] (-) TimerEvent: {}
+[4.437494] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 76%] Built target tidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp\n'}
+[4.522367] (-) TimerEvent: {}
+[4.572912] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 78%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.so\n'}
+[4.587327] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 80%] Linking CXX shared library libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.so\n'}
+[4.622534] (-) TimerEvent: {}
+[4.654601] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 80%] Built target tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp\n'}
+[4.664304] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 80%] Built target tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c\n'}
+[4.678550] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 80%] Built target tidal_vehicle_interfaces\n'}
+[4.697042] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 81%] Generating Python code for ROS interfaces\n'}
+[4.722739] (-) TimerEvent: {}
+[4.824087] (-) TimerEvent: {}
+[4.926335] (-) TimerEvent: {}
+[4.944635] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 81%] Built target tidal_vehicle_interfaces__py\n'}
+[4.959506] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 85%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_py.dir/rosidl_generator_py/tidal_vehicle_interfaces/msg/_safety_status_s.c.o\n'}
+[4.959846] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 85%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_py.dir/rosidl_generator_py/tidal_vehicle_interfaces/msg/_terrain_state_s.c.o\n'}
+[4.960259] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 87%] Building C object CMakeFiles/tidal_vehicle_interfaces__rosidl_generator_py.dir/rosidl_generator_py/tidal_vehicle_interfaces/msg/_vehicle_health_s.c.o\n'}
+[5.026519] (-) TimerEvent: {}
+[5.075917] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 89%] Linking C shared library libtidal_vehicle_interfaces__rosidl_generator_py.so\n'}
+[5.125795] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 89%] Built target tidal_vehicle_interfaces__rosidl_generator_py\n'}
+[5.126651] (-) TimerEvent: {}
+[5.141848] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 90%] Building C object CMakeFiles/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o\n'}
+[5.142377] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 92%] Building C object CMakeFiles/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o\n'}
+[5.144139] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 94%] Building C object CMakeFiles/tidal_vehicle_interfaces_s__rosidl_typesupport_c.dir/rosidl_generator_py/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_c.c.o\n'}
+[5.215039] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 96%] Linking C shared module rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so\n'}
+[5.216294] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[ 98%] Linking C shared module rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_c.so\n'}
+[5.218599] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[100%] Linking C shared module rosidl_generator_py/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.so\n'}
+[5.226834] (-) TimerEvent: {}
+[5.254093] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[100%] Built target tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c\n'}
+[5.254510] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[100%] Built target tidal_vehicle_interfaces_s__rosidl_typesupport_c\n'}
+[5.261356] (tidal_vehicle_interfaces) StdoutLine: {'line': b'[100%] Built target tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c\n'}
+[5.269762] (tidal_vehicle_interfaces) CommandEnded: {'returncode': 0}
+[5.270529] (tidal_vehicle_interfaces) JobProgress: {'identifier': 'tidal_vehicle_interfaces', 'progress': 'install'}
+[5.278421] (tidal_vehicle_interfaces) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces'], 'cwd': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', 'env': OrderedDict({'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code', 'VSCODE_ESM_ENTRYPOINT': 'vs/workbench/api/node/extensionHostProcess', 'CODEX_CI': '1', 'GZ_SIM_RESOURCE_PATH': '/opt/ros/jazzy/share', 'USER': 'tiffy', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'VSCODE_NLS_CONFIG': '{"userLocale":"en","osLocale":"en","resolvedLanguage":"en","defaultMessagesFile":"/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/out/nls.messages.json","locale":"en","availableLanguages":{}}', 'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/share/gz:/opt/ros/jazzy/opt/sdformat_vendor/share/gz:/opt/ros/jazzy/opt/gz_gui_vendor/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_rendering_vendor/share/gz:/opt/ros/jazzy/opt/gz_plugin_vendor/share/gz:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz:/opt/ros/jazzy/opt/gz_common_vendor/share/gz', 'VSCODE_WSL_EXT_LOCATION': '/mnt/c/Users/tiffy/.vscode/extensions/ms-vscode-remote.remote-wsl-0.104.3', 'VSCODE_HANDLES_UNCAUGHT_ERRORS': 'true', 'DEBUG': 'release', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/lib:/opt/ros/jazzy/opt/gz_sensors_vendor/lib:/opt/ros/jazzy/opt/gz_physics_vendor/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/opt/gz_gui_vendor/lib:/opt/ros/jazzy/opt/gz_transport_vendor/lib:/opt/ros/jazzy/opt/gz_rendering_vendor/lib:/opt/ros/jazzy/opt/gz_plugin_vendor/lib:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/lib:/opt/ros/jazzy/opt/gz_msgs_vendor/lib:/opt/ros/jazzy/opt/gz_common_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_ogre_next_vendor/lib:/opt/ros/jazzy/opt/gz_dartsim_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib', 'HOME': '/home/tiffy', 'VSCODE_RECONNECTION_GRACE_TIME': '10800000', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-8c96b4f5-246a-4dc6-97c8-e7c961638d8b.sock', 'ROS_PYTHON_VERSION': '3', 'PAGER': 'cat', 'LC_CTYPE': 'C.UTF-8', 'NO_COLOR': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': '', 'WSL_DISTRO_NAME': 'Ubuntu-24.04', 'WAYLAND_DISPLAY': 'wayland-0', 'VSCODE_L10N_BUNDLE_LOCATION': '', 'CODEX_PERMISSION_PROFILE': ':workspace', 'APPLICATION_INSIGHTS_NO_STATSBEAT': 'true', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'tiffy', 'NAME': 'TiffsLaptop', 'WSL_INTEROP': '/run/WSL/429_interop', 'VSCODE_HANDLES_SIGPIPE': 'true', 'PULSE_SERVER': 'unix:/mnt/wslg/PulseServer', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'RUST_LOG': 'warn', 'TERM': 'xterm-256color', 'PATH': '/home/tiffy/.local/bin:/home/tiffy/.codex/tmp/arg0/codex-arg0L02NGw:/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/bin/remote-cli:/home/tiffy/.local/bin:/home/tiffy/.local/bin:/opt/ros/jazzy/opt/gz_msgs_vendor/bin:/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/opt/gz_ogre_next_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/tiffy/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/tiffy/.dotnet/tools:/snap/bin:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64', 'CODEX_VERSION': '0.155.0-alpha.16.3', 'CODEX_SESSION_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'CODEX_SANDBOX_NETWORK_DISABLED': '1', 'LANG': 'C.UTF-8', 'GH_PAGER': 'cat', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'SHELL': '/bin/bash', 'ELECTRON_RUN_AS_NODE': '1', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'CODEX_THREAD_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'GIT_PAGER': 'cat', 'PWD': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces', 'LC_ALL': 'C.UTF-8', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/opt/ros/jazzy/opt/gz_sim_vendor/lib/python:/opt/ros/jazzy/opt/sdformat_vendor/lib/python:/opt/ros/jazzy/opt/gz_transport_vendor/lib/python:/opt/ros/jazzy/opt/gz_msgs_vendor/lib/python:/opt/ros/jazzy/opt/gz_math_vendor/lib/python:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'WSL2_GUI_APPS_ENABLED': '1', 'HOSTTYPE': 'x86_64', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy', 'WSLENV': 'VSCODE_WSL_EXT_LOCATION/up'}), 'shell': False}
+[5.284340] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[5.284833] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[5.285415] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/rosidl_interfaces/tidal_vehicle_interfaces\n'}
+[5.292384] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/SafetyStatus.json\n'}
+[5.298223] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/TerrainState.json\n'}
+[5.304632] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/VehicleHealth.json\n'}
+[5.311836] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__functions.h\n'}
+[5.318342] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__struct.h\n'}
+[5.324478] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.h\n'}
+[5.326996] (-) TimerEvent: {}
+[5.330549] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__functions.h\n'}
+[5.336572] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__struct.h\n'}
+[5.342436] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.h\n'}
+[5.348524] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__functions.h\n'}
+[5.354256] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__struct.h\n'}
+[5.360655] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.h\n'}
+[5.366739] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_generator_c__visibility_control.h\n'}
+[5.372477] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/safety_status.h\n'}
+[5.378747] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/terrain_state.h\n'}
+[5.384842] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/vehicle_health.h\n'}
+[5.390864] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/library_path.sh\n'}
+[5.397763] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/library_path.dsv\n'}
+[5.404717] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_fastrtps_c.h\n'}
+[5.411954] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_fastrtps_c.h\n'}
+[5.418914] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_fastrtps_c.h\n'}
+[5.425054] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[5.427165] (-) TimerEvent: {}
+[5.432213] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_introspection_c.h\n'}
+[5.438524] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_introspection_c.h\n'}
+[5.444900] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_introspection_c.h\n'}
+[5.450979] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[5.457146] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__builder.hpp\n'}
+[5.464066] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__struct.hpp\n'}
+[5.469784] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__traits.hpp\n'}
+[5.475710] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.hpp\n'}
+[5.483192] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__builder.hpp\n'}
+[5.490126] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__struct.hpp\n'}
+[5.497190] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__traits.hpp\n'}
+[5.504207] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.hpp\n'}
+[5.511069] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__builder.hpp\n'}
+[5.517363] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__struct.hpp\n'}
+[5.523356] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__traits.hpp\n'}
+[5.527359] (-) TimerEvent: {}
+[5.529228] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.hpp\n'}
+[5.535469] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp\n'}
+[5.541005] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/safety_status.hpp\n'}
+[5.547972] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/terrain_state.hpp\n'}
+[5.553725] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/vehicle_health.hpp\n'}
+[5.559935] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[5.565687] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[5.571802] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[5.577632] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[5.584011] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_introspection_cpp.hpp\n'}
+[5.590384] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_introspection_cpp.hpp\n'}
+[5.596389] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/include/tidal_vehicle_interfaces/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_introspection_cpp.hpp\n'}
+[5.602866] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/pythonpath.sh\n'}
+[5.609487] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/pythonpath.dsv\n'}
+[5.615752] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/PKG-INFO\n'}
+[5.622157] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/SOURCES.txt\n'}
+[5.627523] (-) TimerEvent: {}
+[5.627773] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/dependency_links.txt\n'}
+[5.633552] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces-0.0.1-py3.12.egg-info/top_level.txt\n'}
+[5.640438] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/__init__.py\n'}
+[5.646637] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_c.c\n'}
+[5.652830] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[5.659004] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/_tidal_vehicle_interfaces_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[5.664849] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/__init__.py\n'}
+[5.671213] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_safety_status.py\n'}
+[5.677149] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_safety_status_s.c\n'}
+[5.682963] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_terrain_state.py\n'}
+[5.689814] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_terrain_state_s.c\n'}
+[5.696028] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_vehicle_health.py\n'}
+[5.702041] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_vehicle_health_s.c\n'}
+[5.708715] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_c.so\n'}
+[5.714455] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.so\n'}
+[5.720440] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so\n'}
+[5.727008] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_fastrtps_c.so\n'}
+[5.727229] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_introspection_c.so\n'}
+[5.727275] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/tidal_vehicle_interfaces_s__rosidl_typesupport_c.so\n'}
+[5.727456] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/Cargo.toml\n'}
+[5.727616] (-) TimerEvent: {}
+[5.733240] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/build.rs\n'}
+[5.739958] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/src/lib.rs\n'}
+[5.745979] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/src/msg.rs\n'}
+[5.751682] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/rust/src/msg/rmw.rs\n'}
+[5.758037] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/SafetyStatus.idl\n'}
+[5.763545] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/TerrainState.idl\n'}
+[5.769589] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/VehicleHealth.idl\n'}
+[5.776234] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/SafetyStatus.msg\n'}
+[5.782717] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/TerrainState.msg\n'}
+[5.789831] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/msg/VehicleHealth.msg\n'}
+[5.800024] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/package_run_dependencies/tidal_vehicle_interfaces\n'}
+[5.807409] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/parent_prefix_path/tidal_vehicle_interfaces\n'}
+[5.813986] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/ament_prefix_path.sh\n'}
+[5.819766] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/ament_prefix_path.dsv\n'}
+[5.826505] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/path.sh\n'}
+[5.827769] (-) TimerEvent: {}
+[5.832904] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/environment/path.dsv\n'}
+[5.838973] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.bash\n'}
+[5.844982] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.sh\n'}
+[5.851017] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.zsh\n'}
+[5.856831] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/local_setup.dsv\n'}
+[5.863787] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/package.dsv\n'}
+[5.870530] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/ament_index/resource_index/packages/tidal_vehicle_interfaces\n'}
+[5.877248] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake-extras.cmake\n'}
+[5.884907] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[5.891571] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[5.898076] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[5.903975] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[5.909959] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[5.916212] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[5.922113] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/rosidl_cmake_aggregate_target-extras.cmake\n'}
+[5.928077] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfacesConfig.cmake\n'}
+[5.928357] (-) TimerEvent: {}
+[5.934421] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfacesConfig-version.cmake\n'}
+[5.940116] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/package.xml\n'}
+[5.947100] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_c.so\n'}
+[5.947658] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_c.so" to ""\n'}
+[5.947776] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.so\n'}
+[5.947817] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_c.so" to ""\n'}
+[5.947849] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so\n'}
+[5.947991] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so" to ""\n'}
+[5.948707] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_c.so\n'}
+[5.949061] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_c.so" to ""\n'}
+[5.949171] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.so\n'}
+[5.949232] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cpp.so" to ""\n'}
+[5.949288] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.so\n'}
+[5.949342] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_introspection_cpp.so" to ""\n'}
+[5.949440] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_cpp.so\n'}
+[5.949502] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_typesupport_cpp.so" to ""\n'}
+[5.977599] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Listing '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces'...\n"}
+[5.977882] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/__init__.py'...\n"}
+[5.977950] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Listing '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg'...\n"}
+[5.977984] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/__init__.py'...\n"}
+[5.978015] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_safety_status.py'...\n"}
+[5.978070] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_terrain_state.py'...\n"}
+[5.978111] (tidal_vehicle_interfaces) StdoutLine: {'line': b"Compiling '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages/tidal_vehicle_interfaces/msg/_vehicle_health.py'...\n"}
+[5.981890] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_py.so\n'}
+[5.982275] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/libtidal_vehicle_interfaces__rosidl_generator_py.so" to ""\n'}
+[5.982833] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_cExport.cmake\n'}
+[5.983295] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_cExport-noconfig.cmake\n'}
+[5.983583] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[5.983819] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[5.983872] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cExport.cmake\n'}
+[5.983905] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[5.983935] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cExport.cmake\n'}
+[5.983965] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[5.983993] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_cppExport.cmake\n'}
+[5.984021] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[5.984049] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[5.984079] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[5.984106] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[5.984133] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cppExport.cmake\n'}
+[5.984161] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/tidal_vehicle_interfaces__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[5.984190] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_pyExport.cmake\n'}
+[5.984216] (tidal_vehicle_interfaces) StdoutLine: {'line': b'-- Installing: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/share/tidal_vehicle_interfaces/cmake/export_tidal_vehicle_interfaces__rosidl_generator_pyExport-noconfig.cmake\n'}
+[5.985098] (tidal_vehicle_interfaces) CommandEnded: {'returncode': 0}
+[6.012694] (tidal_vehicle_interfaces) JobEnded: {'identifier': 'tidal_vehicle_interfaces', 'rc': 0}
+[6.013608] (tidal_vehicle_simulation) JobStarted: {'identifier': 'tidal_vehicle_simulation'}
+[6.028917] (-) TimerEvent: {}
+[6.051007] (tidal_vehicle_simulation) JobProgress: {'identifier': 'tidal_vehicle_simulation', 'progress': 'cmake'}
+[6.051914] (tidal_vehicle_simulation) Command: {'cmd': ['/usr/bin/cmake', '/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation', '-DAMENT_CMAKE_SYMLINK_INSTALL=1', '-DCMAKE_INSTALL_PREFIX=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation'], 'cwd': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'env': OrderedDict({'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code', 'VSCODE_ESM_ENTRYPOINT': 'vs/workbench/api/node/extensionHostProcess', 'CODEX_CI': '1', 'GZ_SIM_RESOURCE_PATH': '/opt/ros/jazzy/share', 'USER': 'tiffy', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'VSCODE_NLS_CONFIG': '{"userLocale":"en","osLocale":"en","resolvedLanguage":"en","defaultMessagesFile":"/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/out/nls.messages.json","locale":"en","availableLanguages":{}}', 'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/share/gz:/opt/ros/jazzy/opt/sdformat_vendor/share/gz:/opt/ros/jazzy/opt/gz_gui_vendor/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_rendering_vendor/share/gz:/opt/ros/jazzy/opt/gz_plugin_vendor/share/gz:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz:/opt/ros/jazzy/opt/gz_common_vendor/share/gz', 'VSCODE_WSL_EXT_LOCATION': '/mnt/c/Users/tiffy/.vscode/extensions/ms-vscode-remote.remote-wsl-0.104.3', 'VSCODE_HANDLES_UNCAUGHT_ERRORS': 'true', 'DEBUG': 'release', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:/opt/ros/jazzy/opt/gz_sim_vendor/lib:/opt/ros/jazzy/opt/gz_sensors_vendor/lib:/opt/ros/jazzy/opt/gz_physics_vendor/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/opt/gz_gui_vendor/lib:/opt/ros/jazzy/opt/gz_transport_vendor/lib:/opt/ros/jazzy/opt/gz_rendering_vendor/lib:/opt/ros/jazzy/opt/gz_plugin_vendor/lib:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/lib:/opt/ros/jazzy/opt/gz_msgs_vendor/lib:/opt/ros/jazzy/opt/gz_common_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_ogre_next_vendor/lib:/opt/ros/jazzy/opt/gz_dartsim_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib', 'HOME': '/home/tiffy', 'VSCODE_RECONNECTION_GRACE_TIME': '10800000', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-8c96b4f5-246a-4dc6-97c8-e7c961638d8b.sock', 'ROS_PYTHON_VERSION': '3', 'PAGER': 'cat', 'LC_CTYPE': 'C.UTF-8', 'NO_COLOR': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': '', 'WSL_DISTRO_NAME': 'Ubuntu-24.04', 'WAYLAND_DISPLAY': 'wayland-0', 'VSCODE_L10N_BUNDLE_LOCATION': '', 'CODEX_PERMISSION_PROFILE': ':workspace', 'APPLICATION_INSIGHTS_NO_STATSBEAT': 'true', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'tiffy', 'NAME': 'TiffsLaptop', 'WSL_INTEROP': '/run/WSL/429_interop', 'VSCODE_HANDLES_SIGPIPE': 'true', 'PULSE_SERVER': 'unix:/mnt/wslg/PulseServer', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'RUST_LOG': 'warn', 'TERM': 'xterm-256color', 'PATH': '/home/tiffy/.local/bin:/home/tiffy/.codex/tmp/arg0/codex-arg0L02NGw:/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/bin/remote-cli:/home/tiffy/.local/bin:/home/tiffy/.local/bin:/opt/ros/jazzy/opt/gz_msgs_vendor/bin:/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/opt/gz_ogre_next_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/tiffy/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/tiffy/.dotnet/tools:/snap/bin:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64', 'CODEX_VERSION': '0.155.0-alpha.16.3', 'CODEX_SESSION_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'CODEX_SANDBOX_NETWORK_DISABLED': '1', 'LANG': 'C.UTF-8', 'GH_PAGER': 'cat', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy', 'SHELL': '/bin/bash', 'ELECTRON_RUN_AS_NODE': '1', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'CODEX_THREAD_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'GIT_PAGER': 'cat', 'PWD': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'LC_ALL': 'C.UTF-8', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:/opt/ros/jazzy/opt/gz_sim_vendor/lib/python:/opt/ros/jazzy/opt/sdformat_vendor/lib/python:/opt/ros/jazzy/opt/gz_transport_vendor/lib/python:/opt/ros/jazzy/opt/gz_msgs_vendor/lib/python:/opt/ros/jazzy/opt/gz_math_vendor/lib/python:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'WSL2_GUI_APPS_ENABLED': '1', 'HOSTTYPE': 'x86_64', 'CMAKE_PREFIX_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy', 'WSLENV': 'VSCODE_WSL_EXT_LOCATION/up'}), 'shell': False}
+[6.107207] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- The C compiler identification is GNU 13.3.0\n'}
+[6.129781] (-) TimerEvent: {}
+[6.233858] (-) TimerEvent: {}
+[6.290838] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 13.3.0\n'}
+[6.335064] (-) TimerEvent: {}
+[6.435830] (-) TimerEvent: {}
+[6.440788] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[6.536886] (-) TimerEvent: {}
+[6.543141] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[6.548378] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[6.548609] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[6.548804] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[6.576352] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[6.639277] (-) TimerEvent: {}
+[6.679861] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[6.685133] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[6.685567] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[6.685709] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[6.687939] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)\n'}
+[6.739429] (-) TimerEvent: {}
+[6.786613] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter \n'}
+[6.840124] (-) TimerEvent: {}
+[6.840583] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Override CMake install command with custom implementation using symlinks instead of copying resources\n'}
+[6.866371] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sim8 -- found version 8.15.0\n'}
+[6.876561] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sim8\n'}
+[6.877582] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for sdformat14 -- found version 14.9.0\n'}
+[6.877821] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of sdformat14\n'}
+[6.883562] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'tinyxml2'\n"}
+[6.891973] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found tinyxml2, version 10.0.0\n'}
+[6.912504] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[6.912796] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-math7\n'}
+[6.914120] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[6.914342] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-utils2\n'}
+[6.916872] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[6.917159] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-utils2\n'}
+[6.917245] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-utils2> component [cli]\n'}
+[6.918608] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2-cli -- found version 2.2.1\n'}
+[6.918862] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-utils2-cli\n'}
+[6.921645] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2 -- found version 2.0.4\n'}
+[6.921845] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-plugin2\n'}
+[6.922001] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[6.922952] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-plugin2> component [loader]\n'}
+[6.924235] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2-loader -- found version 2.0.4\n'}
+[6.924433] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-plugin2-loader\n'}
+[6.925307] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-plugin2> component [register]\n'}
+[6.926655] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2-register -- found version 2.0.4\n'}
+[6.926872] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-plugin2-register\n'}
+[6.928718] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-transport13 -- found version 13.6.0\n'}
+[6.928966] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-transport13\n'}
+[6.940320] (-) TimerEvent: {}
+[7.042194] (-) TimerEvent: {}
+[7.143586] (-) TimerEvent: {}
+[7.244280] (-) TimerEvent: {}
+[7.344675] (-) TimerEvent: {}
+[7.445198] (-) TimerEvent: {}
+[7.549234] (-) TimerEvent: {}
+[7.614192] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found Protobuf: /usr/lib/x86_64-linux-gnu/libprotobuf.so (found version "3.21.12") \n'}
+[7.649560] (-) TimerEvent: {}
+[7.752208] (-) TimerEvent: {}
+[7.853444] (-) TimerEvent: {}
+[7.954572] (-) TimerEvent: {}
+[8.036952] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Config-file not installed for ZeroMQ -- checking for pkg-config\n'}
+[8.040253] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libzmq >= 4'\n"}
+[8.055188] (-) TimerEvent: {}
+[8.059694] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libzmq, version 4.3.5\n'}
+[8.083837] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found ZeroMQ: TRUE (Required is at least version "4") \n'}
+[8.098587] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'uuid'\n"}
+[8.107304] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found uuid, version 2.39.3\n'}
+[8.125322] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found UUID: TRUE  \n'}
+[8.125661] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[8.127833] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-msgs10 -- found version 10.4.0\n'}
+[8.128359] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-msgs10\n'}
+[8.155530] (-) TimerEvent: {}
+[8.259458] (-) TimerEvent: {}
+[8.361299] (-) TimerEvent: {}
+[8.462436] (-) TimerEvent: {}
+[8.561125] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[8.561400] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[8.562620] (-) TimerEvent: {}
+[8.577260] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-transport13> component [log]\n'}
+[8.578301] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-transport13-log -- found version 13.6.0\n'}
+[8.578685] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-transport13-log\n'}
+[8.579394] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-transport13> component [parameters]\n'}
+[8.580590] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-transport13-parameters -- found version 13.6.0\n'}
+[8.580763] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-transport13-parameters\n'}
+[8.582001] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-msgs10 -- found version 10.4.0\n'}
+[8.583423] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[8.583633] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5\n'}
+[8.583862] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[8.594956] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for dlfcn.h - found\n'}
+[8.606596] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for libdl - found\n'}
+[8.607614] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found DL: TRUE  \n'}
+[8.613191] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [av]\n'}
+[8.614655] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-av -- found version 5.9.0\n'}
+[8.614904] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-av\n'}
+[8.618506] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libswscale'\n"}
+[8.628126] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libswscale, version 7.5.100\n'}
+[8.648474] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found SWSCALE: TRUE  \n'}
+[8.652385] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libavdevice >= 56.4.100'\n"}
+[8.661254] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libavdevice, version 60.3.100\n'}
+[8.662786] (-) TimerEvent: {}
+[8.689150] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found AVDEVICE: TRUE (Required is at least version "56.4.100") \n'}
+[8.692683] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libavformat'\n"}
+[8.701946] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libavformat, version 60.16.100\n'}
+[8.723519] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found AVFORMAT: TRUE  \n'}
+[8.727315] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libavcodec'\n"}
+[8.736120] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libavcodec, version 60.31.102\n'}
+[8.757049] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found AVCODEC: TRUE  \n'}
+[8.760446] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libavutil'\n"}
+[8.762888] (-) TimerEvent: {}
+[8.769251] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libavutil, version 58.29.100\n'}
+[8.790558] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found AVUTIL: TRUE  \n'}
+[8.791929] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [events]\n'}
+[8.793635] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-events -- found version 5.9.0\n'}
+[8.793898] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-events\n'}
+[8.794083] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[8.795196] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [graphics]\n'}
+[8.796580] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-graphics -- found version 5.9.0\n'}
+[8.796771] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-graphics\n'}
+[8.796942] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[8.801336] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found GzAssimp: TRUE (found version "5.3.0") \n'}
+[8.802781] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [io]\n'}
+[8.804172] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-io -- found version 5.9.0\n'}
+[8.804403] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-io\n'}
+[8.805446] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [profiler]\n'}
+[8.806926] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-profiler -- found version 5.9.0\n'}
+[8.807068] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-profiler\n'}
+[8.809472] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-fuel_tools9 -- found version 9.1.1\n'}
+[8.809725] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-fuel_tools9\n'}
+[8.863058] (-) TimerEvent: {}
+[8.963321] (-) TimerEvent: {}
+[9.063626] (-) TimerEvent: {}
+[9.164066] (-) TimerEvent: {}
+[9.264588] (-) TimerEvent: {}
+[9.342743] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found CURL: /usr/lib/x86_64-linux-gnu/libcurl.so (found version "8.5.0")  \n'}
+[9.351343] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'jsoncpp'\n"}
+[9.361044] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found jsoncpp, version 1.9.5\n'}
+[9.364774] (-) TimerEvent: {}
+[9.381549] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found JSONCPP: TRUE  \n'}
+[9.465187] (-) TimerEvent: {}
+[9.565578] (-) TimerEvent: {}
+[9.666076] (-) TimerEvent: {}
+[9.766359] (-) TimerEvent: {}
+[9.812446] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'yaml-0.1'\n"}
+[9.832530] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found yaml-0.1, version 0.2.5\n'}
+[9.853274] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found YAML: TRUE  \n'}
+[9.857491] (tidal_vehicle_simulation) StdoutLine: {'line': b"-- Checking for module 'libzip'\n"}
+[9.866859] (-) TimerEvent: {}
+[9.868013] (tidal_vehicle_simulation) StdoutLine: {'line': b'--   Found libzip, version 1.7.3\n'}
+[9.887748] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found ZIP: TRUE  \n'}
+[9.888176] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[9.888380] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[9.888476] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5\n'}
+[9.888663] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[9.888864] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for dlfcn.h - found\n'}
+[9.889049] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for libdl - found\n'}
+[9.894109] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [testing]\n'}
+[9.895806] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-testing -- found version 5.9.0\n'}
+[9.896109] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-testing\n'}
+[9.897304] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[9.897533] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-msgs10 -- found version 10.4.0\n'}
+[9.899918] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-gui8 -- found version 8.4.0\n'}
+[9.900134] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-gui8\n'}
+[9.967183] (-) TimerEvent: {}
+[10.067464] (-) TimerEvent: {}
+[10.167956] (-) TimerEvent: {}
+[10.268319] (-) TimerEvent: {}
+[10.359248] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[10.359804] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[10.359897] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[10.360054] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2 -- found version 2.0.4\n'}
+[10.360479] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-transport13 -- found version 13.6.0\n'}
+[10.368572] (-) TimerEvent: {}
+[10.370855] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-rendering8 -- found version 8.2.3\n'}
+[10.371132] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-rendering8\n'}
+[10.371455] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[10.371514] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-math7\n'}
+[10.371779] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[10.371833] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-math7> component [eigen3]\n'}
+[10.373235] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7-eigen3 -- found version 7.7.0\n'}
+[10.373454] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-math7-eigen3\n'}
+[10.381230] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[10.381730] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5\n'}
+[10.381912] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[10.382362] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for dlfcn.h - found\n'}
+[10.382484] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for libdl - found\n'}
+[10.387914] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [graphics]\n'}
+[10.388218] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [events]\n'}
+[10.388314] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-common5> component [geospatial]\n'}
+[10.389496] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5-geospatial -- found version 5.9.0\n'}
+[10.389704] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-common5-geospatial\n'}
+[10.389883] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[10.390231] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[10.391696] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2 -- found version 2.0.4\n'}
+[10.391949] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-plugin2\n'}
+[10.392151] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[10.392205] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-plugin2> component [all]\n'}
+[10.393556] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for all libraries of gz-plugin2 -- found version 2.0.4\n'}
+[10.393962] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2 -- found version 2.0.4\n'}
+[10.395327] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[10.468831] (-) TimerEvent: {}
+[10.568404] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so  found components: OpenGL \n'}
+[10.568901] (-) TimerEvent: {}
+[10.571074] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-msgs10 -- found version 10.4.0\n'}
+[10.631424] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-physics7 -- found version 7.8.0\n'}
+[10.631892] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-physics7\n'}
+[10.632070] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[10.632277] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[10.632535] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-plugin2 -- found version 2.0.4\n'}
+[10.632973] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[10.634512] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-physics7> component [heightmap]\n'}
+[10.635752] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-physics7-heightmap -- found version 7.8.0\n'}
+[10.636032] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-physics7-heightmap\n'}
+[10.636687] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[10.637650] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-physics7> component [mesh]\n'}
+[10.639077] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-physics7-mesh -- found version 7.8.0\n'}
+[10.639357] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-physics7-mesh\n'}
+[10.639729] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[10.640232] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-physics7> component [sdf]\n'}
+[10.641343] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-physics7-sdf -- found version 7.8.0\n'}
+[10.641508] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-physics7-sdf\n'}
+[10.641816] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for sdformat14 -- found version 14.9.0\n'}
+[10.643729] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[10.644053] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8\n'}
+[10.669199] (-) TimerEvent: {}
+[10.769557] (-) TimerEvent: {}
+[10.869945] (-) TimerEvent: {}
+[10.970157] (-) TimerEvent: {}
+[11.070393] (-) TimerEvent: {}
+[11.116154] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[11.116439] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[11.116633] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-transport13 -- found version 13.6.0\n'}
+[11.116781] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-rendering8 -- found version 8.2.3\n'}
+[11.117042] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-msgs10 -- found version 10.4.0\n'}
+[11.117424] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for sdformat14 -- found version 14.9.0\n'}
+[11.119265] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [air_pressure]\n'}
+[11.120347] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-air_pressure -- found version 8.2.2\n'}
+[11.120563] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-air_pressure\n'}
+[11.121756] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [air_speed]\n'}
+[11.123162] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-air_speed -- found version 8.2.2\n'}
+[11.123459] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-air_speed\n'}
+[11.124213] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [altimeter]\n'}
+[11.125390] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-altimeter -- found version 8.2.2\n'}
+[11.125635] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-altimeter\n'}
+[11.126419] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [imu]\n'}
+[11.127444] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-imu -- found version 8.2.2\n'}
+[11.127707] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-imu\n'}
+[11.128481] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [force_torque]\n'}
+[11.129526] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-force_torque -- found version 8.2.2\n'}
+[11.129678] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-force_torque\n'}
+[11.130722] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [logical_camera]\n'}
+[11.131706] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-logical_camera -- found version 8.2.2\n'}
+[11.131956] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-logical_camera\n'}
+[11.132741] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [magnetometer]\n'}
+[11.133682] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-magnetometer -- found version 8.2.2\n'}
+[11.133921] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-magnetometer\n'}
+[11.134722] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [navsat]\n'}
+[11.135624] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-navsat -- found version 8.2.2\n'}
+[11.135833] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-navsat\n'}
+[11.136717] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [dvl]\n'}
+[11.137692] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-dvl -- found version 8.2.2\n'}
+[11.137895] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-dvl\n'}
+[11.138058] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.138338] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8\n'}
+[11.170581] (-) TimerEvent: {}
+[11.270862] (-) TimerEvent: {}
+[11.371196] (-) TimerEvent: {}
+[11.471523] (-) TimerEvent: {}
+[11.571943] (-) TimerEvent: {}
+[11.619965] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[11.620319] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-common5 -- found version 5.9.0\n'}
+[11.620685] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-transport13 -- found version 13.6.0\n'}
+[11.620986] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-rendering8 -- found version 8.2.3\n'}
+[11.621101] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-msgs10 -- found version 10.4.0\n'}
+[11.621306] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for sdformat14 -- found version 14.9.0\n'}
+[11.621363] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [rendering]\n'}
+[11.632413] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-rendering -- found version 8.2.2\n'}
+[11.632677] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-rendering\n'}
+[11.634969] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [rendering]\n'}
+[11.635179] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [lidar]\n'}
+[11.635938] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-lidar -- found version 8.2.2\n'}
+[11.636205] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-lidar\n'}
+[11.636371] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.637265] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [gpu_lidar]\n'}
+[11.638255] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-gpu_lidar -- found version 8.2.2\n'}
+[11.638453] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-gpu_lidar\n'}
+[11.638623] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.639717] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [camera]\n'}
+[11.640937] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-camera -- found version 8.2.2\n'}
+[11.641133] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-camera\n'}
+[11.641628] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.643057] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [boundingbox_camera]\n'}
+[11.644152] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-boundingbox_camera -- found version 8.2.2\n'}
+[11.644396] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-boundingbox_camera\n'}
+[11.645450] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [segmentation_camera]\n'}
+[11.646708] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-segmentation_camera -- found version 8.2.2\n'}
+[11.647034] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-segmentation_camera\n'}
+[11.647936] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [depth_camera]\n'}
+[11.648923] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-depth_camera -- found version 8.2.2\n'}
+[11.649118] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-depth_camera\n'}
+[11.649415] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.650538] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [rgbd_camera]\n'}
+[11.651469] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-rgbd_camera -- found version 8.2.2\n'}
+[11.651683] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-rgbd_camera\n'}
+[11.651866] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.652810] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [thermal_camera]\n'}
+[11.653790] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-thermal_camera -- found version 8.2.2\n'}
+[11.653978] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-thermal_camera\n'}
+[11.654260] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8 -- found version 8.2.2\n'}
+[11.655429] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for <gz-sensors8> component [wide_angle_camera]\n'}
+[11.656402] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-sensors8-wide_angle_camera -- found version 8.2.2\n'}
+[11.656573] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Searching for dependencies of gz-sensors8-wide_angle_camera\n'}
+[11.658421] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-rendering8 -- found version 8.2.3\n'}
+[11.659110] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-math7 -- found version 7.7.0\n'}
+[11.659467] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Looking for gz-utils2 -- found version 2.2.1\n'}
+[11.672158] (-) TimerEvent: {}
+[11.772437] (-) TimerEvent: {}
+[11.872793] (-) TimerEvent: {}
+[11.973204] (-) TimerEvent: {}
+[12.073624] (-) TimerEvent: {}
+[12.174699] (-) TimerEvent: {}
+[12.230124] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Configuring done (6.2s)\n'}
+[12.245001] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Generating done (0.0s)\n'}
+[12.248728] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Build files have been written to: /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation\n'}
+[12.259518] (tidal_vehicle_simulation) CommandEnded: {'returncode': 0}
+[12.260500] (tidal_vehicle_simulation) JobProgress: {'identifier': 'tidal_vehicle_simulation', 'progress': 'build'}
+[12.260531] (tidal_vehicle_simulation) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', '--', '-j14', '-l14'], 'cwd': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'env': OrderedDict({'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code', 'VSCODE_ESM_ENTRYPOINT': 'vs/workbench/api/node/extensionHostProcess', 'CODEX_CI': '1', 'GZ_SIM_RESOURCE_PATH': '/opt/ros/jazzy/share', 'USER': 'tiffy', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'VSCODE_NLS_CONFIG': '{"userLocale":"en","osLocale":"en","resolvedLanguage":"en","defaultMessagesFile":"/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/out/nls.messages.json","locale":"en","availableLanguages":{}}', 'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/share/gz:/opt/ros/jazzy/opt/sdformat_vendor/share/gz:/opt/ros/jazzy/opt/gz_gui_vendor/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_rendering_vendor/share/gz:/opt/ros/jazzy/opt/gz_plugin_vendor/share/gz:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz:/opt/ros/jazzy/opt/gz_common_vendor/share/gz', 'VSCODE_WSL_EXT_LOCATION': '/mnt/c/Users/tiffy/.vscode/extensions/ms-vscode-remote.remote-wsl-0.104.3', 'VSCODE_HANDLES_UNCAUGHT_ERRORS': 'true', 'DEBUG': 'release', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:/opt/ros/jazzy/opt/gz_sim_vendor/lib:/opt/ros/jazzy/opt/gz_sensors_vendor/lib:/opt/ros/jazzy/opt/gz_physics_vendor/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/opt/gz_gui_vendor/lib:/opt/ros/jazzy/opt/gz_transport_vendor/lib:/opt/ros/jazzy/opt/gz_rendering_vendor/lib:/opt/ros/jazzy/opt/gz_plugin_vendor/lib:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/lib:/opt/ros/jazzy/opt/gz_msgs_vendor/lib:/opt/ros/jazzy/opt/gz_common_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_ogre_next_vendor/lib:/opt/ros/jazzy/opt/gz_dartsim_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib', 'HOME': '/home/tiffy', 'VSCODE_RECONNECTION_GRACE_TIME': '10800000', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-8c96b4f5-246a-4dc6-97c8-e7c961638d8b.sock', 'ROS_PYTHON_VERSION': '3', 'PAGER': 'cat', 'LC_CTYPE': 'C.UTF-8', 'NO_COLOR': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': '', 'WSL_DISTRO_NAME': 'Ubuntu-24.04', 'WAYLAND_DISPLAY': 'wayland-0', 'VSCODE_L10N_BUNDLE_LOCATION': '', 'CODEX_PERMISSION_PROFILE': ':workspace', 'APPLICATION_INSIGHTS_NO_STATSBEAT': 'true', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'tiffy', 'NAME': 'TiffsLaptop', 'WSL_INTEROP': '/run/WSL/429_interop', 'VSCODE_HANDLES_SIGPIPE': 'true', 'PULSE_SERVER': 'unix:/mnt/wslg/PulseServer', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'RUST_LOG': 'warn', 'TERM': 'xterm-256color', 'PATH': '/home/tiffy/.local/bin:/home/tiffy/.codex/tmp/arg0/codex-arg0L02NGw:/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/bin/remote-cli:/home/tiffy/.local/bin:/home/tiffy/.local/bin:/opt/ros/jazzy/opt/gz_msgs_vendor/bin:/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/opt/gz_ogre_next_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/tiffy/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/tiffy/.dotnet/tools:/snap/bin:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64', 'CODEX_VERSION': '0.155.0-alpha.16.3', 'CODEX_SESSION_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'CODEX_SANDBOX_NETWORK_DISABLED': '1', 'LANG': 'C.UTF-8', 'GH_PAGER': 'cat', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy', 'SHELL': '/bin/bash', 'ELECTRON_RUN_AS_NODE': '1', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'CODEX_THREAD_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'GIT_PAGER': 'cat', 'PWD': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'LC_ALL': 'C.UTF-8', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:/opt/ros/jazzy/opt/gz_sim_vendor/lib/python:/opt/ros/jazzy/opt/sdformat_vendor/lib/python:/opt/ros/jazzy/opt/gz_transport_vendor/lib/python:/opt/ros/jazzy/opt/gz_msgs_vendor/lib/python:/opt/ros/jazzy/opt/gz_math_vendor/lib/python:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'WSL2_GUI_APPS_ENABLED': '1', 'HOSTTYPE': 'x86_64', 'CMAKE_PREFIX_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy', 'WSLENV': 'VSCODE_WSL_EXT_LOCATION/up'}), 'shell': False}
+[12.275270] (-) TimerEvent: {}
+[12.298996] (tidal_vehicle_simulation) StdoutLine: {'line': b'[ 50%] Building CXX object CMakeFiles/tide_visual_system.dir/plugins/tide_visual_system.cpp.o\n'}
+[12.377425] (-) TimerEvent: {}
+[12.478855] (-) TimerEvent: {}
+[12.581259] (-) TimerEvent: {}
+[12.684294] (-) TimerEvent: {}
+[12.785208] (-) TimerEvent: {}
+[12.888085] (-) TimerEvent: {}
+[12.991022] (-) TimerEvent: {}
+[13.093850] (-) TimerEvent: {}
+[13.194925] (-) TimerEvent: {}
+[13.297989] (-) TimerEvent: {}
+[13.399234] (-) TimerEvent: {}
+[13.502102] (-) TimerEvent: {}
+[13.604988] (-) TimerEvent: {}
+[13.707459] (-) TimerEvent: {}
+[13.810364] (-) TimerEvent: {}
+[13.913265] (-) TimerEvent: {}
+[14.016102] (-) TimerEvent: {}
+[14.116819] (-) TimerEvent: {}
+[14.217528] (-) TimerEvent: {}
+[14.320386] (-) TimerEvent: {}
+[14.421119] (-) TimerEvent: {}
+[14.521573] (-) TimerEvent: {}
+[14.622448] (-) TimerEvent: {}
+[14.723269] (-) TimerEvent: {}
+[14.824179] (-) TimerEvent: {}
+[14.925249] (-) TimerEvent: {}
+[15.026024] (-) TimerEvent: {}
+[15.126922] (-) TimerEvent: {}
+[15.230008] (-) TimerEvent: {}
+[15.331630] (-) TimerEvent: {}
+[15.432004] (-) TimerEvent: {}
+[15.456476] (tidal_vehicle_simulation) StdoutLine: {'line': b'[100%] Linking CXX shared library libtide_visual_system.so\n'}
+[15.532303] (-) TimerEvent: {}
+[15.619415] (tidal_vehicle_simulation) StdoutLine: {'line': b'[100%] Built target tide_visual_system\n'}
+[15.626598] (tidal_vehicle_simulation) CommandEnded: {'returncode': 0}
+[15.627504] (tidal_vehicle_simulation) JobProgress: {'identifier': 'tidal_vehicle_simulation', 'progress': 'install'}
+[15.628028] (tidal_vehicle_simulation) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation'], 'cwd': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'env': OrderedDict({'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code', 'VSCODE_ESM_ENTRYPOINT': 'vs/workbench/api/node/extensionHostProcess', 'CODEX_CI': '1', 'GZ_SIM_RESOURCE_PATH': '/opt/ros/jazzy/share', 'USER': 'tiffy', 'CODEX_INTERNAL_ORIGINATOR_OVERRIDE': 'codex_vscode', 'VSCODE_NLS_CONFIG': '{"userLocale":"en","osLocale":"en","resolvedLanguage":"en","defaultMessagesFile":"/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/out/nls.messages.json","locale":"en","availableLanguages":{}}', 'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/gz_sim_vendor/share/gz:/opt/ros/jazzy/opt/sdformat_vendor/share/gz:/opt/ros/jazzy/opt/gz_gui_vendor/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_rendering_vendor/share/gz:/opt/ros/jazzy/opt/gz_plugin_vendor/share/gz:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz:/opt/ros/jazzy/opt/gz_common_vendor/share/gz', 'VSCODE_WSL_EXT_LOCATION': '/mnt/c/Users/tiffy/.vscode/extensions/ms-vscode-remote.remote-wsl-0.104.3', 'VSCODE_HANDLES_UNCAUGHT_ERRORS': 'true', 'DEBUG': 'release', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:/opt/ros/jazzy/opt/gz_sim_vendor/lib:/opt/ros/jazzy/opt/gz_sensors_vendor/lib:/opt/ros/jazzy/opt/gz_physics_vendor/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/opt/gz_gui_vendor/lib:/opt/ros/jazzy/opt/gz_transport_vendor/lib:/opt/ros/jazzy/opt/gz_rendering_vendor/lib:/opt/ros/jazzy/opt/gz_plugin_vendor/lib:/opt/ros/jazzy/opt/gz_fuel_tools_vendor/lib:/opt/ros/jazzy/opt/gz_msgs_vendor/lib:/opt/ros/jazzy/opt/gz_common_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_ogre_next_vendor/lib:/opt/ros/jazzy/opt/gz_dartsim_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib', 'HOME': '/home/tiffy', 'VSCODE_RECONNECTION_GRACE_TIME': '10800000', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-8c96b4f5-246a-4dc6-97c8-e7c961638d8b.sock', 'ROS_PYTHON_VERSION': '3', 'PAGER': 'cat', 'LC_CTYPE': 'C.UTF-8', 'NO_COLOR': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': '', 'WSL_DISTRO_NAME': 'Ubuntu-24.04', 'WAYLAND_DISPLAY': 'wayland-0', 'VSCODE_L10N_BUNDLE_LOCATION': '', 'CODEX_PERMISSION_PROFILE': ':workspace', 'APPLICATION_INSIGHTS_NO_STATSBEAT': 'true', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'tiffy', 'NAME': 'TiffsLaptop', 'WSL_INTEROP': '/run/WSL/429_interop', 'VSCODE_HANDLES_SIGPIPE': 'true', 'PULSE_SERVER': 'unix:/mnt/wslg/PulseServer', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'RUST_LOG': 'warn', 'TERM': 'xterm-256color', 'PATH': '/home/tiffy/.local/bin:/home/tiffy/.codex/tmp/arg0/codex-arg0L02NGw:/home/tiffy/.vscode-server/bin/7debcd0e2acdea1c52de81bf9ee1620444407dda/bin/remote-cli:/home/tiffy/.local/bin:/home/tiffy/.local/bin:/opt/ros/jazzy/opt/gz_msgs_vendor/bin:/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/opt/gz_ogre_next_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/tiffy/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/tiffy/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/tiffy/.dotnet/tools:/snap/bin:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64:/home/tiffy/.vscode-server/extensions/openai.chatgpt-26.917.62051-linux-x64/bin/linux-x86_64', 'CODEX_VERSION': '0.155.0-alpha.16.3', 'CODEX_SESSION_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'CODEX_SANDBOX_NETWORK_DISABLED': '1', 'LANG': 'C.UTF-8', 'GH_PAGER': 'cat', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy', 'SHELL': '/bin/bash', 'ELECTRON_RUN_AS_NODE': '1', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'CODEX_THREAD_ID': '01a0d303-4fc4-73b0-aa8b-c7b49098a754', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'GIT_PAGER': 'cat', 'PWD': '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation', 'LC_ALL': 'C.UTF-8', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:/opt/ros/jazzy/opt/gz_sim_vendor/lib/python:/opt/ros/jazzy/opt/sdformat_vendor/lib/python:/opt/ros/jazzy/opt/gz_transport_vendor/lib/python:/opt/ros/jazzy/opt/gz_msgs_vendor/lib/python:/opt/ros/jazzy/opt/gz_math_vendor/lib/python:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'WSL2_GUI_APPS_ENABLED': '1', 'HOSTTYPE': 'x86_64', 'CMAKE_PREFIX_PATH': '/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy', 'WSLENV': 'VSCODE_WSL_EXT_LOCATION/up'}), 'shell': False}
+[15.632584] (-) TimerEvent: {}
+[15.633871] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[15.634173] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[15.634634] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/libtide_visual_system.so\n'}
+[15.641291] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/tidal_vehicle_simulation/tide_manager.py\n'}
+[15.648133] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/config/scenario_defaults.yaml\n'}
+[15.654756] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/.gitkeep\n'}
+[15.662005] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/environment.launch.py\n'}
+[15.670329] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/.gitkeep\n'}
+[15.677147] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/barrage_obstacles/model.config\n'}
+[15.683884] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/barrage_obstacles/model.sdf\n'}
+[15.691103] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/meshes/destination_incline.obj\n'}
+[15.698238] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/model.config\n'}
+[15.706141] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/model.sdf\n'}
+[15.712850] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove.mtl\n'}
+[15.719738] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_mature.obj\n'}
+[15.725644] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_spreading.obj\n'}
+[15.732249] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_young.obj\n'}
+[15.732594] (-) TimerEvent: {}
+[15.738878] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/model.config\n'}
+[15.744994] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/model.sdf\n'}
+[15.751855] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mission_markers/model.config\n'}
+[15.758163] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mission_markers/model.sdf\n'}
+[15.764489] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/meshes/natural_obstacles.mtl\n'}
+[15.771160] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/meshes/natural_obstacles.obj\n'}
+[15.777263] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/model.config\n'}
+[15.783254] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/model.sdf\n'}
+[15.789604] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/placeholder_obstacles/model.config\n'}
+[15.795779] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/placeholder_obstacles/model.sdf\n'}
+[15.802726] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/heightmap.pgm\n'}
+[15.809015] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/heightmap.png\n'}
+[15.814982] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/materials/mudflat.png\n'}
+[15.821582] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/meshes/terrain_visual.mtl\n'}
+[15.827428] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/meshes/terrain_visual.obj\n'}
+[15.832944] (-) TimerEvent: {}
+[15.834468] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/model.config\n'}
+[15.841554] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/model.sdf\n'}
+[15.847863] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/tidal_corridor_lighting/model.config\n'}
+[15.854447] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/tidal_corridor_lighting/model.sdf\n'}
+[15.860780] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/meshes/low_tide_pools.obj\n'}
+[15.867209] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/model.config\n'}
+[15.873991] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/model.sdf\n'}
+[15.880376] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/materials/muddy_water.png\n'}
+[15.886372] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/meshes/water_surface.mtl\n'}
+[15.893375] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/meshes/water_surface.obj\n'}
+[15.899664] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/model.config\n'}
+[15.906482] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/model.sdf\n'}
+[15.913012] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/plugins/.gitkeep\n'}
+[15.918668] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/plugins/tide_visual_system.cpp\n'}
+[15.925326] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/worlds/.gitkeep\n'}
+[15.931688] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/worlds/tidal_corridor.sdf\n'}
+[15.933157] (-) TimerEvent: {}
+[15.938222] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/package_run_dependencies/tidal_vehicle_simulation\n'}
+[15.945184] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/parent_prefix_path/tidal_vehicle_simulation\n'}
+[15.951555] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/ament_prefix_path.sh\n'}
+[15.957797] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/ament_prefix_path.dsv\n'}
+[15.964023] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/path.sh\n'}
+[15.969989] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/path.dsv\n'}
+[15.976962] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.bash\n'}
+[15.982926] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.sh\n'}
+[15.988754] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.zsh\n'}
+[15.995491] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.dsv\n'}
+[16.001190] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.dsv\n'}
+[16.007168] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/packages/tidal_vehicle_simulation\n'}
+[16.014100] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/cmake/tidal_vehicle_simulationConfig.cmake\n'}
+[16.019917] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/cmake/tidal_vehicle_simulationConfig-version.cmake\n'}
+[16.026779] (tidal_vehicle_simulation) StdoutLine: {'line': b'-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.xml\n'}
+[16.033409] (-) TimerEvent: {}
+[16.034235] (tidal_vehicle_simulation) CommandEnded: {'returncode': 0}
+[16.045085] (tidal_vehicle_simulation) JobEnded: {'identifier': 'tidal_vehicle_simulation', 'rc': 0}
+[16.045725] (-) EventReactorShutdown: {}

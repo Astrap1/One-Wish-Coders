@@ -1,0 +1,326 @@
+[0.092s] Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation -- -j14 -l14
+[0.147s] -- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.562s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.593s] -- Looking for gz-sim8 -- found version 8.15.0
+[0.607s] -- Searching for dependencies of gz-sim8
+[0.608s] -- Looking for sdformat14 -- found version 14.9.0
+[0.608s] -- Searching for dependencies of sdformat14
+[0.617s] -- Checking for module 'tinyxml2'
+[0.637s] --   Found tinyxml2, version 10.0.0
+[0.678s] -- Looking for gz-math7 -- found version 7.7.0
+[0.679s] -- Searching for dependencies of gz-math7
+[0.679s] -- Looking for gz-utils2 -- found version 2.2.1
+[0.679s] -- Searching for dependencies of gz-utils2
+[0.681s] -- Looking for gz-utils2 -- found version 2.2.1
+[0.682s] -- Searching for dependencies of gz-utils2
+[0.682s] -- Searching for <gz-utils2> component [cli]
+[0.683s] -- Looking for gz-utils2-cli -- found version 2.2.1
+[0.683s] -- Searching for dependencies of gz-utils2-cli
+[0.686s] -- Looking for gz-plugin2 -- found version 2.0.4
+[0.686s] -- Searching for dependencies of gz-plugin2
+[0.687s] -- Looking for gz-utils2 -- found version 2.2.1
+[0.687s] -- Searching for <gz-plugin2> component [loader]
+[0.688s] -- Looking for gz-plugin2-loader -- found version 2.0.4
+[0.689s] -- Searching for dependencies of gz-plugin2-loader
+[0.689s] -- Searching for <gz-plugin2> component [register]
+[0.690s] -- Looking for gz-plugin2-register -- found version 2.0.4
+[0.691s] -- Searching for dependencies of gz-plugin2-register
+[0.695s] -- Looking for gz-transport13 -- found version 13.6.0
+[0.695s] -- Searching for dependencies of gz-transport13
+[1.913s] -- Config-file not installed for ZeroMQ -- checking for pkg-config
+[1.918s] -- Checking for module 'libzmq >= 4'
+[1.942s] --   Found libzmq, version 4.3.5
+[1.991s] -- Checking for module 'uuid'
+[2.007s] --   Found uuid, version 2.39.3
+[2.043s] -- Looking for gz-utils2 -- found version 2.2.1
+[2.043s] -- Looking for gz-msgs10 -- found version 10.4.0
+[2.043s] -- Searching for dependencies of gz-msgs10
+[2.578s] -- Looking for gz-utils2 -- found version 2.2.1
+[2.578s] -- Looking for gz-math7 -- found version 7.7.0
+[2.595s] -- Searching for <gz-transport13> component [log]
+[2.596s] -- Looking for gz-transport13-log -- found version 13.6.0
+[2.596s] -- Searching for dependencies of gz-transport13-log
+[2.597s] -- Searching for <gz-transport13> component [parameters]
+[2.598s] -- Looking for gz-transport13-parameters -- found version 13.6.0
+[2.598s] -- Searching for dependencies of gz-transport13-parameters
+[2.600s] -- Looking for gz-msgs10 -- found version 10.4.0
+[2.601s] -- Looking for gz-common5 -- found version 5.9.0
+[2.601s] -- Searching for dependencies of gz-common5
+[2.602s] -- Looking for gz-utils2 -- found version 2.2.1
+[2.602s] -- Looking for dlfcn.h - found
+[2.602s] -- Looking for libdl - found
+[2.612s] -- Searching for <gz-common5> component [av]
+[2.613s] -- Looking for gz-common5-av -- found version 5.9.0
+[2.613s] -- Searching for dependencies of gz-common5-av
+[2.617s] -- Checking for module 'libswscale'
+[2.631s] --   Found libswscale, version 7.5.100
+[2.667s] -- Checking for module 'libavdevice >= 56.4.100'
+[2.681s] --   Found libavdevice, version 60.3.100
+[2.728s] -- Checking for module 'libavformat'
+[2.741s] --   Found libavformat, version 60.16.100
+[2.778s] -- Checking for module 'libavcodec'
+[2.791s] --   Found libavcodec, version 60.31.102
+[2.826s] -- Checking for module 'libavutil'
+[2.840s] --   Found libavutil, version 58.29.100
+[2.871s] -- Searching for <gz-common5> component [events]
+[2.872s] -- Looking for gz-common5-events -- found version 5.9.0
+[2.873s] -- Searching for dependencies of gz-common5-events
+[2.873s] -- Looking for gz-math7 -- found version 7.7.0
+[2.875s] -- Searching for <gz-common5> component [graphics]
+[2.875s] -- Looking for gz-common5-graphics -- found version 5.9.0
+[2.875s] -- Searching for dependencies of gz-common5-graphics
+[2.876s] -- Looking for gz-math7 -- found version 7.7.0
+[2.880s] -- Searching for <gz-common5> component [io]
+[2.881s] -- Looking for gz-common5-io -- found version 5.9.0
+[2.882s] -- Searching for dependencies of gz-common5-io
+[2.884s] -- Searching for <gz-common5> component [profiler]
+[2.884s] -- Looking for gz-common5-profiler -- found version 5.9.0
+[2.885s] -- Searching for dependencies of gz-common5-profiler
+[2.887s] -- Looking for gz-fuel_tools9 -- found version 9.1.1
+[2.887s] -- Searching for dependencies of gz-fuel_tools9
+[3.554s] -- Checking for module 'jsoncpp'
+[3.571s] --   Found jsoncpp, version 1.9.5
+[4.122s] -- Checking for module 'yaml-0.1'
+[4.145s] --   Found yaml-0.1, version 0.2.5
+[4.180s] -- Checking for module 'libzip'
+[4.195s] --   Found libzip, version 1.7.3
+[4.230s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.230s] -- Looking for gz-common5 -- found version 5.9.0
+[4.230s] -- Searching for dependencies of gz-common5
+[4.231s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.231s] -- Looking for dlfcn.h - found
+[4.231s] -- Looking for libdl - found
+[4.239s] -- Searching for <gz-common5> component [testing]
+[4.240s] -- Looking for gz-common5-testing -- found version 5.9.0
+[4.240s] -- Searching for dependencies of gz-common5-testing
+[4.243s] -- Looking for gz-math7 -- found version 7.7.0
+[4.243s] -- Looking for gz-msgs10 -- found version 10.4.0
+[4.244s] -- Looking for gz-gui8 -- found version 8.4.0
+[4.245s] -- Searching for dependencies of gz-gui8
+[4.742s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.742s] -- Looking for gz-math7 -- found version 7.7.0
+[4.743s] -- Looking for gz-common5 -- found version 5.9.0
+[4.743s] -- Looking for gz-plugin2 -- found version 2.0.4
+[4.744s] -- Looking for gz-transport13 -- found version 13.6.0
+[4.754s] -- Looking for gz-rendering8 -- found version 8.2.3
+[4.755s] -- Searching for dependencies of gz-rendering8
+[4.755s] -- Looking for gz-math7 -- found version 7.7.0
+[4.756s] -- Searching for dependencies of gz-math7
+[4.756s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.756s] -- Searching for <gz-math7> component [eigen3]
+[4.757s] -- Looking for gz-math7-eigen3 -- found version 7.7.0
+[4.757s] -- Searching for dependencies of gz-math7-eigen3
+[4.759s] -- Looking for gz-common5 -- found version 5.9.0
+[4.760s] -- Searching for dependencies of gz-common5
+[4.760s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.760s] -- Looking for dlfcn.h - found
+[4.760s] -- Looking for libdl - found
+[4.766s] -- Searching for <gz-common5> component [graphics]
+[4.767s] -- Searching for <gz-common5> component [events]
+[4.767s] -- Searching for <gz-common5> component [geospatial]
+[4.767s] -- Looking for gz-common5-geospatial -- found version 5.9.0
+[4.768s] -- Searching for dependencies of gz-common5-geospatial
+[4.768s] -- Looking for gz-math7 -- found version 7.7.0
+[4.768s] -- Looking for gz-common5 -- found version 5.9.0
+[4.771s] -- Looking for gz-plugin2 -- found version 2.0.4
+[4.771s] -- Searching for dependencies of gz-plugin2
+[4.771s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.772s] -- Searching for <gz-plugin2> component [all]
+[4.772s] -- Looking for all libraries of gz-plugin2 -- found version 2.0.4
+[4.772s] -- Looking for gz-plugin2 -- found version 2.0.4
+[4.775s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.793s] -- Looking for gz-msgs10 -- found version 10.4.0
+[4.857s] -- Looking for gz-physics7 -- found version 7.8.0
+[4.857s] -- Searching for dependencies of gz-physics7
+[4.857s] -- Looking for gz-common5 -- found version 5.9.0
+[4.858s] -- Looking for gz-math7 -- found version 7.7.0
+[4.858s] -- Looking for gz-plugin2 -- found version 2.0.4
+[4.859s] -- Looking for gz-utils2 -- found version 2.2.1
+[4.861s] -- Searching for <gz-physics7> component [heightmap]
+[4.862s] -- Looking for gz-physics7-heightmap -- found version 7.8.0
+[4.863s] -- Searching for dependencies of gz-physics7-heightmap
+[4.863s] -- Looking for gz-common5 -- found version 5.9.0
+[4.864s] -- Searching for <gz-physics7> component [mesh]
+[4.865s] -- Looking for gz-physics7-mesh -- found version 7.8.0
+[4.866s] -- Searching for dependencies of gz-physics7-mesh
+[4.866s] -- Looking for gz-common5 -- found version 5.9.0
+[4.866s] -- Searching for <gz-physics7> component [sdf]
+[4.867s] -- Looking for gz-physics7-sdf -- found version 7.8.0
+[4.868s] -- Searching for dependencies of gz-physics7-sdf
+[4.868s] -- Looking for sdformat14 -- found version 14.9.0
+[4.870s] -- Looking for gz-sensors8 -- found version 8.2.2
+[4.870s] -- Searching for dependencies of gz-sensors8
+[5.380s] -- Looking for gz-math7 -- found version 7.7.0
+[5.381s] -- Looking for gz-common5 -- found version 5.9.0
+[5.381s] -- Looking for gz-transport13 -- found version 13.6.0
+[5.381s] -- Looking for gz-rendering8 -- found version 8.2.3
+[5.381s] -- Looking for gz-msgs10 -- found version 10.4.0
+[5.382s] -- Looking for sdformat14 -- found version 14.9.0
+[5.394s] -- Searching for <gz-sensors8> component [air_pressure]
+[5.395s] -- Looking for gz-sensors8-air_pressure -- found version 8.2.2
+[5.395s] -- Searching for dependencies of gz-sensors8-air_pressure
+[5.396s] -- Searching for <gz-sensors8> component [air_speed]
+[5.397s] -- Looking for gz-sensors8-air_speed -- found version 8.2.2
+[5.398s] -- Searching for dependencies of gz-sensors8-air_speed
+[5.399s] -- Searching for <gz-sensors8> component [altimeter]
+[5.400s] -- Looking for gz-sensors8-altimeter -- found version 8.2.2
+[5.400s] -- Searching for dependencies of gz-sensors8-altimeter
+[5.402s] -- Searching for <gz-sensors8> component [imu]
+[5.404s] -- Looking for gz-sensors8-imu -- found version 8.2.2
+[5.404s] -- Searching for dependencies of gz-sensors8-imu
+[5.405s] -- Searching for <gz-sensors8> component [force_torque]
+[5.406s] -- Looking for gz-sensors8-force_torque -- found version 8.2.2
+[5.407s] -- Searching for dependencies of gz-sensors8-force_torque
+[5.408s] -- Searching for <gz-sensors8> component [logical_camera]
+[5.408s] -- Looking for gz-sensors8-logical_camera -- found version 8.2.2
+[5.409s] -- Searching for dependencies of gz-sensors8-logical_camera
+[5.411s] -- Searching for <gz-sensors8> component [magnetometer]
+[5.412s] -- Looking for gz-sensors8-magnetometer -- found version 8.2.2
+[5.412s] -- Searching for dependencies of gz-sensors8-magnetometer
+[5.413s] -- Searching for <gz-sensors8> component [navsat]
+[5.415s] -- Looking for gz-sensors8-navsat -- found version 8.2.2
+[5.415s] -- Searching for dependencies of gz-sensors8-navsat
+[5.416s] -- Searching for <gz-sensors8> component [dvl]
+[5.418s] -- Looking for gz-sensors8-dvl -- found version 8.2.2
+[5.418s] -- Searching for dependencies of gz-sensors8-dvl
+[5.418s] -- Looking for gz-sensors8 -- found version 8.2.2
+[5.419s] -- Searching for dependencies of gz-sensors8
+[6.008s] -- Looking for gz-math7 -- found version 7.7.0
+[6.008s] -- Looking for gz-common5 -- found version 5.9.0
+[6.009s] -- Looking for gz-transport13 -- found version 13.6.0
+[6.009s] -- Looking for gz-rendering8 -- found version 8.2.3
+[6.010s] -- Looking for gz-msgs10 -- found version 10.4.0
+[6.010s] -- Looking for sdformat14 -- found version 14.9.0
+[6.010s] -- Searching for <gz-sensors8> component [rendering]
+[6.013s] -- Looking for gz-sensors8-rendering -- found version 8.2.2
+[6.013s] -- Searching for dependencies of gz-sensors8-rendering
+[6.016s] -- Searching for <gz-sensors8> component [rendering]
+[6.016s] -- Searching for <gz-sensors8> component [lidar]
+[6.017s] -- Looking for gz-sensors8-lidar -- found version 8.2.2
+[6.017s] -- Searching for dependencies of gz-sensors8-lidar
+[6.018s] -- Looking for gz-sensors8 -- found version 8.2.2
+[6.019s] -- Searching for <gz-sensors8> component [gpu_lidar]
+[6.020s] -- Looking for gz-sensors8-gpu_lidar -- found version 8.2.2
+[6.020s] -- Searching for dependencies of gz-sensors8-gpu_lidar
+[6.021s] -- Looking for gz-sensors8 -- found version 8.2.2
+[6.023s] -- Searching for <gz-sensors8> component [camera]
+[6.023s] -- Looking for gz-sensors8-camera -- found version 8.2.2
+[6.024s] -- Searching for dependencies of gz-sensors8-camera
+[6.024s] -- Looking for gz-sensors8 -- found version 8.2.2
+[6.026s] -- Searching for <gz-sensors8> component [boundingbox_camera]
+[6.027s] -- Looking for gz-sensors8-boundingbox_camera -- found version 8.2.2
+[6.027s] -- Searching for dependencies of gz-sensors8-boundingbox_camera
+[6.029s] -- Searching for <gz-sensors8> component [segmentation_camera]
+[6.031s] -- Looking for gz-sensors8-segmentation_camera -- found version 8.2.2
+[6.031s] -- Searching for dependencies of gz-sensors8-segmentation_camera
+[6.032s] -- Searching for <gz-sensors8> component [depth_camera]
+[6.033s] -- Looking for gz-sensors8-depth_camera -- found version 8.2.2
+[6.034s] -- Searching for dependencies of gz-sensors8-depth_camera
+[6.034s] -- Looking for gz-sensors8 -- found version 8.2.2
+[6.035s] -- Searching for <gz-sensors8> component [rgbd_camera]
+[6.037s] -- Looking for gz-sensors8-rgbd_camera -- found version 8.2.2
+[6.037s] -- Searching for dependencies of gz-sensors8-rgbd_camera
+[6.038s] -- Looking for gz-sensors8 -- found version 8.2.2
+[6.039s] -- Searching for <gz-sensors8> component [thermal_camera]
+[6.040s] -- Looking for gz-sensors8-thermal_camera -- found version 8.2.2
+[6.041s] -- Searching for dependencies of gz-sensors8-thermal_camera
+[6.041s] -- Looking for gz-sensors8 -- found version 8.2.2
+[6.042s] -- Searching for <gz-sensors8> component [wide_angle_camera]
+[6.043s] -- Looking for gz-sensors8-wide_angle_camera -- found version 8.2.2
+[6.044s] -- Searching for dependencies of gz-sensors8-wide_angle_camera
+[6.046s] -- Looking for gz-rendering8 -- found version 8.2.3
+[6.046s] -- Looking for gz-math7 -- found version 7.7.0
+[6.047s] -- Looking for gz-utils2 -- found version 2.2.1
+[6.707s] -- Configuring done (6.6s)
+[6.753s] -- Generating done (0.0s)
+[6.760s] -- Build files have been written to: /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation
+[6.816s] [ 50%] Building CXX object CMakeFiles/tide_visual_system.dir/plugins/tide_visual_system.cpp.o
+[12.877s] [100%] Linking CXX shared library libtide_visual_system.so
+[13.232s] [100%] Built target tide_visual_system
+[13.248s] Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation' returned '0': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation -- -j14 -l14
+[13.250s] Invoking command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation
+[13.261s] -- Install configuration: ""
+[13.262s] -- Execute custom install script
+[13.262s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/libtide_visual_system.so
+[13.263s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/tidal_vehicle_simulation/tide_manager.py
+[13.264s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/tidal_vehicle_simulation/collision_test_teleop.py
+[13.279s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/config/scenario_defaults.yaml
+[13.281s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/.gitkeep
+[13.281s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/collision_test.launch.py
+[13.293s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/environment.launch.py
+[13.295s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/.gitkeep
+[13.296s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/barrage_obstacles/model.config
+[13.297s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/barrage_obstacles/model.sdf
+[13.298s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/collision_test_body/model.config
+[13.312s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/collision_test_body/model.sdf
+[13.326s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/meshes/destination_incline.obj
+[13.327s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/model.config
+[13.328s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/model.sdf
+[13.328s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove.mtl
+[13.329s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_mature.obj
+[13.330s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_spreading.obj
+[13.331s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_young.obj
+[13.331s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/model.config
+[13.332s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/model.sdf
+[13.332s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_collision_debug/model.config
+[13.345s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_collision_debug/model.sdf
+[13.361s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_0_no_trank.jpg
+[13.361s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_10_color_leaf_2.jpg
+[13.362s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_1_color_trank.jpg
+[13.362s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_2_gl_trank.png
+[13.362s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_3_no_leaf.jpg
+[13.363s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_4_color_leaf_1.jpg
+[13.364s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_5_gl_leaf.png
+[13.364s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_6_no_root.jpg
+[13.365s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_7_color_root.jpg
+[13.365s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_8_color_leaf_4.jpg
+[13.366s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_9_color_leaf_3.jpg
+[13.366s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/meshes/mangrovetree.mtl
+[13.367s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/meshes/mangrovetree.obj
+[13.368s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/model.config
+[13.368s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/model.sdf
+[13.369s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mission_markers/model.config
+[13.369s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mission_markers/model.sdf
+[13.370s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/meshes/natural_obstacles.mtl
+[13.370s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/meshes/natural_obstacles.obj
+[13.372s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/model.config
+[13.373s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/model.sdf
+[13.373s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/placeholder_obstacles/model.config
+[13.374s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/placeholder_obstacles/model.sdf
+[13.374s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/heightmap.pgm
+[13.375s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/heightmap.png
+[13.375s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/materials/mudflat.png
+[13.376s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/meshes/terrain_visual.mtl
+[13.376s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/meshes/terrain_visual.obj
+[13.377s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/model.config
+[13.377s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/model.sdf
+[13.377s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/tidal_corridor_lighting/model.config
+[13.378s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/tidal_corridor_lighting/model.sdf
+[13.379s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/meshes/low_tide_pools.obj
+[13.379s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/model.config
+[13.380s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/model.sdf
+[13.381s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/materials/muddy_water.png
+[13.381s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/meshes/water_surface.mtl
+[13.383s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/meshes/water_surface.obj
+[13.383s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/model.config
+[13.383s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/model.sdf
+[13.384s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/plugins/.gitkeep
+[13.385s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/plugins/tide_visual_system.cpp
+[13.386s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/worlds/.gitkeep
+[13.386s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/worlds/tidal_corridor.sdf
+[13.387s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/package_run_dependencies/tidal_vehicle_simulation
+[13.387s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/parent_prefix_path/tidal_vehicle_simulation
+[13.388s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/ament_prefix_path.sh
+[13.389s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/ament_prefix_path.dsv
+[13.390s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/path.sh
+[13.390s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/path.dsv
+[13.391s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.bash
+[13.392s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.sh
+[13.392s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.zsh
+[13.393s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.dsv
+[13.393s] -- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.dsv
+[13.406s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/packages/tidal_vehicle_simulation
+[13.407s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/cmake/tidal_vehicle_simulationConfig.cmake
+[13.407s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/cmake/tidal_vehicle_simulationConfig-version.cmake
+[13.408s] -- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.xml
+[13.411s] Invoked command in '/home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation' returned '0': AMENT_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces:/opt/ros/jazzy/opt/gz_sim_vendor:/opt/ros/jazzy/opt/gz_sensors_vendor:/opt/ros/jazzy/opt/gz_physics_vendor:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_gui_vendor:/opt/ros/jazzy/opt/gz_transport_vendor:/opt/ros/jazzy/opt/gz_rendering_vendor:/opt/ros/jazzy/opt/gz_plugin_vendor:/opt/ros/jazzy/opt/gz_fuel_tools_vendor:/opt/ros/jazzy/opt/gz_msgs_vendor:/opt/ros/jazzy/opt/gz_common_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_ogre_next_vendor:/opt/ros/jazzy/opt/gz_dartsim_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy LD_LIBRARY_PATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/tiffy/One-Wish-Coders/install/tidal_vehicle_interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/tiffy/One-Wish-Coders/build/tidal_vehicle_simulation

@@ -1,0 +1,7 @@
+std_msgs/Header header
+string tide_state
+float32 tide_risk
+float32 water_level_m
+float32 tide_rate_m_per_minute
+float32 seconds_until_corridor_unsafe
+bool corridor_traversable

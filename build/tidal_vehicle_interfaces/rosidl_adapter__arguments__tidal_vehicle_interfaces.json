@@ -1,0 +1,8 @@
+{
+  "package_name": "tidal_vehicle_interfaces",
+  "non_idl_tuples": [
+    "/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces:msg/SafetyStatus.msg",
+    "/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces:msg/TerrainState.msg",
+    "/home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws/src/tidal_vehicle_interfaces:msg/VehicleHealth.msg"
+  ]
+}

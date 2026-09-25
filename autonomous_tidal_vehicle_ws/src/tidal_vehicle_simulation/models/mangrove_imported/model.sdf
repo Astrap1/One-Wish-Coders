@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<sdf version="1.10">
+  <model name="mangrove_imported">
+    <pose>14 7 0 0 0 0</pose>
+    <static>true</static>
+    <link name="visual_only_link">
+      <!-- Terrain at (14, 7) is approximately 0.03 m above world zero. -->
+      <pose>0 0 0.03 1.5708 0 0</pose>
+      <visual name="imported_mangrove_visual"><geometry><mesh><uri>meshes/Mangrovetree.glb</uri></mesh></geometry></visual>
+    </link>
+    <!-- The converted GLB mesh is the authoritative visual and collision geometry. -->
+    <!-- A mesh collision is used so Gazebo physics and LiDAR can detect the tree shape. -->
+    <link name="glb_collision_link">
+      <pose>0 0 0.28 0 0 0</pose>
+      <collision name="glb_mesh_collision">
+        <geometry><mesh><uri>meshes/mangrovetree.obj</uri></mesh></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

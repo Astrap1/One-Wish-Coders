@@ -1,0 +1,1 @@
+/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces/ament_cmake_environment_hooks/local_setup.sh

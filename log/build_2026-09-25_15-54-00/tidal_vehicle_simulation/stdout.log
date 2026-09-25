@@ -1,0 +1,79 @@
+[100%] Built target tide_visual_system
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/libtide_visual_system.so
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/lib/tidal_vehicle_simulation/tide_manager.py
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/config/scenario_defaults.yaml
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/.gitkeep
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/launch/environment.launch.py
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/.gitkeep
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/barrage_obstacles/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/barrage_obstacles/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/meshes/destination_incline.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/destination_incline/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove.mtl
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_mature.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_spreading.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/meshes/mangrove_young.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_cluster/model.sdf
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_0_no_trank.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_10_color_leaf_2.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_1_color_trank.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_2_gl_trank.png
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_3_no_leaf.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_4_color_leaf_1.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_5_gl_leaf.png
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_6_no_root.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_7_color_root.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_8_color_leaf_4.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/materials/image_9_color_leaf_3.jpg
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/meshes/mangrovetree.mtl
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/meshes/mangrovetree.obj
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/model.config
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mangrove_imported/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mission_markers/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/mission_markers/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/meshes/natural_obstacles.mtl
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/meshes/natural_obstacles.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/natural_obstacles/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/placeholder_obstacles/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/placeholder_obstacles/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/heightmap.pgm
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/heightmap.png
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/materials/mudflat.png
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/meshes/terrain_visual.mtl
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/meshes/terrain_visual.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/terrain/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/tidal_corridor_lighting/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/tidal_corridor_lighting/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/meshes/low_tide_pools.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_pools/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/materials/muddy_water.png
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/meshes/water_surface.mtl
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/meshes/water_surface.obj
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/model.config
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/models/water_surface/model.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/plugins/.gitkeep
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/plugins/tide_visual_system.cpp
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/worlds/.gitkeep
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/worlds/tidal_corridor.sdf
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/package_run_dependencies/tidal_vehicle_simulation
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/parent_prefix_path/tidal_vehicle_simulation
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/path.sh
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/environment/path.dsv
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.bash
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.sh
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.zsh
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/local_setup.dsv
+-- Symlinking: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.dsv
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/ament_index/resource_index/packages/tidal_vehicle_simulation
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/cmake/tidal_vehicle_simulationConfig.cmake
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/cmake/tidal_vehicle_simulationConfig-version.cmake
+-- Up-to-date symlink: /home/tiffy/One-Wish-Coders/install/tidal_vehicle_simulation/share/tidal_vehicle_simulation/package.xml

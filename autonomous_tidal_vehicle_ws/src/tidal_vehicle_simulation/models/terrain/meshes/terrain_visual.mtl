@@ -1,0 +1,23 @@
+newmtl dry_mud
+Kd 0.48 0.36 0.22
+Ka 0.20 0.14 0.08
+Ns 8
+map_Kd ../materials/mudflat.png
+
+newmtl wet_mud
+Kd 0.38 0.30 0.20
+Ka 0.12 0.09 0.05
+Ns 18
+map_Kd ../materials/mudflat.png
+
+newmtl firm_soil
+Kd 0.40 0.46 0.24
+Ka 0.12 0.15 0.06
+Ns 10
+map_Kd ../materials/mudflat.png
+
+newmtl vegetated_soil
+Kd 0.25 0.38 0.16
+Ka 0.08 0.13 0.05
+Ns 12
+map_Kd ../materials/mudflat.png

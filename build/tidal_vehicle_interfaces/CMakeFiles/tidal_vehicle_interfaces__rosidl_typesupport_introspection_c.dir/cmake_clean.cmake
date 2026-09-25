@@ -1,0 +1,21 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c.o"
+  "CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c.o.d"
+  "CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c.o"
+  "CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c.o.d"
+  "CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c.o"
+  "CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c.o.d"
+  "libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.pdb"
+  "libtidal_vehicle_interfaces__rosidl_typesupport_introspection_c.so"
+  "rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/safety_status__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/safety_status__type_support.c"
+  "rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/terrain_state__type_support.c"
+  "rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/tidal_vehicle_interfaces/msg/detail/vehicle_health__type_support.c"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/tidal_vehicle_interfaces__rosidl_typesupport_introspection_c.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

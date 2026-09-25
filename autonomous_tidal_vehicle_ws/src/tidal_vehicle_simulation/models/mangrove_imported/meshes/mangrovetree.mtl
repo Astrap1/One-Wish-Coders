@@ -1,0 +1,48 @@
+newmtl mat_0
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.55
+Ks 0.03 0.03 0.03
+Ns 12
+d 1.0
+map_Kd ../materials/image_1_color_trank.jpg
+
+newmtl mat_1
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.55
+Ks 0.03 0.03 0.03
+Ns 12
+d 1.0
+map_Kd ../materials/image_4_color_leaf_1.jpg
+
+newmtl mat_2
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.55
+Ks 0.03 0.03 0.03
+Ns 12
+d 1.0
+map_Kd ../materials/image_7_color_root.jpg
+
+newmtl mat_3
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.55
+Ks 0.03 0.03 0.03
+Ns 12
+d 1.0
+map_Kd ../materials/image_8_color_leaf_4.jpg
+
+newmtl mat_4
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.55
+Ks 0.03 0.03 0.03
+Ns 12
+d 1.0
+map_Kd ../materials/image_9_color_leaf_3.jpg
+
+newmtl mat_5
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.55
+Ks 0.03 0.03 0.03
+Ns 12
+d 1.0
+map_Kd ../materials/image_10_color_leaf_2.jpg
+

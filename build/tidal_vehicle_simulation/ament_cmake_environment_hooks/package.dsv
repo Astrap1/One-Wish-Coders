@@ -1,0 +1,4 @@
+source;share/tidal_vehicle_simulation/local_setup.bash
+source;share/tidal_vehicle_simulation/local_setup.dsv
+source;share/tidal_vehicle_simulation/local_setup.sh
+source;share/tidal_vehicle_simulation/local_setup.zsh

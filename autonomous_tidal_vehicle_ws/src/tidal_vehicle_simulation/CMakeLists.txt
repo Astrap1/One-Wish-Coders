@@ -42,6 +42,7 @@ install(DIRECTORY config launch models worlds DESTINATION share/${PROJECT_NAME})
 install(PROGRAMS
   scripts/vehicle_mobility_node.py
   scripts/lidar_scan_node.py
+  scripts/tide_manager.py
   scripts/gen_test_worlds.py
   DESTINATION lib/${PROJECT_NAME})
 

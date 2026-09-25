@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import math
+import io
 import threading
 import time
 
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry, Path
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import Image, LaserScan
+from PIL import Image as PILImage
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -16,7 +18,7 @@ from std_msgs.msg import String
 from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState, VehicleHealth
 
 from .operator_dashboard import build_dashboard_payload
-from .web_dashboard import update_dashboard_state, serve_dashboard
+from .web_dashboard import update_camera_frame, update_dashboard_state, serve_dashboard
 
 
 class BrowserDashboardNode(Node):
@@ -60,6 +62,7 @@ class BrowserDashboardNode(Node):
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd_vel, 10)
         self.create_subscription(Odometry, "/odom", self._on_odom, 10)
+        self.create_subscription(Image, "/camera/image_raw", self._on_camera, 10)
         self.create_timer(1.0, self._publish_state)
 
     def _on_mission_event(self, message: String) -> None:
@@ -126,6 +129,24 @@ class BrowserDashboardNode(Node):
         self._vehicle_x = float(message.pose.pose.position.x)
         self._vehicle_y = float(message.pose.pose.position.y)
         self._publish_state()
+
+    def _on_camera(self, message: Image) -> None:
+        if message.encoding not in {"rgb8", "bgr8"}:
+            return
+        channels = 3
+        width = int(message.width)
+        height = int(message.height)
+        row_bytes = width * channels
+        raw = bytes(message.data)
+        if message.step > row_bytes:
+            raw = b"".join(raw[row * int(message.step):row * int(message.step) + row_bytes] for row in range(height))
+        image = PILImage.frombytes("RGB", (width, height), raw)
+        if message.encoding == "bgr8":
+            red, green, blue = image.split()
+            image = PILImage.merge("RGB", (blue, green, red))
+        output = io.BytesIO()
+        image.save(output, format="JPEG", quality=82, optimize=True)
+        update_camera_frame(output.getvalue())
 
     def _on_mission_goal(self, _: PoseStamped) -> None:
         self._reason = "Mission goal received; monitoring route progress."

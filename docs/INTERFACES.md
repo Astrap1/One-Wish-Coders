@@ -4,7 +4,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 
 | Topic | Publisher | Consumer | Initial type | Purpose |
 | --- | --- | --- | --- | --- |
-| `/scan` | Simulation | Autonomy | `sensor_msgs/LaserScan` | Near-field obstacle sensing. |
+| `/scan` | Simulation | Autonomy | `sensor_msgs/LaserScan` | Near-field obstacle sensing used for the planner's temporary obstacle overlay. |
 | `/imu` | Simulation | Autonomy | `sensor_msgs/Imu` | Orientation and motion sensing. |
 | `/odom` | Simulation | Autonomy, Safety, Operator | `nav_msgs/Odometry` | Vehicle position and velocity. |
 | `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. |
@@ -89,3 +89,11 @@ The simulation publishes a new terrain state and cost map whenever the simulated
 - `-1`: unknown terrain, treated as no-go by autonomy.
 
 Until the common TF tree is integrated, `/terrain_costmap`, `/odom`, `/mission_goal` and `/planned_path` must have matching frame IDs. The global planner publishes `/planned_path`; the path follower combines it with `/odom` and publishes `/cmd_vel_proposed`. The safety supervisor remains the only publisher of `/cmd_vel`.
+
+## LiDAR obstacle update rule
+
+Autonomy treats `/terrain_costmap` as the Simulation-owned base map. It must not republish or modify that source map. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the configured safety radius and overlaid as temporary no-go cells for route planning.
+
+Each accepted scan replaces the previous temporary obstacle set. A changed set causes immediate route reassessment; a clear scan removes prior LiDAR cells. If the overlay blocks every route, the global planner publishes an empty `/planned_path` to stop the path follower's previous proposal.
+
+Until the common TF tree and final sensor mounting are integrated, Autonomy assumes the LiDAR origin matches the odometry position and its zero angle points along the vehicle's forward axis. The initial 1.7 m inflation radius represents an estimated 2.5 m by 1.5 m footprint plus about 0.25 m clearance. Person 4 owns the final collision geometry, sensor pose and frame publication; Person 1 must use those values once available.

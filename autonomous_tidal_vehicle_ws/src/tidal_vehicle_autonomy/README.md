@@ -6,7 +6,7 @@ Owns route proposals, path following, local obstacle response and delivery missi
 
 ### global_planner
 
-The global planner listens to /terrain_costmap, /odom, /mission_goal and /terrain_state, then publishes a terrain-aware /planned_path.
+The global planner listens to /terrain_costmap, /odom, /mission_goal, /terrain_state and /scan, then publishes a terrain-aware /planned_path.
 
 For the first integration slice, map, odometry and goal must use the same frame, normally map. The node refuses to mix frames until the common transform tree is available.
 
@@ -17,6 +17,17 @@ Terrain cost-map encoding is fixed as follows:
 - -1: unknown and no-go.
 
 If replanning makes a previously published route unsafe, the planner publishes an empty path to invalidate it.
+
+LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Valid detections are inflated and added to an internal planning copy of the terrain map. A changed obstacle set triggers replanning; an obstacle-free scan removes the prior temporary cells. The Simulation-owned /terrain_costmap is never modified.
+
+For the initial integration, the vehicle footprint is estimated as 2.5 m long by 1.5 m wide, and the LiDAR is assumed to be at the odometry position and aligned with the vehicle's forward axis. Use Person 4's final collision geometry and sensor transform when they are ready.
+
+Global-planner LiDAR parameters:
+
+| Parameter | Default | Meaning |
+| --- | ---: | --- |
+| obstacle_inflation_radius_m | 1.7 m | Estimated vehicle half-diagonal plus about 0.25 m clearance. |
+| obstacle_max_range_m | 8.0 m | Farthest scan return used by local planning. |
 
 ### path_follower
 
@@ -52,10 +63,9 @@ Path-follower parameters:
 
 ## Remaining milestones
 
-1. Consume /scan and create a local obstacle representation.
-2. Replan around an injected obstacle.
-3. Respect the Safety return instruction while publishing current outbound and return routes against terrain state.
-4. Tune path-following parameters against the integrated simulated vehicle.
+1. Replace the initial LiDAR pose assumption with Person 4's final sensor transform.
+2. Respect the Safety return instruction while publishing current outbound and return routes against terrain state.
+3. Tune LiDAR inflation, usable range and path-following parameters against the integrated simulated vehicle.
 
 ## Safety-return integration
 

@@ -14,7 +14,7 @@ See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system bound
 
 ## Vehicle configuration and mobility modes
 
-The simulated vehicle has an inflatable air-cushion skirt, a lift fan, rear propulsion fans and wheels. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt or hovercraft physics.
+The simulated vehicle has an inflatable air-cushion skirt, a lift fan, rear propulsion fans and wheels. Its initial planning size is approximately 2.5 m long and an estimated 1.5 m wide; Person 4's final collision geometry remains authoritative. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt or hovercraft physics.
 
 The vehicle controller uses three internal mobility modes:
 
@@ -55,13 +55,14 @@ the same bands. A path that crosses a `90+` or `-1` cell is invalid.
 
 ## Role 1: Autonomy implementation status
 
-- Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal` and `/terrain_state` and publishes `/planned_path` only.
+- Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state` and `/scan` and publishes `/planned_path` only.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
 - Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-wheel terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
 - The planner replans after cost-map, goal or terrain-state updates, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe.
+- Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay, and a changed scan triggers route reassessment without modifying Simulation's terrain map.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
 - The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames.
-- Added eleven ROS-independent planner/follower tests and two ROS topic integration tests.
+- Added seventeen ROS-independent planner, follower and LiDAR tests and three ROS topic integration tests.
 - Verified the autonomy package builds in WSL and both `global_planner` and `path_follower` start successfully.
 
 ### Path follower implementation details
@@ -95,7 +96,22 @@ The follower proposes a zero command when the path is empty, odometry is missing
 
 The follower is independent of `WHEEL`, `TRANSITION` and `HOVER` actuator behaviour. Person 2 retains final command authority and remains the only publisher of `/cmd_vel`; Person 4 translates the approved body-motion command into wheel, lift-fan and propulsion-fan behaviour.
 
-LiDAR-based local obstacle response, live simulated-odometry tuning and Safety-requested return-path handling remain the next Role 1 milestones. Autonomy does not publish `/cmd_vel`.
+### LiDAR obstacle response implementation details
+
+The global planner keeps Simulation's `/terrain_costmap` unchanged as its base map. Each `/scan` update is converted from polar range measurements into world coordinates using the vehicle pose from `/odom`, then into terrain-grid cells. Invalid, infinite, too-near and over-range measurements are ignored. Detected cells are expanded by the configured safety radius and marked no-go only in an internal copy used by A*.
+
+Each accepted scan replaces the previous dynamic obstacle set. When that set changes, the planner immediately rechecks the route. It publishes a detour when one exists and publishes an empty `/planned_path` if the obstacle removes every safe route. A later clear scan removes the temporary cells and allows the direct terrain route to return.
+
+Default LiDAR parameters are:
+
+| Parameter | Default | Purpose |
+| --- | ---: | --- |
+| `obstacle_inflation_radius_m` | `1.7 m` | Cover the estimated half-diagonal of the vehicle plus about 0.25 m clearance. |
+| `obstacle_max_range_m` | `8.0 m` | Ignore detections beyond the useful local planning distance. |
+
+For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 1.7 m circular inflation is based on an approximately 2.5 m by 1.5 m vehicle footprint plus about 0.25 m clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when available.
+
+Live simulated-odometry and LiDAR tuning, final sensor-frame integration and Safety-requested return-path handling remain the next Role 1 milestones. Autonomy does not publish `/cmd_vel`.
 
 ## Three-day build plan
 

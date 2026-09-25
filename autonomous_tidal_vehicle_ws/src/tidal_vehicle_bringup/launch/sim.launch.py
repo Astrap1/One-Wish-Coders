@@ -1,22 +1,23 @@
 """sim.launch.py — the one-command launch path (vehicle simulation & integration).
 
-    ros2 launch tidal_vehicle_bringup sim.launch.py                        # Version 2, integration world
-    ros2 launch tidal_vehicle_bringup sim.launch.py world:=tidal_corridor  # Person 3's corridor + tide
+    ros2 launch tidal_vehicle_bringup sim.launch.py                        # Version 2 in the tidal corridor
     ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version 1 fallback
+    ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
     ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true
 
 Starts:
   * Gazebo Harmonic with `world` (path relative to tidal_vehicle_simulation/worlds, no .sdf)
   * the `vehicle` (v2: hovercraft_v2, tracked; v1: hovercraft, wheeled), spawned at HOME
     unless the world already includes it
-  * world:=tidal_corridor also starts Person 3's tide_manager (/terrain_state and the
-    changing /terrain_costmap) instead of the static integration cost map
+  * tide:=true (default) starts Person 3's tide_manager (/terrain_state and the changing
+    /terrain_costmap); tide:=false starts the static integration cost map instead
   * ros_gz_bridge (config/ros_gz_bridge.yaml) -> /odom /tf /joint_states /points /imu /gps/fix
     /camera/image_raw + vehicle-internal /vehicle/* topics
   * robot_state_publisher (URDF from tidal_vehicle_description) -> /robot_description, joint TFs
   * lidar_scan_node       /points -> /scan
-  * vehicle_mobility_node /cmd_vel -> hover fans or wheels; /vehicle_health; placeholder /terrain_state
-  * terrain_costmap_node   static integration map until Person 3's tide manager is ready
+  * vehicle_mobility_node /cmd_vel -> hover fans or wheels; /vehicle_health
+  * tide_manager           dynamic terrain state and costmap for tidal_corridor
+    (or terrain_costmap_node for explicit non-tidal integration worlds)
   * global_planner + path_follower + safety_supervisor
   * foxglove_bridge on ws://0.0.0.0:8765 (Foxglove Desktop on Windows: ws://localhost:8765)
   * RViz (optional)
@@ -48,7 +49,6 @@ VEHICLES = {
     "v2": {"model": "hovercraft_v2", "urdf": "hovercraft_v2.urdf",
            "params": "vehicle_mobility_v2.yaml", "bridge": "ros_gz_bridge_v2.yaml"},
 }
-TIDE_WORLDS = {"tidal_corridor"}       # worlds whose terrain state comes from tide_manager
 SPAWN_Z = {"tidal_corridor": 0.25}     # drop height above z = 0 (the corridor ground is uneven)
 
 
@@ -73,7 +73,8 @@ def _setup(context):
     urdf = (desc_share / "urdf" / veh["urdf"]).read_text()
     params = str(sim_share / "config" / veh["params"])
     safety_params = str(safety_share / "config" / "safety_params.yaml")
-    tide = any(world_name.startswith(w) for w in TIDE_WORLDS)
+    scenario_params = str(sim_share / "config" / "scenario_defaults.yaml")
+    tide = LaunchConfiguration("tide").perform(context).lower() in ("true", "1", "yes")
     # Spawn the vehicle at HOME (0, 0) unless the world file already includes it.
     spawn = f"<uri>model://{veh['model']}</uri>" not in world_file.read_text()
 
@@ -104,12 +105,11 @@ def _setup(context):
         Node(package="tidal_vehicle_simulation", executable="vehicle_mobility_node.py",
              name="vehicle_mobility", output="screen",
              parameters=[params, mode_policy,
-                         # one /terrain_state publisher: the tide manager's, when it runs
+                         # Tide manager is the only terrain-state publisher in the
+                         # tidal corridor. Keep the placeholder for test worlds.
                          {"publish_terrain_state": not tide}]),
         (Node(package="tidal_vehicle_simulation", executable="tide_manager.py",
-              name="tide_manager", output="screen",
-              parameters=[str(sim_share / "config" / "scenario_defaults.yaml"),
-                          {"use_sim_time": True}])
+              name="tide_manager", output="screen", parameters=[scenario_params])
          if tide else
          Node(package="tidal_vehicle_simulation", executable="terrain_costmap_node.py",
               name="terrain_costmap", output="screen", parameters=[params])),
@@ -135,10 +135,12 @@ def _setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument("world", default_value="vehicle_tests/integration_test",
+        DeclareLaunchArgument("world", default_value="tidal_corridor",
                               description="world under tidal_vehicle_simulation/worlds, without .sdf"),
         DeclareLaunchArgument("vehicle", default_value="v2",
                               description="v2 (tracked, the demo vehicle) | v1 (wheeled fallback)"),
+        DeclareLaunchArgument("tide", default_value="true",
+                              description="run the tide manager instead of the static integration map"),
         DeclareLaunchArgument("mode_policy", default_value="",
                               description="hover_only | terrain_auto; empty = vehicle default "
                                           "(v1 hover_only, v2 terrain_auto)"),

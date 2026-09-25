@@ -22,7 +22,7 @@ The vehicle controller uses three internal mobility modes:
 - **TRACK** — used on firm land and on slopes. The tracks are deployed and execute the safety-approved command as a skid-steer drive. The lift fan provides a controlled share of the vehicle's weight (the *cushion load share*): about 0–20% on firm, level ground and up to about 60% on soft ground or slopes, lowering the tracks' ground pressure while they keep traction and braking. The tracks are never fully unloaded in TRACK mode.
 - **TRANSITION** — used while changing between TRACK and HOVER. Horizontal motion stops, the tracks deploy or retract, the lift fan ramps up or down, and the controller waits until the vehicle is either hover-ready or settled and loaded on its tracks.
 
-Mode selection is internal to Person 4's controller. It switches to TRACK when the vehicle reaches firm land (cost `0`--`19`) or a slope steeper than the hover slope limit (working value 6°), and back to HOVER on mud or shallow water (cost `20`--`89`) below that limit. A short dwell time prevents chattering at terrain boundaries.
+Mode selection is internal to Person 4's controller (`vehicle_mobility_node`, `gear: tracks`). It reads the `/terrain_costmap` bands from the vehicle's position to 2.5 m ahead along its heading, so it changes mode *before* reaching new terrain. It switches to TRACK on firm land (cost `0`--`19`, after a 3 s dwell) or on a climbing or side slope steeper than the hover slope limit (8°, sustained for 1.5 s so edges and bumps don't trigger it). It switches to HOVER when hover terrain (cost `20`--`89`) lies ahead. Two slope rules use the tracks where a hovercraft would slide. When the vehicle is stopped for 5 s on a slope steeper than 2°, it parks on its tracks. When it is asked to pivot in place on such a slope, it pivots on its tracks. Neither applies over water, where the surface is level. It never lifts off while tilted.
 
 These mobility modes are separate from Person 2's safety states and must not replace or rename `CRUISE`, `CAUTION`, `HOLD` or `RETURN`. They do not introduce new external commands or topics. The existing command authority remains:
 
@@ -32,7 +32,7 @@ These mobility modes are separate from Person 2's safety states and must not rep
 
 A track-to-hover transition must stop horizontal motion, ramp the lift fan, wait for hover-ready status, then retract the tracks before propulsion begins. A hover-to-track transition must stop horizontal motion, deploy the tracks, reduce lift in a controlled way to the target load share and confirm that the vehicle has settled onto its tracks before track motion begins. The safety-approved command remains authoritative in every mode. Any future topic or message change requires the matching update to `docs/INTERFACES.md`.
 
-Version 1 used wheels, and this section called its ground mode **WHEEL**. Safety's ground-mode return-energy parameters (`wheel_cost_max`, `wheel_energy_percent_per_m`, `wheel_nominal_speed_mps`) stand in for TRACK mode until Person 2 renames them.
+Safety's ground-mode return-energy parameters are `track_cost_max`, `track_energy_percent_per_m` and `track_nominal_speed_mps`. The common launch sets Safety's `track_mode_enabled` to true for `vehicle:=v2` and false for the Version 1 fallback, which runs `hover_only`.
 
 ### Shared terrain-cost semantics
 
@@ -47,26 +47,35 @@ The terrain cost map supplies the shared route and mobility interpretation:
 Autonomy plans with these costs and Safety estimates the return energy/time using
 the same bands. A path that crosses a `90+` or `-1` cell is invalid.
 
-### Vehicle Version 2 (in design)
+### Vehicle Version 2 (the demo vehicle)
 
-Version 1 is frozen in `assets/vehicle_blender/version_1/`: a 1.2 × 0.7 m, 25 kg air-cushion vehicle on four wheels with swing-up legs. It remains the simulated model (`tidal_vehicle_description/models/hovercraft/`) until Version 2 replaces it. Version 2 is built in `assets/vehicle_blender/version_2/` with the same pipeline (Blender script → `link_frames.json` → `gen_description.py` → SDF/URDF).
+Version 2 is built and is the default vehicle of the common launch (`vehicle:=v2`). Its Blender source is `assets/vehicle_blender/version_2/build_vehicle.py`. The pipeline is the same as Version 1's: Blender script → `link_frames.json` → `gen_description_v2.py` → `models/hovercraft_v2/model.sdf` and `urdf/hovercraft_v2.urdf`. It uses the same frame names (`base_link`, `lidar_link`, `camera_link`, `imu_link`) and the same public topics as Version 1. Version 1 is frozen in `assets/vehicle_blender/version_1/` (1.2 × 0.7 m, 25 kg, four wheels on swing-up legs) and stays available as the fallback with `vehicle:=v1`.
 
-First-order sizing for Version 2. These are stated design assumptions, not validated data:
+Version 2 sizing. These are stated design assumptions, not validated data. The geometric values are the built model's, checked in `assets/vehicle_blender/version_2/renders/dimensions.txt`:
 
 | Quantity | Working value | Basis |
 | --- | --- | --- |
 | Overall size | 2.5 m L × 1.5 m W × 1.5 m H | Team working dimensions; the height includes the LiDAR mast. |
 | Design mass | ≈ 300 kg including a 30 kg payload | Composite hull and skirt ≈ 70 kg, track undercarriage ≈ 70 kg, fans and motors ≈ 50 kg, 10 kWh battery ≈ 65 kg, electronics ≈ 15 kg. |
-| Cushion pressure | ≈ 0.9 kPa over ≈ 3.2 m² of cushion | Within the usual 0.5–1.5 kPa range for light hovercraft. |
+| Cushion pressure | ≈ 0.81 kPa over ≈ 3.6 m² of cushion | Within the usual 0.5–1.5 kPa range for light hovercraft. |
 | Lift power | ≈ 2–3 kW electrical | Air escaping under an 8 m skirt perimeter with a 6 mm effective gap, 50% fan-and-motor efficiency. |
-| Propulsion | Two ducted fans, ≈ 200 N each | Thrust-to-weight ≈ 0.14, enough to accelerate, brake with reverse thrust and climb gentle slopes on the cushion. |
-| Tracks | Two tracks, 0.30 m wide, ≈ 1.6 m ground contact | ≈ 3 kPa ground pressure with no cushion support and ≈ 1.2 kPa at 60% cushion load share. For comparison, a standing person exerts roughly 15–25 kPa. |
-| Slope limits (working) | HOVER ≤ 6°; TRACK ≤ 20° | Hovercraft lose control authority on side and up slopes; tracks with cushion assistance take over. |
-| Height and stability | Hull top ≤ ≈ 1.0 m, centre of mass ≤ ≈ 0.5 m above ground | Keeps centre-of-mass height to beam ≈ 0.33 so a compartmented skirt stays roll-stable on the cushion. The rest of the 1.5 m is the sensor mast. A solid 1.5 m-tall hull would be roll-unstable on the cushion and is not the intent. |
+| Propulsion | Two reversible ducted fans, ≈ 200 N each, 80% reverse thrust | Thrust-to-weight ≈ 0.14. Reverse thrust of 320 N brakes the vehicle and holds it on slopes up to ≈ 6°. |
+| Tracks | Two inboard tracks, 0.28 m wide, 1.40 m ground contact, 0.84 m gauge | Length-to-gauge ≈ 1.67, inside the 1.0–1.8 range where skid steering works well. Ground pressure ≈ 3.75 kPa with no cushion support and ≈ 1.5 kPa at 60% cushion load share. A standing person exerts roughly 15–25 kPa. They retract 0.25 m into hull wells. |
+| Slope limits (working) | HOVER climbs ≤ 8°; TRACK ≤ 20° (15° ramp tested) | Above 8° it climbs on the tracks with cushion assistance. When stopped or pivoting on slopes above 2° it uses the tracks, because the cushion slides sideways. |
+| Height and stability | Hull top 0.95 m, centre of mass 0.46 m above ground | Keeps centre-of-mass height to beam ≈ 0.31 so a compartmented skirt stays roll-stable on the cushion. The rest of the 1.5 m is the sensor mast. |
 
 Conclusion: the dimensions are physically plausible for an electric, 300 kg-class craft, provided the hull stays low and the 1.5 m height is mostly the mast. Air-cushion-assisted tracked vehicles have been studied for soft terrain such as marsh and snow, but performance in Singapore mangrove mud needs physical testing.
 
-Simulation risk to retire first: Gazebo Harmonic's track systems (`TrackController`/`TrackedVehicle`) need contact-surface-motion support from the physics engine, and Version 1 runs DART with the Bullet collision detector for the air-cushion ray casts. Prove tracks work on that combination before building the rest of Version 2. The fallback is a row of road wheels under a visual track.
+Agreed Version 2 design decisions:
+
+- **Demo vehicle.** Version 2 is the vehicle for the final demonstration, and Version 1 is the fallback (`vehicle:=v1`).
+- **Payload.** Rated at 30 kg in a sealed box. It can carry up to about 80 kg at reduced performance: cushion pressure ≈ 1.0 kPa, lift power up about 26%, thrust-to-weight ≈ 0.12.
+- **Tracks.** Two inboard tracks under the hull, inside the skirt footprint, retracting vertically into hull wells. The overall width stays 1.5 m.
+- **Propulsion.** Two rear reversible ducted fans with rudders.
+- **LiDAR.** On a mast at the vehicle's centre, directly above `base_link`, so its horizontal position matches the odometry position that Autonomy's obstacle projection assumes. The lift fan is offset forward.
+- **Style.** The same as Version 1: olive hull, black skirt, orange payload box.
+
+Simulation risk retired: Gazebo Harmonic's `TrackController`/`TrackedVehicle` work with DART and the Bullet collision detector, which the air-cushion ray casts need. They also work with the corridor's heightmap. The tracks drive at the commanded speed, pivot in place without drift and climb a 15° ramp. The `hover::AirCushion` plugin gained a `lift_share` input for TRACK-mode load sharing, reversible thrust and a yaw reserve. Version 1 is unchanged by these additions.
 
 ## Team roles
 
@@ -159,22 +168,25 @@ The HOME values must match Person 2's safety parameters. The final sensor transf
 
 ## Role 4: Vehicle simulation and integration status
 
-- **Version 1 is merged on `main`.** It contains the wheeled procedural Blender model, generated SDF/URDF, Gazebo plugins, mobility and LiDAR nodes, ROS-Gazebo bridge and the common launcher. Full description: `docs/VEHICLE_SIMULATION.md`.
-- **Gazebo physics verified:** 25 of 25 headless acceptance checks pass on Gazebo Harmonic 8.15, covering hover-gap hold, speed and turning, water → mud → bank travel, debris clearance, command tracking and the mud wheel/hover comparison.
-- **ROS 2 integration verified in WSL:** all launch processes start, `/odom`, `/scan`, vehicle health and mode telemetry are live, LiDAR uses compatible sensor QoS, Safety is the sole `/cmd_vel` publisher, and all processes stop cleanly.
-- The default `vehicle_tests/integration_test` world contains no scripted motion. ROS is its only actuator source, and its static `/terrain_costmap` supports repeatable vehicle and autonomy integration.
-- Person 3's tidal corridor, tide manager, animated water and mangrove assets are now on `main`, but that environment still runs through a separate launch path and is not yet compatible with the vehicle stack.
-- The public mobility modes are `TRACK`, `TRANSITION` and `HOVER`. Version 1 implements TRACK with wheels. Horizontal commands are zero during TRANSITION; HOVER requires explicit plugin readiness, and transition failures are reported in `/vehicle_health.fault`.
-- `hover_only` remains the Version 1 demo default, matching Safety's `track_mode_enabled: false`. Vehicle health and placeholder terrain telemetry publish at 10 Hz; Safety evaluates freshness in simulation time.
+- **Version 2 delivered on `main` and is the launch default.** It includes the Blender model, SDF/URDF, the mobility controller (`gear: tracks`), a bridge configuration and the test worlds described in `docs/VEHICLE_SIMULATION.md`. Launch with `ros2 launch tidal_vehicle_bringup sim.launch.py`, or add `vehicle:=v1` for the fallback.
+- **Gazebo physics verified:** all 19 Version 2 checks pass (`tools/vehicle_tests/analyze.py`):
+  - hover gap 5.05 cm held with the tracks retracted;
+  - 2.0 m/s and 0.46 rad/s command tracking in HOVER;
+  - 1.00 m/s and a 0.51 rad/s pivot with 5 mm drift in TRACK;
+  - the 15° ramp climbed on the tracks;
+  - exactly 60% cushion load share while resting on the tracks;
+  - the full water → mud → bank sequence: hover, stop, deploy the tracks, lower the lift to 40%, then climb a 12° bank on the tracks.
 
-Remaining integration work:
+  The Version 1 regression checks are unchanged.
+- **ROS 2 integration verified** (headless, integration world with `tide:=false`). An autonomous goal across water and mud produced `delivery_confirmed` then `mission_complete`. Version 2 started on its tracks at HOME, switched to HOVER 2.5 m before the water, and returned to TRACK at HOME. Safety remained the sole `/cmd_vel` publisher. The Version 1 fallback completes the same mission.
+- **Tidal corridor:** Version 2 spawns at HOME, parks on its tracks, crosses the channel in HOVER and reaches delivery. Open issues are listed below.
 
-1. Fold Person 3's `environment.launch.py` and tide manager into the single common launcher under `world:=tidal_corridor`.
-2. Change the corridor physics from ODE to the DART/Bullet combination required by the air-cushion ray casts, spawn the vehicle at HOME and add the terrain-zone plugin.
-3. Change the tide manager frame from `world` to `map` and disable the vehicle's placeholder `/terrain_state` whenever the tide manager runs.
-4. Remove committed root-level generated `build/`, `install/` and `log/` output and keep builds under `autonomous_tidal_vehicle_ws/`.
-5. Replace Version 1's timed wheel-settling check with measured ground-gear readiness before enabling terrain-selected TRACK motion.
-6. Integrate and validate the planned 2.5 m Version 2 tracked vehicle before enabling track-mode return estimates.
+Open integration items:
+
+1. **Corridor incline.** The corridor terrain is tilted 4.6° (`fixed_terrain` pitch 0.08 rad). On the return leg Version 2 creeps downhill in TRACK mode even with its tracks stopped, and it takes about 3 m to stop from cruise before a pivot. The track/skirt contact with the heightmap needs investigating. Version 1 does not reach the delivery point on this terrain at all. A flatter shore (less than about 2°) would suit both vehicles.
+2. **Tide timing.** `scenario_defaults.yaml` floods the corridor in 30 s of sim time, so a normal delivery cannot finish before the tide cuts off HOME. Scenario 1 needs the tide held, or a slower rise, with the rising tide triggered for scenario 3.
+3. **Rendering load.** The mangrove and rock meshes are heavy for the LiDAR and camera. Check the real-time factor on the demo laptop's GPU.
+4. **Sensor transform.** Autonomy should use the Version 2 LiDAR transform (centre mast, 1.44 m) once the shared TF work lands. Until then its "LiDAR at odometry position" assumption holds for Version 2.
 
 ## Three-day build plan
 

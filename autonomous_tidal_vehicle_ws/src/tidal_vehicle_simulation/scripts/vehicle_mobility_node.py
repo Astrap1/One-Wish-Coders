@@ -28,13 +28,15 @@ class ModeMachine:
         lift to the TRACK load share, then wait until the measured cushion gap
         has settled at the on-track height for settle_s.
       Mode selection (terrain_auto): TRACK on firm ground (after firm_dwell_s)
-        or on slopes steeper than hover_slope_limit_deg; HOVER on MUD / WATER
-        below that limit. In TRACK mode the cushion carries track_share_firm of
+        or on climbing / side slopes steeper than hover_slope_limit_deg
+        (slope_deg); HOVER on MUD / WATER below that limit. Descending on the
+        cushion is allowed: the reversible fans brake. In TRACK mode the cushion carries track_share_firm of
         the weight, or track_share_slope on slopes.
       Parking: stopped in HOVER on a slope steeper than park_slope_deg for
-        park_after_s (and not over water), the vehicle deploys its tracks and
-        parks on them instead of sliding downhill on the cushion; it lifts
-        off again as soon as motion is commanded on hover terrain.
+        park_after_s, or asked to pivot in place there (and not over water),
+        the vehicle deploys its tracks and parks / pivots on them instead of
+        sliding downhill on the cushion; it lifts off again once forward
+        motion is commanded on hover terrain.
     """
 
     def __init__(
@@ -55,6 +57,8 @@ class ModeMachine:
         settle_gap_tolerance_m: float = 0.008,
         park_after_s: float = 5.0,
         park_slope_deg: float = 2.0,
+        slope_dwell_s: float = 1.5,
+        settle_vz_mps: float = 0.01,
     ) -> None:
         if policy not in {"hover_only", "terrain_auto"}:
             raise ValueError("mode_policy must be hover_only or terrain_auto")
@@ -76,6 +80,9 @@ class ModeMachine:
         self.settle_gap_tolerance_m = settle_gap_tolerance_m
         self.park_after_s = park_after_s
         self.park_slope_deg = park_slope_deg
+        self.slope_dwell_s = slope_dwell_s
+        self.settle_vz_mps = settle_vz_mps
+        self.steep_t = 0.0
         self.idle_t = 0.0
         self.mode = "TRACK"
         self.transition_target: str | None = None
@@ -127,13 +134,18 @@ class ModeMachine:
         slope_deg: float = 0.0,
         moving: bool = True,
         over_water: bool = False,
+        tilt_deg: float | None = None,
+        pivot: bool = False,
+        vz: float | None = None,
     ) -> tuple[bool, float]:
         self.phase_t += dt
         self.firm_t = self.firm_t + dt if terrain == "FIRM" else 0.0
         self.idle_t = 0.0 if moving else self.idle_t + dt
         if self.gear == "tracks":
             return self._step_tracks(dt, terrain, hover_state, gap, gear_pos, slope_deg,
-                                     moving, over_water)
+                                     moving, over_water,
+                                     slope_deg if tilt_deg is None else tilt_deg,
+                                     pivot, vz)
 
         if self.mode == "TRACK":
             self.hover_enabled = False
@@ -187,24 +199,34 @@ class ModeMachine:
         slope_deg: float,
         moving: bool,
         over_water: bool,
+        tilt_deg: float,
+        pivot: bool,
+        vz: float | None,
     ) -> tuple[bool, float]:
-        # over water the surface is level: the slope limit and parking don't apply
-        steep = slope_deg > self.hover_slope_limit_deg and not over_water
-        sloped = slope_deg > self.park_slope_deg and not over_water
+        # over water the surface is level: the slope limit and parking don't apply.
+        # A slope must persist for slope_dwell_s: crossing an edge or a bump
+        # tilts the vehicle for a moment without being a slope to climb.
+        tilted = slope_deg > self.hover_slope_limit_deg and not over_water
+        self.steep_t = self.steep_t + dt if tilted else 0.0
+        steep = self.steep_t >= self.slope_dwell_s
+        sloped = tilt_deg > self.park_slope_deg and not over_water
         if self.mode == "TRACK":
             self.legs = 0.0
             self.lift_share = self.track_share(slope_deg)
             self.hover_enabled = self.lift_share > 0.0
-            parked = sloped and not moving
+            # parked: stopped, or pivoting in place, on a slope (tracks turn
+            # without drifting; the cushion would slide downhill)
+            parked = sloped and (not moving or pivot)
+            # never lift off while tilted, even briefly
             if (self.policy == "terrain_auto" and terrain in {"MUD", "WATER"}
-                    and not steep and not parked):
+                    and not tilted and not parked):
                 self._start_transition("HOVER")
 
         elif self.mode == "HOVER":
             self.hover_enabled = True
             self.lift_share = None
             self.legs = self.retract_position
-            park = sloped and self.idle_t >= self.park_after_s
+            park = sloped and (self.idle_t >= self.park_after_s or pivot)
             if self.policy == "terrain_auto" and (
                     self.firm_t >= self.firm_dwell_s or steep or park):
                 self._start_transition("TRACK")
@@ -238,8 +260,14 @@ class ModeMachine:
                     self.settled_t = 0.0
             if self._stage == 1:
                 self.lift_share = self.track_share(slope_deg)
+                # settled = the cushion no longer lifts the vehicle above its
+                # on-track height (corners over water can read lower), or, on
+                # uneven ground where the mean gap is not a clean number, the
+                # vehicle has stopped moving vertically on its tracks
                 on_tracks = (gap is not None
-                             and abs(gap - self.settle_gap_m) <= self.settle_gap_tolerance_m)
+                             and gap <= self.settle_gap_m + self.settle_gap_tolerance_m)
+                if vz is not None and hover_state == "LOAD_SHARE" and self.phase_t >= 1.0:
+                    on_tracks = on_tracks or abs(vz) <= self.settle_vz_mps
                 self.settled_t = self.settled_t + dt if on_tracks else 0.0
                 if self.settled_t >= self.settle_s:
                     self._enter("TRACK")
@@ -398,6 +426,8 @@ def main() -> None:
                 ),
                 park_after_s=float(parameter("park_after_s", 5.0).value),
                 park_slope_deg=float(parameter("park_slope_deg", 2.0).value),
+                slope_dwell_s=float(parameter("slope_dwell_s", 1.5).value),
+                settle_vz_mps=float(parameter("settle_vz_mps", 0.01).value),
                 settle_gap_m=float(parameter("settle_gap_m", 0.03).value),
                 settle_gap_tolerance_m=float(
                     parameter("settle_gap_tolerance_m", 0.008).value
@@ -424,6 +454,8 @@ def main() -> None:
             self.gap: float | None = None
             self.gear_pos: float | None = None
             self.slope_deg = 0.0
+            self.tilt_deg = 0.0
+            self.vz: float | None = None
             self.pose = (0.0, 0.0, 0.0)
             self.odom_seen = False
             self.costmap = None
@@ -539,9 +571,15 @@ def main() -> None:
                              1.0 - 2.0 * (q.y * q.y + q.z * q.z))
             self.pose = (p.x, p.y, yaw)
             self.odom_seen = True
-            # tilt of the body z axis from vertical = slope under the vehicle
+            self.vz = message.twist.twist.linear.z
+            # total tilt of the body z axis from vertical (used for parking)
             cos_tilt = 1.0 - 2.0 * (q.x * q.x + q.y * q.y)
-            self.slope_deg = math.degrees(math.acos(max(-1.0, min(1.0, cos_tilt))))
+            self.tilt_deg = math.degrees(math.acos(max(-1.0, min(1.0, cos_tilt))))
+            # slope to climb: nose-up pitch (REP-103: pitch > 0 is nose down) or
+            # a side slope; descending on the cushion is fine
+            roll = math.atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y))
+            pitch = math.asin(max(-1.0, min(1.0, 2.0 * (q.w * q.y - q.z * q.x))))
+            self.slope_deg = math.degrees(max(-pitch, abs(roll)))
 
         def on_cmd(self, message: Twist) -> None:
             self.cmd = message
@@ -581,6 +619,9 @@ def main() -> None:
                 slope_deg=self.slope_deg,
                 moving=abs(linear) > 0.01 or abs(angular) > 0.01,
                 over_water=self.terrain == "WATER",
+                tilt_deg=self.tilt_deg,
+                pivot=abs(linear) <= 0.05 and abs(angular) > 0.05,
+                vz=self.vz,
             )
             share = self.modes.lift_share
             if self.pub_share is not None:

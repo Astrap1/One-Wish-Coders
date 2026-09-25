@@ -8,8 +8,15 @@ turns into the Gazebo SDF and ROS URDF.
 
 | Version | Folder | Concept | Status |
 | --- | --- | --- | --- |
-| 1 | `version_1/` | 1.2 × 0.7 m air-cushion vehicle (0.99 m overall width), 25 kg, one lift fan, two rear thrust fans with rudders, four 0.30 m balloon wheels on swing-up legs with coil-over suspension. | Frozen reference. Its generated model is `tidal_vehicle_description/models/hovercraft/`, which the launch file still uses until Version 2 replaces it. Gazebo acceptance results are summarised in `docs/VEHICLE_SIMULATION.md`. |
-| 2 | `version_2/` (not yet created) | Hovercraft-dominant amphibious vehicle with a complete retractable tracked undercarriage and controlled air-cushion load sharing, about 2.5 m long, 1.5 m wide and 1.5 m high. | In design. See `AGENTS.md` → *Vehicle Version 2*. |
+| 1 | `version_1/` | 1.2 × 0.7 m air-cushion vehicle (0.99 m overall width), 25 kg, one lift fan, two rear thrust fans with rudders, four 0.30 m balloon wheels on swing-up legs with coil-over suspension. | Frozen. It is the fallback (`vehicle:=v1`); its generated model is `tidal_vehicle_description/models/hovercraft/`. |
+| 2 | `version_2/` | Hovercraft-dominant amphibious vehicle with a complete retractable tracked undercarriage and controlled air-cushion load sharing: 2.5 × 1.5 × 1.5 m, 300 kg including a 30 kg payload, two inboard tracks, reversible ducted fans and a centre LiDAR mast. | The demo vehicle and launch default. Its generated model is `tidal_vehicle_description/models/hovercraft_v2/`. See `AGENTS.md` → *Vehicle Version 2* and `docs/VEHICLE_SIMULATION.md`. |
+
+Rebuild Version 2 (Blender 4.2+, or the pip `bpy` 4.2 module with `python3`):
+
+```bash
+blender --background --python assets/vehicle_blender/version_2/build_vehicle.py
+python3 autonomous_tidal_vehicle_ws/src/tidal_vehicle_description/scripts/gen_description_v2.py
+```
 
 Rebuild Version 1 (Blender 4.2 writes both `.dae` and `.glb`; see `docs/VEHICLE_SIMULATION.md` §2 for Blender on Windows):
 

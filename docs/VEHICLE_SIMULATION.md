@@ -1,6 +1,75 @@
 # Vehicle simulation (Person 4: vehicle simulation and integration)
 
-This describes **Version 1** of the air-cushion vehicle (wheeled; Version 2 with a tracked undercarriage is in design, see `AGENTS.md`): model, physics abstraction, sensors, ROS interface and the one-command launch. The public topics are in [`INTERFACES.md`](INTERFACES.md).
+This describes the air-cushion vehicle: model, physics abstraction, sensors, ROS interface and the one-command launch. **Version 2** (tracked, below) is the demo vehicle and the launch default. Sections 1–6 describe the shared pipeline and **Version 1** (wheeled), which is the fallback with `vehicle:=v1`. The public topics are in [`INTERFACES.md`](INTERFACES.md), and the design decisions are in `AGENTS.md` under "Vehicle Version 2".
+
+## Version 2: tracked, hovercraft-dominant (the demo vehicle)
+
+```bash
+ros2 launch tidal_vehicle_bringup sim.launch.py                        # Version 2 in the tidal corridor
+ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
+ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version 1 fallback
+```
+
+**Vehicle:**
+- 2.5 m long, 1.5 m wide, 1.5 m high; 300 kg including a 30 kg payload box.
+- Bag skirt with segmented fingers.
+- Lift fan offset forward, so the 16-channel LiDAR sits on a centre mast directly above `base_link` at 1.44 m.
+- Two reversible ducted fans (200 N each, 80% reverse) with rudders.
+- Two inboard rubber tracks (0.28 m wide, 1.40 m contact, 0.84 m gauge) on prismatic joints. They retract 0.25 m into hull wells in HOVER.
+
+**Rebuild the model:**
+```bash
+blender --background --python assets/vehicle_blender/version_2/build_vehicle.py
+python3 autonomous_tidal_vehicle_ws/src/tidal_vehicle_description/scripts/gen_description_v2.py
+```
+The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_vehicle.py`). Its spec checks are in `renders/dimensions.txt`, and all of them pass.
+
+**Simulation model (stated assumptions, not validated physics):**
+- `hover::AirCushion` gains are scaled from Version 1 to 300 kg: same cushion natural frequency and damping ratio, 5 cm hover gap, drag sized for a top speed of about 3 m/s.
+- New plugin inputs:
+  - `lift_share` (0–1): in TRACK mode the cushion carries that share of the weight and the tracks carry the rest.
+  - `reverse_thrust_fraction` 0.8, which brakes and holds the vehicle on slopes up to about 6°.
+  - `yaw_reserve_fraction` 0.3, which keeps some steering while braking.
+- Gazebo's `TrackController` and `TrackedVehicle` drive the tracks from `/vehicle/cmd_vel_tracks`.
+- `hover::TerrainZones` water only counts where the water surface is above the measured ground. A water zone can also rise over time (`<rise>`, `<rise_duration>`).
+
+**Mode control** (`vehicle_mobility_node`, `config/vehicle_mobility_v2.yaml`, `gear: tracks`, `mode_policy: terrain_auto`):
+
+| From → to | Sequence (horizontal motion is zero throughout) | Ready when | Fault on timeout (12 s) |
+|---|---|---|---|
+| TRACK → HOVER | full lift → wait for `hover_state == HOVER` → retract the tracks | measured track joints at 0.25 m | `hover_not_ready` / `track_deployment_fault` |
+| HOVER → TRACK | deploy the tracks while hovering → lower the lift to the TRACK load share | skirt gap at the on-track height (≤ 3.8 cm), or vertical speed below 3 cm/s in `LOAD_SHARE` | `track_deployment_fault` / `track_settle_timeout` |
+
+**Mode selection:**
+- It uses the `/terrain_costmap` bands, looking 2.5 m ahead along the heading. HOVER when hover terrain (20–89) lies ahead; TRACK on firm ground (0–19) after a 3 s dwell.
+- TRACK on climbing or side slopes above 8° that last 1.5 s.
+- Parks on the tracks when stopped for 5 s on a slope above 2°, and pivots on the tracks when a turn in place is asked on such a slope.
+- In TRACK mode the cushion carries 20% on firm, level ground and 60% on steep slopes.
+
+**Tests:**
+```bash
+python3 autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation/scripts/gen_test_worlds_v2.py --no-render-sensors --out /tmp/v2worlds
+for t in "v2_hover_test 62" "v2_track_test 48" "v2_load_share_test 18" "v2_transition_test 63"; do
+  WORLD_DIR=/tmp/v2worlds tools/vehicle_tests/run_test.sh $t; done
+python3 tools/vehicle_tests/analyze.py        # v2_* rows in results/acceptance.md
+```
+All 19 Version 2 checks pass:
+
+| Test | Result |
+|---|---|
+| Hover gap with the tracks retracted | 5.05 cm (4.2–5.4) |
+| HOVER tracking | 2.006 m/s at 2.0; 0.46 rad/s at 0.5 |
+| TRACK drive | 1.000 m/s; pivot 0.51 rad/s with 5 mm drift |
+| 15° ramp | climbed on the tracks |
+| Load share | 0.600 at 0.6 commanded, resting on the tracks (gap 2.7–3.0 cm) |
+| Water → mud → bank | hover across; stop; deploy; 40% share; climb a 12° bank on the tracks |
+
+With the full ROS stack in the integration world, an autonomous goal across the water channel produced `delivery_confirmed` then `mission_complete` in 87 s. Open items in the tidal corridor are listed in `AGENTS.md` (Role 4).
+
+**Test-host notes:**
+- Headless rendering needs EGL (`libegl1`, `libegl-mesa0`).
+- conda/RoboStack builds of gz-sim 8.10 lack `Model::SetStatic`. Build with `-DTIDAL_BUILD_TIDE_VISUAL=OFF` there.
+- The apt Gazebo that ROS 2 Jazzy installs has `Model::SetStatic`, so none of this applies on the WSL laptop.
 
 ## 1. Where things live
 
@@ -11,12 +80,17 @@ This describes **Version 1** of the air-cushion vehicle (wheeled; Version 2 with
 | `tidal_vehicle_description/urdf/hovercraft.urdf` | The same vehicle for ROS (`robot_state_publisher`, RViz, Foxglove) |
 | `tidal_vehicle_description/scripts/gen_description.py` | Builds `model.sdf` and the URDF from `link_frames.json`, so they can't drift apart |
 | `tidal_vehicle_simulation/plugins/` | C++ Gazebo systems: `hover::AirCushion`, `hover::TerrainZones`, `hover::ScriptedCommands` → `libtidal_vehicle_plugins.so` |
-| `tidal_vehicle_simulation/scripts/vehicle_mobility_node.py` | Safety-approved `/cmd_vel` → fans or wheels, TRACK/TRANSITION/HOVER switching, `/vehicle_health` and placeholder `/terrain_state` |
+| `tidal_vehicle_simulation/scripts/vehicle_mobility_node.py` | Safety-approved `/cmd_vel` → fans or wheels, TRACK/TRANSITION/HOVER switching, `/vehicle_health` and placeholder `/terrain_state` for static test worlds only |
 | `tidal_vehicle_simulation/scripts/lidar_scan_node.py` | `/points` → `/scan` |
-| `tidal_vehicle_simulation/scripts/terrain_costmap_node.py` | Static `/terrain_costmap` for the default vehicle integration world |
+| `tidal_vehicle_simulation/scripts/terrain_costmap_node.py` | Static `/terrain_costmap` fallback for explicit vehicle-only test worlds |
 | `tidal_vehicle_simulation/worlds/vehicle_tests/` | Vehicle test worlds (generated by `scripts/gen_test_worlds.py`). The tidal-corridor demo world belongs to the environment workstream. |
 | `tidal_vehicle_bringup/launch/sim.launch.py` | The one-command launch |
 | `tools/vehicle_tests/` | Headless test runner, analysis and A/B clip recorder. Output goes to `results/`, which git ignores. |
+| `assets/vehicle_blender/version_2/build_vehicle.py` | Procedural Blender model for **Version 2** (tracked). It writes meshes and `link_frames.json` to `models/hovercraft_v2/`. |
+| `tidal_vehicle_description/models/hovercraft_v2/`, `urdf/hovercraft_v2.urdf` | Version 2 Gazebo model and URDF, generated by `scripts/gen_description_v2.py` |
+| `tidal_vehicle_simulation/config/vehicle_mobility_v2.yaml` | Version 2 mobility, LiDAR and battery parameters |
+| `tidal_vehicle_bringup/config/ros_gz_bridge_v2.yaml` | Version 2 Gazebo ⇄ ROS topic map |
+| `tidal_vehicle_simulation/scripts/gen_test_worlds_v2.py` | Version 2 test worlds (`worlds/vehicle_tests/v2_*.sdf`) |
 
 ## 2. Development setup (agreed team workflow)
 

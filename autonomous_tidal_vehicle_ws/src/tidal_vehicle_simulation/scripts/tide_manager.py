@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic tide state and costmap publisher for the demo world."""
 
-import math
 from typing import Optional
 
 import rclpy
@@ -21,6 +20,23 @@ class TideManager(Node):
         self.declare_parameter("risk_rate_per_minute", 0.05)
         self.declare_parameter("corridor_unsafe_risk_threshold", 0.85)
         self.declare_parameter("publish_period_s", 0.5)
+        self.declare_parameter("frame_id", "map")
+        self.declare_parameter("map_resolution_m", 1.0)
+        self.declare_parameter("map_width_cells", 80)
+        self.declare_parameter("map_height_cells", 60)
+        self.declare_parameter("map_origin_x_m", -40.0)
+        self.declare_parameter("map_origin_y_m", -30.0)
+        self.declare_parameter("firm_cost", 10)
+        self.declare_parameter("mud_cost", 45)
+        self.declare_parameter("water_cost", 55)
+        self.declare_parameter("channel_min_x_m", 4.0)
+        self.declare_parameter("channel_max_x_m", 18.0)
+        self.declare_parameter("channel_min_y_m", -8.0)
+        self.declare_parameter("channel_max_y_m", 8.0)
+        self.declare_parameter("mud_min_x_m", 18.0)
+        self.declare_parameter("mud_max_x_m", 32.0)
+        self.declare_parameter("mud_min_y_m", -8.0)
+        self.declare_parameter("mud_max_y_m", 8.0)
 
         self.duration = float(self.get_parameter("scenario_duration_s").value)
         self.initial_level = float(self.get_parameter("initial_water_level_m").value)
@@ -29,6 +45,17 @@ class TideManager(Node):
         self.unsafe_threshold = float(
             self.get_parameter("corridor_unsafe_risk_threshold").value
         )
+        self.frame_id = str(self.get_parameter("frame_id").value)
+        self.resolution = float(self.get_parameter("map_resolution_m").value)
+        self.width = int(self.get_parameter("map_width_cells").value)
+        self.height = int(self.get_parameter("map_height_cells").value)
+        self.origin_x = float(self.get_parameter("map_origin_x_m").value)
+        self.origin_y = float(self.get_parameter("map_origin_y_m").value)
+        self.firm_cost = int(self.get_parameter("firm_cost").value)
+        self.mud_cost = int(self.get_parameter("mud_cost").value)
+        self.water_cost = int(self.get_parameter("water_cost").value)
+        self.channel = self._rectangle("channel")
+        self.mudflat = self._rectangle("mud")
         # The demo starts at low tide and rises automatically; scenario events
         # can still reset, hold, resume, or restart the progression.
         self.started_at: Optional[float] = self._now()
@@ -89,7 +116,7 @@ class TideManager(Node):
 
         state = TerrainState()
         state.header.stamp = self.get_clock().now().to_msg()
-        state.header.frame_id = "map"
+        state.header.frame_id = self.frame_id
         state.tide_state = tide_state
         state.tide_risk = float(risk)
         state.water_level_m = float(self.last_level)
@@ -102,33 +129,41 @@ class TideManager(Node):
     def _make_costmap(self, fraction: float, risk: float) -> OccupancyGrid:
         grid = OccupancyGrid()
         grid.header.stamp = self.get_clock().now().to_msg()
-        grid.header.frame_id = "map"
-        grid.info.resolution = 1.0
-        grid.info.width = 50
-        grid.info.height = 50
-        grid.info.origin.position.x = -25.0
-        grid.info.origin.position.y = -25.0
+        grid.header.frame_id = self.frame_id
+        grid.info.resolution = self.resolution
+        grid.info.width = self.width
+        grid.info.height = self.height
+        grid.info.origin.position.x = self.origin_x
+        grid.info.origin.position.y = self.origin_y
         grid.info.origin.orientation.w = 1.0
         values = []
-        for row in range(50):
-            y = row - 24.5
-            for col in range(50):
-                x = col - 24.5
-                # A soft, meandering channel risk band; this is a planning layer,
-                # not a replacement for the fixed Gazebo collision heightmap.
-                centre = 5.0 * math.sin(y * 0.18) - 2.0
-                channel_distance = abs(x - centre)
-                wet = channel_distance < 3.0 + 0.8 * math.sin(y * 0.13) ** 2
-                value = 20
-                if wet:
-                    value = 55 + int(35 * fraction)
-                if channel_distance < 1.2 + 0.7 * fraction:
-                    value = min(100, 70 + int(30 * fraction))
-                if risk >= self.unsafe_threshold and wet:
-                    value = 100
+        for row in range(self.height):
+            y = self.origin_y + (row + 0.5) * self.resolution
+            for col in range(self.width):
+                x = self.origin_x + (col + 0.5) * self.resolution
+                value = self.firm_cost
+                # These rectangles deliberately mirror TerrainZones in
+                # tidal_corridor.sdf. Obstacles remain a LiDAR planning overlay.
+                if self._contains(self.mudflat, x, y):
+                    value = min(89, self.mud_cost + int(20 * fraction))
+                if self._contains(self.channel, x, y):
+                    value = min(89, self.water_cost + int(35 * fraction))
+                    if risk >= self.unsafe_threshold:
+                        value = 100
                 values.append(value)
         grid.data = values
         return grid
+
+    def _rectangle(self, prefix: str) -> tuple[float, float, float, float]:
+        return tuple(
+            float(self.get_parameter(f"{prefix}_{axis}_m").value)
+            for axis in ("min_x", "max_x", "min_y", "max_y")
+        )
+
+    @staticmethod
+    def _contains(rectangle: tuple[float, float, float, float], x: float, y: float) -> bool:
+        min_x, max_x, min_y, max_y = rectangle
+        return min_x <= x <= max_x and min_y <= y <= max_y
 
 
 def main() -> None:

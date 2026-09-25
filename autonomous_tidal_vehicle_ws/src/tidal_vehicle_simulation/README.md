@@ -10,9 +10,10 @@ See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
   - `hover::AirCushion` — cushion lift, glide drag, fan thrust, rudders, hover velocity control, mud resistance
   - `hover::TerrainZones` — declares mud and water zones
   - `hover::ScriptedCommands` — timed test commands
-- `scripts/vehicle_mobility_node.py` — `/cmd_vel` → fans or wheels, TRACK/TRANSITION/HOVER switching, `/vehicle_health`, placeholder `/terrain_state`
+- `scripts/vehicle_mobility_node.py` — `/cmd_vel` → fans or wheels, TRACK/TRANSITION/HOVER switching, `/vehicle_health`, and a low-tide placeholder `/terrain_state` only for static test worlds
 - `scripts/lidar_scan_node.py` — `/points` → best-effort `/scan`
-- `scripts/terrain_costmap_node.py` — static `/terrain_costmap` for the default vehicle integration world
+- `scripts/terrain_costmap_node.py` — static `/terrain_costmap` fallback for explicit vehicle test worlds
+- `scripts/tide_manager.py` — changing, map-frame `/terrain_state` and `/terrain_costmap` for the tidal corridor
 - `scripts/gen_test_worlds.py` → `worlds/vehicle_tests/*.sdf` — vehicle test worlds
 - `worlds/vehicle_tests/integration_test.sdf` — unscripted world used by the common ROS launch
 - `config/vehicle_mobility.yaml` — mobility and battery assumptions
@@ -23,4 +24,7 @@ See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
 - `models/` — roots, debris, delivery zone and other reusable world assets.
 - Mud and water zones: add a `hover::TerrainZones` plugin to the world (see `worlds/vehicle_tests/transition_test.sdf`) so the vehicle's cushion and mud physics know where they are. Use Gazebo's `Buoyancy` system for water.
 
-The first complete world must provide `/scan`, `/imu`, `/odom`, `/terrain_state` and `/vehicle_health` through the agreed interface contract. The vehicle stack already provides all of these, with a placeholder `/terrain_state`.
+`worlds/tidal_corridor.sdf` is the complete demo world: it includes the
+hovercraft, DART/Bullet physics, sensors, buoyancy and terrain-zone plugin. Its
+channel/mud rectangles exactly match the tide manager cost map. The tide manager,
+not the vehicle placeholder, provides `/terrain_state` and `/terrain_costmap`.

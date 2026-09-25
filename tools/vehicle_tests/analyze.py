@@ -243,9 +243,104 @@ def mud_ab():
     fig.tight_layout(); fig.savefig(PLOTS / "checkpoint2_mud_ab.png", dpi=150); plt.close(fig)
 
 
+# --------------------------------------------------------------------------
+# Version 2 (hovercraft_v2: retractable tracks + cushion load sharing)
+# --------------------------------------------------------------------------
+def _v2(test):
+    p = RES / test / "hover_hovercraft_v2.csv"
+    return load(p) if p.exists() else None
+
+
+def _win(d, t0, t1):
+    return (d["t"] >= t0) & (d["t"] <= t1)
+
+
+def _yaw_rate(d, t0, t1):
+    m = _win(d, t0, t1)
+    yaw = np.unwrap(d["yaw"][m])
+    return (yaw[-1] - yaw[0]) / (d["t"][m][-1] - d["t"][m][0])
+
+
+def _tilt(d):
+    return math.degrees(max(np.max(np.abs(d["roll"])), np.max(np.abs(d["pitch"]))))
+
+
+def v2_hover():
+    d = _v2("v2_hover_test")
+    if d is None:
+        return
+    t = "v2_hover_test"
+    g = d["gap_mean"][_win(d, 6, 25)]
+    check(t, "Tracks retracted into the hull before propulsion", f"{at(d, 6, 'track_left_joint'):.3f} m",
+          "0.25 m (±0.01)", abs(at(d, 6, "track_left_joint") - 0.25) < 0.01)
+    check(t, "Hover gap held (mean, 6-25 s)", f"{np.mean(g) * 100:.2f} cm", "5 cm (±1)",
+          abs(np.mean(g) - 0.05) < 0.01)
+    check(t, "Gap range", f"{g.min() * 100:.2f}..{g.max() * 100:.2f} cm", "within 3.5..6.5 cm",
+          g.min() > 0.035 and g.max() < 0.065)
+    v = np.mean(d["speed"][_win(d, 33, 39)])
+    check(t, "HOVER speed tracking at 2.0 m/s", f"{v:.3f} m/s", "2.0 m/s (±0.15)", abs(v - 2.0) < 0.15)
+    r = _yaw_rate(d, 44, 51)
+    check(t, "HOVER yaw-rate tracking at 0.5 rad/s", f"{r:.3f} rad/s", "0.5 rad/s (±0.1)", abs(r - 0.5) < 0.1)
+    vs = at(d, 61.9, "speed")
+    check(t, "Stops after a zero command", f"{vs:.3f} m/s", "< 0.1 m/s", vs < 0.1)
+    check(t, "Stable: max roll/pitch", f"{_tilt(d):.1f}°", "< 5°", _tilt(d) < 5)
+
+
+def v2_track():
+    d = _v2("v2_track_test")
+    if d is None:
+        return
+    t = "v2_track_test"
+    v = (at(d, 8, "x") - at(d, 3, "x")) / 5.0
+    check(t, "TRACK speed at 1.0 m/s (3-8 s)", f"{v:.3f} m/s", "1.0 m/s (±0.1)", abs(v - 1.0) < 0.1)
+    r = _yaw_rate(d, 9, 14)
+    check(t, "Pivot turn at 0.5 rad/s", f"{r:.3f} rad/s", "0.5 rad/s (±0.1)", abs(r - 0.5) < 0.1)
+    drift = math.hypot(at(d, 14, "x") - at(d, 9, "x"), at(d, 14, "y") - at(d, 9, "y"))
+    check(t, "Pivot turn stays in place", f"{drift:.3f} m", "< 0.2 m", drift < 0.2)
+    top = 8.0 * math.sin(math.radians(15))
+    z = at(d, 47.9, "z") - 0.50
+    check(t, "Climbs the 15° ramp onto the plateau", f"hull rise {z:.2f} m", f"≈ {top:.2f} m (±0.2)",
+          abs(z - top) < 0.2)
+
+
+def v2_load_share():
+    d = _v2("v2_load_share_test")
+    if d is None:
+        return
+    t = "v2_load_share_test"
+    m = _win(d, 4, 14)
+    sup, g = np.mean(d["support"][m]), d["gap_mean"][m]
+    check(t, "Cushion carries the commanded 60 % share", f"{sup:.3f}", "0.60 (±0.05)", abs(sup - 0.6) < 0.05)
+    check(t, "Vehicle stays on its tracks (skirt gap)", f"{g.min() * 100:.2f}..{g.max() * 100:.2f} cm",
+          "3 cm (±0.8)", g.min() > 0.022 and g.max() < 0.038)
+    v = (at(d, 14, "x") - at(d, 8, "x")) / 6.0
+    check(t, "Track drive with load share at 1.0 m/s", f"{v:.3f} m/s", "1.0 m/s (±0.1)", abs(v - 1.0) < 0.1)
+
+
+def v2_transition():
+    d = _v2("v2_transition_test")
+    if d is None:
+        return
+    t = "v2_transition_test"
+    xs = at(d, 32, "x")                      # stopped on the bank (bank starts at x = 26)
+    check(t, "HOVER across water and mud, stops on the bank", f"x {xs:.1f} m", "> 26 m", xs > 26)
+    g = d["gap_mean"][_win(d, 8, 25)]
+    check(t, "No sinking over water/mud (min gap)", f"{g.min() * 100:.1f} cm", "> 3 cm", g.min() > 0.03)
+    check(t, "Tracks deployed, then 40 % load share", f"support {at(d, 39, 'support'):.2f}, "
+          f"gap {at(d, 39, 'gap_mean') * 100:.1f} cm", "0.40 (±0.05), 3 cm (±0.8)",
+          abs(at(d, 39, "support") - 0.4) < 0.05 and abs(at(d, 39, "gap_mean") - 0.03) < 0.008)
+    top = 8.0 * math.sin(math.radians(12))
+    z = at(d, 62.9, "z") - 0.50
+    check(t, "Climbs the 12° bank on the tracks", f"hull rise {z:.2f} m", f"≈ {top:.2f} m (±0.2)",
+          abs(z - top) < 0.2)
+    check(t, "Stable: max roll", f"{math.degrees(np.max(np.abs(d['roll']))):.1f}°", "< 5°",
+          math.degrees(np.max(np.abs(d["roll"]))) < 5)
+
+
 def main():
     PLOTS.mkdir(parents=True, exist_ok=True)
-    for f in (empty_test, gap_hold, hover_drive, transition, debris, cmd_vel, mud_ab):
+    for f in (empty_test, gap_hold, hover_drive, transition, debris, cmd_vel, mud_ab,
+              v2_hover, v2_track, v2_load_share, v2_transition):
         f()
     lines = ["| Test | Check | Result | Target | |", "|---|---|---|---|---|"]
     for t, n, v, tg, ok in checks:

@@ -140,10 +140,22 @@ def test_tracks_hover_to_track_deploys_then_settles_on_measured_gap() -> None:
 
 
 def test_tracks_steep_slope_selects_track_with_slope_share() -> None:
-    modes = _tracks()
-    modes.step(0.1, terrain="MUD", slope_deg=9.0, gap=0.03, gear_pos=0.0)
+    modes = _tracks(slope_dwell_s=0.2)
+    for _ in range(3):
+        modes.step(0.1, terrain="MUD", slope_deg=9.0, gap=0.03, gear_pos=0.0)
     assert modes.mode == "TRACK"      # mud but too steep to hover
     assert modes.lift_share == 0.6
+
+
+def test_brief_tilt_does_not_leave_hover() -> None:
+    modes = _tracks(slope_dwell_s=0.5, policy="hover_only")
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.25)
+    modes.policy = "terrain_auto"
+    for _ in range(3):                # 0.3 s pitch spike crossing an edge
+        modes.step(0.1, terrain="MUD", slope_deg=8.0, hover_state="HOVER", gear_pos=0.25)
+    modes.step(0.1, terrain="MUD", slope_deg=1.0, hover_state="HOVER", gear_pos=0.25)
+    assert modes.mode == "HOVER"
 
 
 def test_tracks_settle_timeout_reports_fault() -> None:
@@ -206,3 +218,26 @@ def test_tracks_do_not_park_over_water_or_on_flat_ground() -> None:
         modes.step(0.1, terrain="MUD", slope_deg=0.5, moving=False,
                    hover_state="HOVER", gear_pos=0.25)
     assert modes.mode == "HOVER"
+
+
+def test_tracks_pivot_on_slope_uses_tracks() -> None:
+    modes = _tracks(policy="hover_only")
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.25)
+    modes.policy = "terrain_auto"
+    modes.step(0.1, terrain="MUD", slope_deg=1.0, tilt_deg=4.0, moving=True, pivot=True,
+               hover_state="HOVER", gear_pos=0.25)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+
+
+def test_tracks_settle_on_vertical_speed_on_uneven_ground() -> None:
+    modes = _tracks()
+    modes.step(0.1, terrain="MUD", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", hover_state="HOVER", gear_pos=0.25)
+    for _ in range(3):
+        modes.step(0.1, terrain="FIRM", hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    modes.step(0.1, terrain="FIRM", hover_state="HOVER", gap=0.05, gear_pos=0.0)
+    for _ in range(12):               # mean gap reads 4.5 cm on uneven ground, but no vertical motion
+        modes.step(0.1, terrain="FIRM", hover_state="LOAD_SHARE", gap=0.045, gear_pos=0.0, vz=0.002)
+    assert modes.mode == "TRACK"

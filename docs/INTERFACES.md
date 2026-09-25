@@ -4,17 +4,17 @@ These are the initial contracts between workstreams. Topic names and message typ
 
 | Topic | Publisher | Consumer | Initial type | Purpose |
 | --- | --- | --- | --- | --- |
-| `/scan` | Simulation (`lidar_scan_node`) | Autonomy | `sensor_msgs/LaserScan` | Near-field obstacle sensing used for the planner's temporary obstacle overlay. 2D scan in `lidar_link`, 720 bins, derived from `/points` (closest return per bearing between ~7 cm and 1.2 m above ground; the vehicle's own body is filtered out). 10 Hz. |
+| `/scan` | Simulation (`lidar_scan_node`) | Autonomy | `sensor_msgs/LaserScan` | Best-effort sensor QoS. Near-field obstacle sensing used for the planner's temporary obstacle overlay. 2D scan in `lidar_link`, 720 bins, derived from `/points` (closest return per bearing between ~7 cm and 1.2 m above ground; the vehicle's own body is filtered out). 10 Hz. |
 | `/imu` | Simulation | Autonomy | `sensor_msgs/Imu` | Orientation and motion sensing. Frame `imu_link`, 50 Hz. |
 | `/odom` | Simulation (Gazebo OdometryPublisher) | Autonomy, Safety, Operator | `nav_msgs/Odometry` | Vehicle position and velocity. Ground truth (idealised), `header.frame_id: map`, `child_frame_id: base_link`, 50 Hz. Valid in both hover and ground mode. |
-| `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. Published by the environment workstream's `tide_manager.py`. `vehicle_mobility_node` can publish a constant low-tide placeholder at 10 Hz for the vehicle test worlds (`publish_terrain_state: true`); it must be off whenever `tide_manager.py` runs, so there is one publisher. |
-| `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current terrain-risk map after the simulated tide update. |
-| `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health. 10 Hz, so Safety's 1.0 s wall-clock freshness check holds even when the simulation runs well below real time. Version 1 battery uses a stated power model (lift fan, thrust, wheels); Version 2 will use the equivalent track model. Mobility/link/payload/fault are parameters for fault injection. |
+| `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate. Person 3's `tide_manager.py` publishes this for the corridor. The vehicle test launch uses a 10 Hz low-tide placeholder; disable it whenever the tide manager runs so there is one publisher. |
+| `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current terrain-risk map. The default vehicle integration world uses a static map; Person 3's tide manager supplies the changing map when the corridor is integrated. |
+| `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health at 10 Hz. Battery uses a stated Version 1 power model; mobility, link, payload and fault remain runtime fault-injection parameters. |
 | `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. |
 | `/planned_path` | Autonomy | Path follower, Operator, Safety | `nav_msgs/Path` | Active proposed route: outbound normally, HOME route while return is latched. |
-| `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Fresh route from current pose to the fixed HOME zone. |
+| `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Prospective route from the current pose to HOME during outbound travel; freshly republished and activated when return is required. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
-| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 1 demo routing is HOVER-only; Version 2 will route the same command to HOVER fans or TRACK drive internally. A command older than 0.5 s means stop. |
+| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Routed to the fans in HOVER mode or the Version 1 wheels in TRACK mode. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
 | `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
@@ -24,7 +24,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/tf`, `/tf_static` | Simulation, `robot_state_publisher` | All | `tf2_msgs/TFMessage` | `map → base_link` from odometry; `base_link →` every vehicle part and sensor from the URDF and `/joint_states`. |
 | `/joint_states` | Simulation | `robot_state_publisher` | `sensor_msgs/JointState` | Legs, suspension, wheels, fans, rudders. |
 | `/robot_description` | `robot_state_publisher` | Operator (RViz / Foxglove) | `std_msgs/String` | Vehicle URDF (meshes as `package://tidal_vehicle_description/...`). |
-| `/vehicle/mode` | Simulation (`vehicle_mobility_node`) | Operator, Evaluation | `std_msgs/String` | Read-only mobility-mode status for display and logging: `HOVER`, `TRANSITION` or `TRACK` (Version 1: `WHEEL`). 20 Hz. Not a command input; no node may publish to it except the vehicle controller. |
+| `/vehicle/mode` | Simulation (`vehicle_mobility_node`) | Operator, Evaluation | `std_msgs/String` | Public mobility mode: `TRACK`, `TRANSITION` or `HOVER`. |
 | `/clock` | Simulation | All | `rosgraph_msgs/Clock` | Simulation time; every node runs with `use_sim_time: true`. |
 
 Topics under `/vehicle/*` other than `/vehicle/mode` are internal to the vehicle simulation (mobility node ⇄ Gazebo) and are not a cross-workstream contract. They are listed in `tidal_vehicle_bringup/config/ros_gz_bridge.yaml`.
@@ -56,11 +56,9 @@ Safety:
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
 
-Safety samples these bands along `/return_path`: TRACK and HOVER segments use
-different declared energy/speed assumptions, and each TRACK--HOVER mode change
-adds transition energy and time to the return ETA. The current Version 1
-`hover_only` demo disables TRACK estimation, so all route segments use the
-HOVER assumptions until Version 2 transitions are validated.
+Safety samples these bands along `/return_path`: track (Version 1: wheel) and
+hover segments use different declared energy/speed assumptions, and each
+ground--hover mode change adds transition energy and time to the return ETA.
 
 ## Vehicle-fault semantics
 
@@ -95,6 +93,8 @@ cells. While returning, Autonomy refreshes `/return_path` without republishing
 `/planned_path`, preventing callback ordering from resetting freshness or path
 follower progress. A later false `return_required` value does not clear the latched return;
 the existing `reset` scenario event clears it.
+
+Safety evaluates telemetry, command and route freshness using ROS time, which is Gazebo simulation time in the common launch.
 
 `VehicleHealth` is raw simulation telemetry. Safety calculates the estimated
 return energy, return margin and return ETA from `/return_path`,

@@ -1,1 +1,0 @@
-/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces/rosidl_typesupport_introspection_cpp/tidal_vehicle_interfaces/msg/detail/vehicle_health__rosidl_typesupport_introspection_cpp.hpp

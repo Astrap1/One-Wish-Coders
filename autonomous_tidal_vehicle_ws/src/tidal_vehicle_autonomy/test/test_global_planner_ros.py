@@ -1,5 +1,10 @@
 """ROS-level tests for terrain, LiDAR and return-route replanning."""
 
+import os
+
+os.environ.setdefault("ROS_DOMAIN_ID", "31")
+
+
 from math import inf
 from time import monotonic
 
@@ -226,6 +231,8 @@ def test_safety_request_switches_to_fresh_latched_return_route() -> None:
         _spin_for(executor)
 
         assert capture.paths[-1].poses[-1].pose.position.x == 8.5
+        assert capture.return_paths
+        assert capture.return_paths[-1].poses[-1].pose.position.x == 0.5
         status_publisher.publish(
             _safety_status(True, "Tide margin requires return")
         )
@@ -245,7 +252,8 @@ def test_safety_request_switches_to_fresh_latched_return_route() -> None:
 
         return_count = len(capture.return_paths)
         planned_count = len(capture.paths)
-        _spin_for(executor, 0.6)
+        # Allow scheduling margin beyond the 0.5 s refresh period.
+        _spin_for(executor, 0.8)
         assert len(capture.return_paths) > return_count
         assert len(capture.paths) == planned_count
 

@@ -12,6 +12,7 @@ setup(
         ("share/" + package_name + "/config", ["config/safety_params.yaml"]),
     ],
     install_requires=["setuptools"],
+    tests_require=["pytest"],
     zip_safe=True,
     maintainer="One Wish Coders",
     maintainer_email="team@example.com",

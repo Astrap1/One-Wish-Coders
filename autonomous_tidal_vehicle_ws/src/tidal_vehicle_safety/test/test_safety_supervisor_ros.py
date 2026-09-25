@@ -1,5 +1,10 @@
 """ROS-level command-gate test using local mock publishers and a subscriber."""
 
+import os
+
+os.environ.setdefault("ROS_DOMAIN_ID", "32")
+
+
 from time import monotonic
 
 import rclpy

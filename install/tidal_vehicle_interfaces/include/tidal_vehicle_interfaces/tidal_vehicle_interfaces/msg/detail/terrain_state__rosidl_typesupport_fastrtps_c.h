@@ -1,1 +1,0 @@
-/home/tiffy/One-Wish-Coders/build/tidal_vehicle_interfaces/rosidl_typesupport_fastrtps_c/tidal_vehicle_interfaces/msg/detail/terrain_state__rosidl_typesupport_fastrtps_c.h

@@ -11,11 +11,13 @@ Starts:
   * robot_state_publisher (URDF from tidal_vehicle_description) -> /robot_description, joint TFs
   * lidar_scan_node       /points -> /scan
   * vehicle_mobility_node /cmd_vel -> hover fans or wheels; /vehicle_health; placeholder /terrain_state
+  * terrain_costmap_node   static integration map until Person 3's tide manager is ready
+  * global_planner + path_follower + safety_supervisor
   * foxglove_bridge on ws://0.0.0.0:8765 (Foxglove Desktop on Windows: ws://localhost:8765)
   * RViz (optional)
 
-The autonomy and safety nodes are added here by their owners once their entry
-points are ready. Only the safety supervisor may publish /cmd_vel.
+Only the safety supervisor publishes /cmd_vel. Autonomy publishes proposals on
+/cmd_vel_proposed.
 """
 import os
 from pathlib import Path
@@ -40,6 +42,7 @@ def _setup(context):
     bringup = Path(get_package_share_directory("tidal_vehicle_bringup"))
     sim_share = Path(get_package_share_directory("tidal_vehicle_simulation"))
     desc_share = Path(get_package_share_directory("tidal_vehicle_description"))
+    safety_share = Path(get_package_share_directory("tidal_vehicle_safety"))
     sim_lib = Path(get_package_prefix("tidal_vehicle_simulation")) / "lib"
 
     world_file = sim_share / "worlds" / f"{world}.sdf"
@@ -49,6 +52,7 @@ def _setup(context):
                           .replace("WORLD", world_name))
     urdf = (desc_share / "urdf" / "hovercraft.urdf").read_text()
     params = str(sim_share / "config" / "vehicle_mobility.yaml")
+    safety_params = str(safety_share / "config" / "safety_params.yaml")
 
     gz_cmd = ["gz", "sim", "-r", str(world_file)]
     if headless:
@@ -69,6 +73,15 @@ def _setup(context):
         Node(package="tidal_vehicle_simulation", executable="vehicle_mobility_node.py",
              name="vehicle_mobility", output="screen",
              parameters=[params, {"mode_policy": LaunchConfiguration("mode_policy")}]),
+        Node(package="tidal_vehicle_simulation", executable="terrain_costmap_node.py",
+             name="terrain_costmap", output="screen", parameters=[params]),
+        Node(package="tidal_vehicle_autonomy", executable="global_planner",
+             name="global_planner", output="screen", parameters=[{"use_sim_time": True}]),
+        Node(package="tidal_vehicle_autonomy", executable="path_follower",
+             name="path_follower", output="screen", parameters=[{"use_sim_time": True}]),
+        Node(package="tidal_vehicle_safety", executable="safety_supervisor",
+             name="safety_supervisor", output="screen",
+             parameters=[safety_params, {"use_sim_time": True}]),
         Node(package="foxglove_bridge", executable="foxglove_bridge", output="screen",
              parameters=[{"port": 8765, "address": "0.0.0.0", "use_sim_time": True}],
              condition=IfCondition(LaunchConfiguration("foxglove"))),
@@ -81,7 +94,7 @@ def _setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument("world", default_value="vehicle_tests/transition_test",
+        DeclareLaunchArgument("world", default_value="vehicle_tests/integration_test",
                               description="world under tidal_vehicle_simulation/worlds, without .sdf"),
         DeclareLaunchArgument("mode_policy", default_value="hover_only",
                               description="hover_only | terrain_auto"),

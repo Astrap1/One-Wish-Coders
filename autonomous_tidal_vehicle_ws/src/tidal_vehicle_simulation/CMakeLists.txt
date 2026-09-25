@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(tidal_vehicle_simulation)
 
-add_library(tide_visual_system SHARED plugins/tide_visual_system.cpp)
-target_link_libraries(tide_visual_system PRIVATE gz-sim8::gz-sim8)
-install(TARGETS tide_visual_system LIBRARY DESTINATION lib)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE)
@@ -26,6 +22,12 @@ find_package(gz-plugin2 REQUIRED COMPONENTS register)
 find_package(gz-transport13 REQUIRED)
 find_package(gz-msgs10 REQUIRED)
 
+# Tide visual system used by Person 3's corridor environment.
+add_library(tide_visual_system SHARED plugins/tide_visual_system.cpp)
+target_link_libraries(tide_visual_system PRIVATE
+  gz-sim8::gz-sim8 gz-plugin2::register)
+install(TARGETS tide_visual_system LIBRARY DESTINATION lib)
+
 # tidal_vehicle_plugins: hover::AirCushion (model), hover::TerrainZones and
 # hover::ScriptedCommands (world). Gazebo finds it through
 # GZ_SIM_SYSTEM_PLUGIN_PATH (set by tidal_vehicle_bringup's launch file).
@@ -42,11 +44,18 @@ install(DIRECTORY config launch models worlds DESTINATION share/${PROJECT_NAME})
 install(PROGRAMS
   scripts/vehicle_mobility_node.py
   scripts/lidar_scan_node.py
+  scripts/terrain_costmap_node.py
   scripts/tide_manager.py
+  scripts/collision_test_teleop.py
   scripts/gen_test_worlds.py
   DESTINATION lib/${PROJECT_NAME})
 
 if(ament_cmake_FOUND)
+  if(BUILD_TESTING)
+    find_package(ament_cmake_pytest REQUIRED)
+    ament_add_pytest_test(vehicle_mobility_test test/test_vehicle_mobility.py)
+  endif()
+
   ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")
   ament_package()
 endif()

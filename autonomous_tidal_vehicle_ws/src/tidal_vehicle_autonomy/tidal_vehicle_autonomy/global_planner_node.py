@@ -6,7 +6,9 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.qos import (
+    DurabilityPolicy, QoSProfile, ReliabilityPolicy, qos_profile_sensor_data,
+)
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 
@@ -38,6 +40,8 @@ class GlobalPlannerNode(Node):
         self._last_scan: LaserScan | None = None
         self._last_scan_pose: tuple[float, float, float] | None = None
         self._last_path_cells: tuple[GridCell, ...] | None = None
+        self._last_return_path_cells: tuple[GridCell, ...] | None = None
+        self._return_path_available = False
         self._active_path_end: tuple[float, float] | None = None
         self._path_available = False
         self._return_requested = False
@@ -70,7 +74,9 @@ class GlobalPlannerNode(Node):
         self.create_subscription(Odometry, "/odom", self._on_odometry, 20)
         self.create_subscription(PoseStamped, "/mission_goal", self._on_goal, 10)
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
-        self.create_subscription(LaserScan, "/scan", self._on_scan, 10)
+        self.create_subscription(
+            LaserScan, "/scan", self._on_scan, qos_profile_sensor_data
+        )
         self.create_subscription(
             SafetyStatus,
             "/safety_status",
@@ -146,6 +152,8 @@ class GlobalPlannerNode(Node):
             return
         self._goal = message
         self._last_path_cells = None
+        self._last_return_path_cells = None
+        self._return_path_available = False
         self._active_path_end = None
         self._delivery_reported = False
         self._completion_reported = False
@@ -183,6 +191,8 @@ class GlobalPlannerNode(Node):
         self._delivery_reported = False
         self._completion_reported = False
         self._last_path_cells = None
+        self._last_return_path_cells = None
+        self._return_path_available = False
         self._active_path_end = None
         self._path_available = False
         self._publish_empty_routes(include_return=True)
@@ -267,6 +277,13 @@ class GlobalPlannerNode(Node):
             self._pose.pose.pose.position.x,
             self._pose.pose.pose.position.y,
         )
+        if not self._return_requested:
+            self._update_prospective_return_path(
+                start,
+                reason,
+                force_publish,
+            )
+
         goal = self._costmap.grid_from_world(target[0], target[1])
         cells = plan_path(self._costmap, start, goal)
         if cells is None:
@@ -293,6 +310,8 @@ class GlobalPlannerNode(Node):
         path = self._path_message(cells)
         self._path_publisher.publish(path)
         if self._return_requested:
+            self._last_return_path_cells = path_cells
+            self._return_path_available = True
             self._return_path_publisher.publish(path)
         self._path_available = True
         self._active_path_end = self._costmap.world_from_grid(cells[-1])
@@ -300,20 +319,49 @@ class GlobalPlannerNode(Node):
             f"Published {len(cells)}-cell {self._route_name()} after {reason}"
         )
 
+    def _update_prospective_return_path(
+        self,
+        start: GridCell,
+        reason: str,
+        force_publish: bool,
+    ) -> None:
+        home_frame = self._string_parameter("home_frame")
+        if not self._frames_match(home_frame):
+            return
+        home = self._costmap.grid_from_world(
+            self._float_parameter("home_x_m"),
+            self._float_parameter("home_y_m"),
+        )
+        cells = plan_path(self._costmap, start, home)
+        if cells is None:
+            self._last_return_path_cells = None
+            if self._return_path_available or force_publish:
+                self._publish_empty_return_path()
+                self.get_logger().warning(
+                    f"No prospective return route available after {reason}"
+                )
+            self._return_path_available = False
+            return
+
+        path_cells = tuple(cells)
+        if path_cells == self._last_return_path_cells and not force_publish:
+            return
+        self._last_return_path_cells = path_cells
+        self._return_path_available = True
+        self._return_path_publisher.publish(self._path_message(cells))
+
     def _on_return_path_refresh_timer(self) -> None:
         if (
-            not self._return_requested
-            or self._mission_finished
-            or not self._path_available
-            or self._last_path_cells is None
+            self._mission_finished
+            or not self._return_path_available
+            or self._last_return_path_cells is None
             or self._costmap is None
             or self._costmap_msg is None
         ):
             return
-        # This return-only refresh removes callback-order ambiguity with
-        # Safety's terrain-map freshness check without resetting the follower.
+        # Refresh only Safety's copy, preserving path-follower progress.
         self._return_path_publisher.publish(
-            self._path_message(list(self._last_path_cells))
+            self._path_message(list(self._last_return_path_cells))
         )
 
     def _active_target(self) -> tuple[float, float, str] | None:
@@ -345,15 +393,24 @@ class GlobalPlannerNode(Node):
             path.poses.append(pose)
         return path
 
-    def _publish_empty_routes(self, include_return: bool) -> None:
+    def _empty_path_message(self) -> Path:
         path = Path()
         path.header.stamp = self.get_clock().now().to_msg()
         if self._costmap_msg is not None:
             path.header.frame_id = self._costmap_msg.header.frame_id
         else:
             path.header.frame_id = self._string_parameter("home_frame")
+        return path
+
+    def _publish_empty_return_path(self) -> None:
+        self._return_path_publisher.publish(self._empty_path_message())
+
+    def _publish_empty_routes(self, include_return: bool) -> None:
+        path = self._empty_path_message()
         self._path_publisher.publish(path)
         if include_return:
+            self._last_return_path_cells = None
+            self._return_path_available = False
             self._return_path_publisher.publish(path)
 
     def _check_goal_reached(self) -> None:

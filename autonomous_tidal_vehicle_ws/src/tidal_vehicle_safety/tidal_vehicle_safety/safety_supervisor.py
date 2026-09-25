@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from time import monotonic
 from typing import Optional
 
 import rclpy
@@ -112,14 +111,14 @@ class SafetySupervisor(Node):
 
     def _on_health(self, message: VehicleHealth) -> None:
         self._health = message
-        self._last_health_at = monotonic()
+        self._last_health_at = self._now_s()
 
     def _on_terrain(self, message: TerrainState) -> None:
         self._terrain = message
-        self._last_terrain_at = monotonic()
+        self._last_terrain_at = self._now_s()
 
     def _on_costmap(self, message: OccupancyGrid) -> None:
-        now = monotonic()
+        now = self._now_s()
         info = message.info
         self._costmap = GridCostmap(
             width=info.width,
@@ -149,13 +148,13 @@ class SafetySupervisor(Node):
             self._reason = "Mission goal accepted; validating operating margin."
 
     def _on_planned_path(self, _message: Path) -> None:
-        self._planned_path_received_at = monotonic()
+        self._planned_path_received_at = self._now_s()
 
     def _on_return_path(self, message: Path) -> None:
         self._return_path_points = [
             (pose.pose.position.x, pose.pose.position.y) for pose in message.poses
         ]
-        self._return_path_received_at = monotonic()
+        self._return_path_received_at = self._now_s()
         self._refresh_return_estimate()
 
     def _on_mission_event(self, message: String) -> None:
@@ -174,7 +173,7 @@ class SafetySupervisor(Node):
             self._reset("Scenario reset; awaiting a new goal.")
 
     def _on_proposed_command(self, command: Twist) -> None:
-        self._last_command_at = monotonic()
+        self._last_command_at = self._now_s()
         decision = self._evaluate()
         self._apply_decision(decision)
         if decision.state == HOLD:
@@ -281,7 +280,7 @@ class SafetySupervisor(Node):
         return (
             not self._outbound_path_current()
             and self._costmap_changed_at is not None
-            and monotonic() - self._costmap_changed_at
+            and self._now_s() - self._costmap_changed_at
             > self._parameter("path_replan_timeout_s")
         )
 
@@ -304,7 +303,7 @@ class SafetySupervisor(Node):
             self._phase is MissionPhase.RETURNING
             and self._return_requested_at is not None
             and not self._return_path_ready()
-            and monotonic() - self._return_requested_at
+            and self._now_s() - self._return_requested_at
             > self._parameter("return_path_timeout_s")
         )
 
@@ -313,14 +312,15 @@ class SafetySupervisor(Node):
             return False
         timeout = self._parameter("telemetry_timeout_s")
         return (
-            monotonic() - self._last_health_at <= timeout
-            and monotonic() - self._last_terrain_at <= timeout
+            self._now_s() - self._last_health_at <= timeout
+            and self._now_s() - self._last_terrain_at <= timeout
         )
 
     def _command_fresh(self) -> bool:
         return (
             self._last_command_at is not None
-            and monotonic() - self._last_command_at <= self._parameter("command_timeout_s")
+            and self._now_s() - self._last_command_at
+            <= self._parameter("command_timeout_s")
         )
 
     def _apply_decision(self, decision: Decision) -> None:
@@ -334,7 +334,7 @@ class SafetySupervisor(Node):
     def _request_return(self, reason: str) -> None:
         if self._phase is not MissionPhase.RETURNING:
             self._phase = MissionPhase.RETURNING
-            self._return_requested_at = monotonic()
+            self._return_requested_at = self._now_s()
         self._state = RETURN
         self._reason = reason
         self._publish_stop()
@@ -420,12 +420,26 @@ class SafetySupervisor(Node):
     def _parameter(self, name: str) -> float:
         return self.get_parameter(name).value
 
+    def _now_s(self) -> float:
+        # All freshness and timeout decisions use the same clock as the
+        # simulation. This avoids false stale-data holds when Gazebo runs
+        # slower than wall time.
+        return self.get_clock().now().nanoseconds * 1.0e-9
+
 
 def main(args: Optional[list[str]] = None) -> None:
     rclpy.init(args=args)
     node = SafetySupervisor()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    except RuntimeError:
+        # rclpy can report a take_message conversion error while launch is
+        # tearing down subscriptions. Preserve real runtime failures.
+        if rclpy.ok():
+            raise
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()

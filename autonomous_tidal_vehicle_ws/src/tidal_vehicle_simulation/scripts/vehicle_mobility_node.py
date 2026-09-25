@@ -1,234 +1,357 @@
 #!/usr/bin/env python3
-"""
-vehicle_mobility_node — the vehicle's mobility abstraction (Person 4).
+"""Route safety-approved motion to the Version 1 wheel or hover actuators."""
 
-Turns the safety-approved /cmd_vel into commands for the Gazebo vehicle and
-reports raw vehicle telemetry.
+from __future__ import annotations
 
-  /cmd_vel (geometry_msgs/Twist)  ── HOVER mode ──►  /vehicle/cmd_vel_hover  (fans, via AirCushion)
-                                  ── WHEEL mode ──►  /vehicle/cmd_vel_wheels (wheels, via DiffDrive)
-
-Mode policy (parameter `mode_policy`):
-  hover_only    (default) lift fan on and legs folded at start-up; the vehicle
-                always drives on its cushion. Simplest, most reliable for the demo.
-  terrain_auto  WHEEL on firm terrain; switches to HOVER on MUD / WATER and back
-                to WHEEL after `firm_dwell_s` on firm ground. The transitions are
-                scripted sequences (fan spin-up → fold legs, or unfold → fan off).
-                NOTE: the HOVER→WHEEL transition while moving is not yet
-                validated in tests; use hover_only for demos until it is.
-
-Mobility modes follow AGENTS.md: WHEEL | TRANSITION | HOVER (Version 2 replaces
-WHEEL with TRACK). While in TRANSITION both command outputs are held at zero.
-A transition to HOVER completes only once the AirCushion plugin reports
-hover_state == "HOVER"; if that takes longer than `transition_timeout_s` the
-vehicle stays stopped in TRANSITION and /vehicle_health.fault reports
-`hover_not_ready`.
-
-Also publishes:
-  /vehicle/mode    (std_msgs/String)  WHEEL | TRANSITION | HOVER, read-only
-                   status for the operator view (not a command input)
-  /vehicle_health  (tidal_vehicle_interfaces/VehicleHealth)  raw telemetry at
-                   `telemetry_rate_hz` (10 Hz):
-                   battery from a simple power model (lift fan, thrust, wheels),
-                   mobility health, link and payload flags. Fault injection by
-                   the evaluation workstream can override via parameters.
-  /terrain_state   (tidal_vehicle_interfaces/TerrainState)  OPTIONAL placeholder
-                   (publish_terrain_state: true) until the environment
-                   workstream's tide manager publishes the real one.
-
-All numbers are stated simulation assumptions (config/vehicle_mobility.yaml),
-not measured vehicle data.
-"""
 import math
 
 FOLDED = math.pi / 2
 
 
-# ---------------------------------------------------------------------------
-# Pure logic (no ROS imports) so it can be unit-tested without a ROS install
-# ---------------------------------------------------------------------------
 class ModeMachine:
-    """WHEEL ⇄ HOVER sequencing through TRANSITION. step() returns the actuator targets.
+    """Implement the public TRACK, TRANSITION and HOVER mobility modes."""
 
-    `mode` is the public mobility mode (WHEEL | TRANSITION | HOVER); `target` is
-    the mode a TRANSITION is heading to. `fault` is "" or a /vehicle_health
-    fault name from docs/INTERFACES.md.
-    """
-
-    def __init__(self, policy="hover_only", spinup_s=1.5, fold_s=1.6, firm_dwell_s=3.0,
-                 transition_timeout_s=10.0):
+    def __init__(
+        self,
+        policy: str = "hover_only",
+        spinup_s: float = 1.5,
+        fold_s: float = 1.6,
+        firm_dwell_s: float = 3.0,
+        transition_timeout_s: float = 8.0,
+        settle_s: float = 0.5,
+    ) -> None:
+        if policy not in {"hover_only", "terrain_auto"}:
+            raise ValueError("mode_policy must be hover_only or terrain_auto")
         self.policy = policy
-        self.spinup_s, self.fold_s, self.firm_dwell_s = spinup_s, fold_s, firm_dwell_s
+        self.spinup_s = spinup_s
+        self.fold_s = fold_s
+        self.firm_dwell_s = firm_dwell_s
         self.transition_timeout_s = transition_timeout_s
-        self.mode, self.target = "WHEEL", "WHEEL"
+        self.settle_s = settle_s
+        self.mode = "TRACK"
+        self.transition_target: str | None = None
         self.phase_t = 0.0
         self.firm_t = 0.0
         self.hover_enabled = False
         self.legs = 0.0
         self.fault = ""
         if policy == "hover_only":
-            self._begin("HOVER")
+            self._start_transition("HOVER")
 
-    def _begin(self, target):
-        self.mode, self.target, self.phase_t = "TRANSITION", target, 0.0
+    def _enter(self, mode: str) -> None:
+        self.mode = mode
+        self.phase_t = 0.0
+        self.transition_target = None
+        self.fault = ""
 
-    def _finish(self):
-        self.mode, self.phase_t, self.fault = self.target, 0.0, ""
+    def _start_transition(self, target: str) -> None:
+        self.mode = "TRANSITION"
+        self.transition_target = target
+        self.phase_t = 0.0
+        self.fault = ""
 
-    def step(self, dt, terrain="FIRM", hover_state=""):
+    def step(
+        self,
+        dt: float,
+        terrain: str = "FIRM",
+        hover_state: str = "",
+    ) -> tuple[bool, float]:
         self.phase_t += dt
         self.firm_t = self.firm_t + dt if terrain == "FIRM" else 0.0
-        if self.mode == "WHEEL":
-            self.hover_enabled, self.legs = False, 0.0
-            if self.policy == "terrain_auto" and terrain in ("MUD", "WATER"):
-                self._begin("HOVER")
+
+        if self.mode == "TRACK":
+            self.hover_enabled = False
+            self.legs = 0.0
+            if self.policy == "terrain_auto" and terrain in {"MUD", "WATER"}:
+                self._start_transition("HOVER")
+
         elif self.mode == "HOVER":
-            self.hover_enabled, self.legs = True, FOLDED
+            self.hover_enabled = True
+            self.legs = FOLDED
             if self.policy == "terrain_auto" and self.firm_t >= self.firm_dwell_s:
-                self._begin("WHEEL")
-        elif self.target == "HOVER":                        # TRANSITION → HOVER
-            self.hover_enabled = True                       # 1) lift fan on
+                self._start_transition("TRACK")
+
+        elif self.transition_target == "HOVER":
+            self.hover_enabled = True
             if self.phase_t >= self.spinup_s:
-                self.legs = FOLDED                          # 2) fold legs
-            if self.phase_t >= self.spinup_s + self.fold_s and hover_state == "HOVER":
-                self._finish()                              # 3) hover-ready: riding on the cushion
+                self.legs = FOLDED
+            if (
+                self.phase_t >= self.spinup_s + self.fold_s
+                and hover_state == "HOVER"
+            ):
+                self._enter("HOVER")
+                self.hover_enabled = True
+                self.legs = FOLDED
             elif self.phase_t >= self.transition_timeout_s:
-                self.fault = "hover_not_ready"              # stay stopped until the cushion is up
-        else:                                               # TRANSITION → WHEEL
-            self.legs = 0.0                                 # 1) unfold legs (still hovering)
+                self.fault = "hover_not_ready"
+
+        elif self.transition_target == "TRACK":
+            self.legs = 0.0
             if self.phase_t >= self.fold_s:
-                self.hover_enabled = False                  # 2) lift fan off
-            if self.phase_t >= self.fold_s + self.spinup_s:
-                self._finish()
+                self.hover_enabled = False
+            if (
+                self.phase_t >= self.fold_s + self.settle_s
+                and hover_state == "OFF"
+            ):
+                self._enter("TRACK")
+                self.hover_enabled = False
+                self.legs = 0.0
+            elif self.phase_t >= self.transition_timeout_s:
+                self.fault = "wheel_settle_timeout"
+
         return self.hover_enabled, self.legs
 
     @property
-    def drive_mode(self):
-        return self.mode if self.mode in ("WHEEL", "HOVER") else None
+    def drive_mode(self) -> str | None:
+        return self.mode if self.mode in {"TRACK", "HOVER"} and not self.fault else None
 
 
 class Battery:
-    """Very simple energy model: P = idle + lift fan + thrust + wheels."""
+    """Simple declared energy model for the simulation demonstration."""
 
-    def __init__(self, capacity_wh=500.0, idle_w=20.0, lift_fan_w=300.0,
-                 thrust_w_per_n=7.0, wheels_w=60.0, glide_b1=5.0, glide_b2=6.0,
-                 initial_percent=100.0):
+    def __init__(
+        self,
+        capacity_wh: float = 500.0,
+        idle_w: float = 20.0,
+        lift_fan_w: float = 300.0,
+        thrust_w_per_n: float = 7.0,
+        wheels_w: float = 60.0,
+        glide_b1: float = 5.0,
+        glide_b2: float = 6.0,
+        initial_percent: float = 100.0,
+    ) -> None:
         self.cap_j = capacity_wh * 3600.0
-        self.idle_w, self.lift_w, self.k_thrust, self.wheels_w = idle_w, lift_fan_w, thrust_w_per_n, wheels_w
-        self.b1, self.b2 = glide_b1, glide_b2
+        self.idle_w = idle_w
+        self.lift_w = lift_fan_w
+        self.k_thrust = thrust_w_per_n
+        self.wheels_w = wheels_w
+        self.b1 = glide_b1
+        self.b2 = glide_b2
         self.percent = initial_percent
 
-    def step(self, dt, hover_enabled, mode, v_cmd, w_cmd):
-        p = self.idle_w
+    def step(
+        self,
+        dt: float,
+        hover_enabled: bool,
+        mode: str | None,
+        v_cmd: float,
+        w_cmd: float,
+    ) -> tuple[float, float]:
+        power = self.idle_w
         if hover_enabled:
-            p += self.lift_w
+            power += self.lift_w
         if mode == "HOVER":
-            v = abs(v_cmd)
-            thrust = self.b1 * v + self.b2 * v * v + 20.0 * abs(w_cmd)   # N, both fans
-            p += self.k_thrust * thrust
-        elif mode == "WHEEL" and (abs(v_cmd) > 1e-3 or abs(w_cmd) > 1e-3):
-            p += self.wheels_w
-        self.percent = max(0.0, self.percent - 100.0 * p * dt / self.cap_j)
-        return self.percent, p
+            speed = abs(v_cmd)
+            thrust = (
+                self.b1 * speed
+                + self.b2 * speed * speed
+                + 20.0 * abs(w_cmd)
+            )
+            power += self.k_thrust * thrust
+        elif mode == "TRACK" and (
+            abs(v_cmd) > 1e-3 or abs(w_cmd) > 1e-3
+        ):
+            power += self.wheels_w
+        self.percent = max(
+            0.0,
+            self.percent - 100.0 * power * dt / self.cap_j,
+        )
+        return self.percent, power
 
 
-# ---------------------------------------------------------------------------
-# ROS node
-# ---------------------------------------------------------------------------
-def main():
+def main() -> None:
     import rclpy
-    from rclpy.node import Node
     from geometry_msgs.msg import Twist
+    from rclpy.node import Node
     from std_msgs.msg import Bool, Float64, String
+
     from tidal_vehicle_interfaces.msg import TerrainState, VehicleHealth
 
     class VehicleMobility(Node):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__("vehicle_mobility")
-            p = self.declare_parameter
-            policy = p("mode_policy", "hover_only").value
-            self.cmd_timeout = p("cmd_timeout_s", 0.5).value
-            self.max_v = p("max_speed_mps", 2.5).value
-            self.max_w = p("max_yaw_rate_rps", 1.0).value
-            self.pub_terrain = p("publish_terrain_state", True).value
-            self.frame = p("map_frame", "map").value
-            # fault-injection hooks (evaluation workstream may set these at runtime)
-            self.mobility_health = p("mobility_health_percent", 100.0).value
-            self.link_ok = p("link_ok", True).value
-            self.payload_secured = p("payload_secured", True).value
-            self.fault = p("fault", "").value
-            self.modes = ModeMachine(policy, p("spinup_s", 1.5).value, p("fold_s", 1.6).value,
-                                     p("firm_dwell_s", 3.0).value,
-                                     p("transition_timeout_s", 10.0).value)
-            telemetry_rate = p("telemetry_rate_hz", 10.0).value
-            self.battery = Battery(p("battery_capacity_wh", 500.0).value, p("idle_w", 20.0).value,
-                                   p("lift_fan_w", 300.0).value, p("thrust_w_per_n", 7.0).value,
-                                   p("wheels_w", 60.0).value,
-                                   initial_percent=p("initial_battery_percent", 100.0).value)
+            parameter = self.declare_parameter
+            policy = str(parameter("mode_policy", "hover_only").value)
+            self.cmd_timeout = float(parameter("cmd_timeout_s", 0.5).value)
+            self.max_v = float(parameter("max_speed_mps", 2.5).value)
+            self.max_w = float(parameter("max_yaw_rate_rps", 1.0).value)
+            self.pub_terrain = bool(
+                parameter("publish_terrain_state", True).value
+            )
+            self.frame = str(parameter("map_frame", "map").value)
+            parameter("mobility_health_percent", 100.0)
+            parameter("link_ok", True)
+            parameter("payload_secured", True)
+            parameter("fault", "")
+            telemetry_rate = float(
+                parameter("telemetry_rate_hz", 10.0).value
+            )
+            if telemetry_rate <= 0.0:
+                raise ValueError("telemetry_rate_hz must be positive")
+            self.modes = ModeMachine(
+                policy=policy,
+                spinup_s=float(parameter("spinup_s", 1.5).value),
+                fold_s=float(parameter("fold_s", 1.6).value),
+                firm_dwell_s=float(parameter("firm_dwell_s", 3.0).value),
+                transition_timeout_s=float(
+                    parameter("transition_timeout_s", 8.0).value
+                ),
+                settle_s=float(parameter("settle_s", 0.5).value),
+            )
+            self.battery = Battery(
+                capacity_wh=float(parameter("battery_capacity_wh", 500.0).value),
+                idle_w=float(parameter("idle_w", 20.0).value),
+                lift_fan_w=float(parameter("lift_fan_w", 300.0).value),
+                thrust_w_per_n=float(
+                    parameter("thrust_w_per_n", 7.0).value
+                ),
+                wheels_w=float(parameter("wheels_w", 60.0).value),
+                initial_percent=float(
+                    parameter("initial_battery_percent", 100.0).value
+                ),
+            )
             self.cmd = Twist()
             self.cmd_stamp = None
-            self.terrain, self.hover_state = "FIRM", ""
+            self.terrain = "FIRM"
+            self.hover_state = ""
+            self._last_mode = ""
 
             self.create_subscription(Twist, "/cmd_vel", self.on_cmd, 10)
-            self.create_subscription(String, "/vehicle/terrain_truth",
-                                     lambda m: setattr(self, "terrain", m.data), 10)
-            self.create_subscription(String, "/vehicle/hover_state",
-                                     lambda m: setattr(self, "hover_state", m.data), 10)
-            self.pub_hover = self.create_publisher(Twist, "/vehicle/cmd_vel_hover", 10)
-            self.pub_wheels = self.create_publisher(Twist, "/vehicle/cmd_vel_wheels", 10)
-            self.pub_enable = self.create_publisher(Bool, "/vehicle/hover_enabled", 10)
-            self.pub_legs = self.create_publisher(Float64, "/vehicle/legs_cmd", 10)
-            self.pub_mode = self.create_publisher(String, "/vehicle/mode", 10)
-            self.pub_health = self.create_publisher(VehicleHealth, "/vehicle_health", 10)
-            self.pub_tstate = self.create_publisher(TerrainState, "/terrain_state", 10)
+            self.create_subscription(
+                String,
+                "/vehicle/terrain_truth",
+                lambda message: setattr(self, "terrain", message.data),
+                10,
+            )
+            self.create_subscription(
+                String,
+                "/vehicle/hover_state",
+                lambda message: setattr(self, "hover_state", message.data),
+                10,
+            )
+            self.pub_hover = self.create_publisher(
+                Twist,
+                "/vehicle/cmd_vel_hover",
+                10,
+            )
+            self.pub_wheels = self.create_publisher(
+                Twist,
+                "/vehicle/cmd_vel_wheels",
+                10,
+            )
+            self.pub_enable = self.create_publisher(
+                Bool,
+                "/vehicle/hover_enabled",
+                10,
+            )
+            self.pub_legs = self.create_publisher(
+                Float64,
+                "/vehicle/legs_cmd",
+                10,
+            )
+            self.pub_mode = self.create_publisher(
+                String,
+                "/vehicle/mode",
+                10,
+            )
+            self.pub_health = self.create_publisher(
+                VehicleHealth,
+                "/vehicle_health",
+                10,
+            )
+            self.pub_tstate = self.create_publisher(
+                TerrainState,
+                "/terrain_state",
+                10,
+            )
             self.dt = 0.05
             self.create_timer(self.dt, self.tick)
             self.create_timer(1.0 / telemetry_rate, self.publish_health)
             self.get_logger().info(f"mobility: mode_policy={policy}")
 
-        def on_cmd(self, msg):
-            self.cmd = msg
+        def on_cmd(self, message: Twist) -> None:
+            self.cmd = message
             self.cmd_stamp = self.get_clock().now()
 
-        def current_cmd(self):
+        def current_cmd(self) -> tuple[float, float]:
             if self.cmd_stamp is None:
                 return 0.0, 0.0
-            age = (self.get_clock().now() - self.cmd_stamp).nanoseconds * 1e-9
+            age = (
+                self.get_clock().now() - self.cmd_stamp
+            ).nanoseconds * 1e-9
             if age > self.cmd_timeout:
-                return 0.0, 0.0                                  # stale → stop
-            v = max(-self.max_v, min(self.max_v, self.cmd.linear.x))
-            w = max(-self.max_w, min(self.max_w, self.cmd.angular.z))
-            return v, w
+                return 0.0, 0.0
+            linear = max(
+                -self.max_v,
+                min(self.max_v, self.cmd.linear.x),
+            )
+            angular = max(
+                -self.max_w,
+                min(self.max_w, self.cmd.angular.z),
+            )
+            return linear, angular
 
-        def tick(self):
-            en, legs = self.modes.step(self.dt, self.terrain, self.hover_state)
-            self.pub_enable.publish(Bool(data=en))
+        def tick(self) -> None:
+            enabled, legs = self.modes.step(
+                self.dt,
+                self.terrain,
+                self.hover_state,
+            )
+            self.pub_enable.publish(Bool(data=enabled))
             self.pub_legs.publish(Float64(data=legs))
-            v, w = self.current_cmd()
-            out, zero = Twist(), Twist()
-            out.linear.x, out.angular.z = v, w
-            dm = self.modes.drive_mode
-            self.pub_hover.publish(out if dm == "HOVER" else zero)
-            self.pub_wheels.publish(out if dm == "WHEEL" else zero)
+            linear, angular = self.current_cmd()
+            command = Twist()
+            command.linear.x = linear
+            command.angular.z = angular
+            stop = Twist()
+            drive_mode = self.modes.drive_mode
+            self.pub_hover.publish(
+                command if drive_mode == "HOVER" else stop
+            )
+            self.pub_wheels.publish(
+                command if drive_mode == "TRACK" else stop
+            )
             self.pub_mode.publish(String(data=self.modes.mode))
-            self.battery.step(self.dt, en, dm, v if dm else 0.0, w if dm else 0.0)
+            self.battery.step(
+                self.dt,
+                enabled,
+                drive_mode,
+                linear if drive_mode else 0.0,
+                angular if drive_mode else 0.0,
+            )
+            if self.modes.mode != self._last_mode:
+                self.get_logger().info(
+                    f"Mobility mode: {self.modes.mode}"
+                )
+                self._last_mode = self.modes.mode
 
-        def publish_health(self):
+        def publish_health(self) -> None:
             now = self.get_clock().now().to_msg()
-            h = VehicleHealth()
-            h.header.stamp, h.header.frame_id = now, "base_link"
-            h.battery_percent = float(self.battery.percent)
-            h.mobility_health_percent = float(self.mobility_health)
-            h.link_ok, h.payload_secured = bool(self.link_ok), bool(self.payload_secured)
-            h.fault = self.fault or self.modes.fault      # injected fault wins over mode faults
-            self.pub_health.publish(h)
-            if self.pub_terrain:                  # placeholder until the tide manager exists
-                t = TerrainState()
-                t.header.stamp, t.header.frame_id = now, self.frame
-                t.tide_state, t.tide_risk, t.water_level_m = "low", 0.0, 0.0
-                t.tide_rate_m_per_minute, t.seconds_until_corridor_unsafe = 0.0, -1.0
-                t.corridor_traversable = True
-                self.pub_tstate.publish(t)
+            health = VehicleHealth()
+            health.header.stamp = now
+            health.header.frame_id = "base_link"
+            health.battery_percent = float(self.battery.percent)
+            health.mobility_health_percent = float(
+                self.get_parameter("mobility_health_percent").value
+            )
+            health.link_ok = bool(self.get_parameter("link_ok").value)
+            health.payload_secured = bool(
+                self.get_parameter("payload_secured").value
+            )
+            injected_fault = str(self.get_parameter("fault").value)
+            health.fault = injected_fault or self.modes.fault
+            self.pub_health.publish(health)
+            if self.pub_terrain:
+                terrain = TerrainState()
+                terrain.header.stamp = now
+                terrain.header.frame_id = self.frame
+                terrain.tide_state = "low"
+                terrain.tide_risk = 0.0
+                terrain.water_level_m = 0.0
+                terrain.tide_rate_m_per_minute = 0.0
+                terrain.seconds_until_corridor_unsafe = -1.0
+                terrain.corridor_traversable = True
+                self.pub_tstate.publish(terrain)
 
     rclpy.init()
     node = VehicleMobility()
@@ -238,7 +361,8 @@ def main():
         pass
     finally:
         node.destroy_node()
-        rclpy.try_shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

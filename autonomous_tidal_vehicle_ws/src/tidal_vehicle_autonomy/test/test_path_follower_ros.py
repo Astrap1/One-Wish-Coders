@@ -1,5 +1,10 @@
 """ROS-level path-follower test using local mock publishers and a subscriber."""
 
+import os
+
+os.environ.setdefault("ROS_DOMAIN_ID", "31")
+
+
 from time import monotonic
 
 from geometry_msgs.msg import PoseStamped, Twist

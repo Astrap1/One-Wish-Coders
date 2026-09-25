@@ -247,6 +247,10 @@ def plugins_xml(links, data):
       <glide_lateral_factor>3</glide_lateral_factor>
       <max_thrust>{MAX_THRUST_N:.0f}</max_thrust>
       <thrust_time_constant>0.4</thrust_time_constant>
+      <!-- reversible ducted fans (AGENTS.md): 80 % reverse thrust, so the vehicle
+           can brake and hold station on the corridor's ~5 deg shore incline -->
+      <reverse_thrust_fraction>0.8</reverse_thrust_fraction>
+      <yaw_reserve_fraction>0.3</yaw_reserve_fraction>
       <thrust_point_left>{fmt(tl)}</thrust_point_left>
       <thrust_point_right>{fmt(tr)}</thrust_point_right>
       <rudder_point>{fmt(rud)}</rudder_point>

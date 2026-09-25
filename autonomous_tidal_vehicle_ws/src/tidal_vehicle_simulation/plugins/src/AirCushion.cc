@@ -157,6 +157,8 @@ class AirCushion : public System,
     this->bYaw      = get("glide_yaw_drag", 4.0);
     this->maxThrust = get("max_thrust", 30.0);
     this->thrustTau = get("thrust_time_constant", 0.3);
+    this->reverseFrac = get("reverse_thrust_fraction", 0.5);
+    this->yawReserve = get("yaw_reserve_fraction", 0.0);
     this->cMud      = get("mud_viscous_drag", 150.0);
     this->mudRR     = get("mud_rolling_resistance", 0.25);
     this->cMudYaw   = get("mud_yaw_drag", 20.0);
@@ -305,7 +307,8 @@ class AirCushion : public System,
       // feed-forward: thrust that balances glide drag at the target speed
       const double ff = this->b1 * vRef + this->b2 * vRef * std::abs(vRef);
       double coll = ff + this->spdKp * e + this->spdKi * this->spdInt;
-      const double collMax = 2.0 * this->maxThrust, collMin = -this->maxThrust;
+      const double collMax = 2.0 * this->maxThrust;
+      const double collMin = -2.0 * this->reverseFrac * this->maxThrust;
       if (coll < collMax && coll > collMin) this->spdInt += e * dt;  // anti-windup
       this->spdInt = std::clamp(this->spdInt, -3.0, 3.0);
       if (vRef == 0.0 && std::abs(vFwd) < 0.05) this->spdInt = 0.0;
@@ -314,11 +317,14 @@ class AirCushion : public System,
       const double arm = std::max(std::abs(this->thrustPt[0].Y()), 0.05);
       double diff = (this->bYaw * rRef) / arm + this->yawKp * (rRef - w.Z());
       // Collective (speed / braking) has priority: limit the differential so
-      // both fans stay inside [-0.5, 1] x max thrust. Otherwise a hard turn
-      // clips the reversing fan and the pair pushes forward while pivoting.
+      // both fans stay inside [-reverse_thrust_fraction, 1] x max thrust.
+      // Otherwise a hard turn clips the reversing fan and the pair pushes
+      // forward while pivoting. yaw_reserve_fraction keeps some steering even
+      // while braking at full reverse (e.g. holding station on a slope).
       const double half = 0.5 * coll;
-      const double dMax = 2.0 * std::max(0.0, std::min(this->maxThrust - half,
-                                                       half + 0.5 * this->maxThrust));
+      const double rev = this->reverseFrac * this->maxThrust;
+      const double dMax = std::max(2.0 * std::max(0.0, std::min(this->maxThrust - half, half + rev)),
+                                   2.0 * this->yawReserve * this->maxThrust);
       diff = std::clamp(diff, -dMax, dMax);
       cmdL = half - 0.5 * diff;
       cmdR = half + 0.5 * diff;
@@ -340,8 +346,9 @@ class AirCushion : public System,
 
     // Thrust fans respond with a first-order lag
     const double a = std::min(1.0, dt / std::max(this->thrustTau, 1e-3));
-    this->thrust[0] += (std::clamp(cmdL, -0.5 * maxThrust, maxThrust) - this->thrust[0]) * a;
-    this->thrust[1] += (std::clamp(cmdR, -0.5 * maxThrust, maxThrust) - this->thrust[1]) * a;
+    const double tMin = -this->reverseFrac * this->maxThrust;
+    this->thrust[0] += (std::clamp(cmdL, tMin, maxThrust) - this->thrust[0]) * a;
+    this->thrust[1] += (std::clamp(cmdR, tMin, maxThrust) - this->thrust[1]) * a;
 
     // --- Gaps under each corner --------------------------------------------
     auto &reg = TerrainRegistry::Instance();
@@ -551,6 +558,7 @@ class AirCushion : public System,
   private: std::array<math::Vector3d, 2> thrustPt;
   private: double hTarget{0.04}, k{1500}, c{130}, fMaxFactor{2}, spinup{1.5};
   private: double b1{5}, b2{6}, bYaw{4}, maxThrust{30}, thrustTau{0.3};
+  private: double reverseFrac{0.5}, yawReserve{0.0};
   private: double cMud{150}, mudRR{0.25}, cMudYaw{20}, rayRange{1.0};
   private: double waterGlideFactor{1.3}, cWater{60}, cWaterYaw{10};
   private: double lambda{0.05}, rudderK{0.55}, hdgKp{40}, hdgKd{25};

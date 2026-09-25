@@ -175,3 +175,34 @@ def test_costmap_lookahead_samples_along_heading() -> None:
     assert sample(info, data, 0.5, 0.5, 0.0, 2.0) == [10, 10, 10, 10, 10]
     assert 30 in sample(info, data, 1.0, 0.5, 0.0, 2.5)   # water 2.5 m ahead
     assert sample(info, data, 1.0, 0.5, math.pi, 2.5) == [10, 10, 10]  # facing away
+
+
+def test_tracks_park_on_slope_when_stopped_and_lift_off_when_moving() -> None:
+    modes = _tracks(park_after_s=0.3, park_slope_deg=2.0)
+    # stopped on a 4 deg mud slope: stays parked on the tracks
+    for _ in range(3):
+        modes.step(0.1, terrain="MUD", slope_deg=4.0, moving=False, gap=0.03, gear_pos=0.0)
+    assert modes.mode == "TRACK"
+    # motion commanded: lift off into HOVER
+    modes.step(0.1, terrain="MUD", slope_deg=4.0, moving=True, gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", slope_deg=4.0, moving=True, hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, terrain="MUD", slope_deg=4.0, moving=True, hover_state="HOVER", gear_pos=0.25)
+    assert modes.mode == "HOVER"
+    # stopped again for park_after_s: park on the tracks instead of sliding
+    for _ in range(4):
+        modes.step(0.1, terrain="MUD", slope_deg=4.0, moving=False, hover_state="HOVER",
+                   gear_pos=0.25)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+
+
+def test_tracks_do_not_park_over_water_or_on_flat_ground() -> None:
+    modes = _tracks(park_after_s=0.2, policy="hover_only")
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.0)
+    modes.step(0.1, hover_state="HOVER", gear_pos=0.25)
+    modes.policy = "terrain_auto"
+    for _ in range(5):
+        modes.step(0.1, terrain="MUD", slope_deg=4.0, moving=False, over_water=True,
+                   hover_state="HOVER", gear_pos=0.25)
+        modes.step(0.1, terrain="MUD", slope_deg=0.5, moving=False,
+                   hover_state="HOVER", gear_pos=0.25)
+    assert modes.mode == "HOVER"

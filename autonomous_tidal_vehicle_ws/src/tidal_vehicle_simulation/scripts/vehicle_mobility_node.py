@@ -31,6 +31,10 @@ class ModeMachine:
         or on slopes steeper than hover_slope_limit_deg; HOVER on MUD / WATER
         below that limit. In TRACK mode the cushion carries track_share_firm of
         the weight, or track_share_slope on slopes.
+      Parking: stopped in HOVER on a slope steeper than park_slope_deg for
+        park_after_s (and not over water), the vehicle deploys its tracks and
+        parks on them instead of sliding downhill on the cushion; it lifts
+        off again as soon as motion is commanded on hover terrain.
     """
 
     def __init__(
@@ -49,6 +53,8 @@ class ModeMachine:
         hover_slope_limit_deg: float = 6.0,
         settle_gap_m: float = 0.03,
         settle_gap_tolerance_m: float = 0.008,
+        park_after_s: float = 5.0,
+        park_slope_deg: float = 2.0,
     ) -> None:
         if policy not in {"hover_only", "terrain_auto"}:
             raise ValueError("mode_policy must be hover_only or terrain_auto")
@@ -68,6 +74,9 @@ class ModeMachine:
         self.hover_slope_limit_deg = hover_slope_limit_deg
         self.settle_gap_m = settle_gap_m
         self.settle_gap_tolerance_m = settle_gap_tolerance_m
+        self.park_after_s = park_after_s
+        self.park_slope_deg = park_slope_deg
+        self.idle_t = 0.0
         self.mode = "TRACK"
         self.transition_target: str | None = None
         self.phase_t = 0.0
@@ -116,11 +125,15 @@ class ModeMachine:
         gap: float | None = None,
         gear_pos: float | None = None,
         slope_deg: float = 0.0,
+        moving: bool = True,
+        over_water: bool = False,
     ) -> tuple[bool, float]:
         self.phase_t += dt
         self.firm_t = self.firm_t + dt if terrain == "FIRM" else 0.0
+        self.idle_t = 0.0 if moving else self.idle_t + dt
         if self.gear == "tracks":
-            return self._step_tracks(dt, terrain, hover_state, gap, gear_pos, slope_deg)
+            return self._step_tracks(dt, terrain, hover_state, gap, gear_pos, slope_deg,
+                                     moving, over_water)
 
         if self.mode == "TRACK":
             self.hover_enabled = False
@@ -172,21 +185,28 @@ class ModeMachine:
         gap: float | None,
         gear_pos: float | None,
         slope_deg: float,
+        moving: bool,
+        over_water: bool,
     ) -> tuple[bool, float]:
-        steep = slope_deg > self.hover_slope_limit_deg
+        # over water the surface is level: the slope limit and parking don't apply
+        steep = slope_deg > self.hover_slope_limit_deg and not over_water
+        sloped = slope_deg > self.park_slope_deg and not over_water
         if self.mode == "TRACK":
             self.legs = 0.0
             self.lift_share = self.track_share(slope_deg)
             self.hover_enabled = self.lift_share > 0.0
+            parked = sloped and not moving
             if (self.policy == "terrain_auto" and terrain in {"MUD", "WATER"}
-                    and not steep):
+                    and not steep and not parked):
                 self._start_transition("HOVER")
 
         elif self.mode == "HOVER":
             self.hover_enabled = True
             self.lift_share = None
             self.legs = self.retract_position
-            if self.policy == "terrain_auto" and (self.firm_t >= self.firm_dwell_s or steep):
+            park = sloped and self.idle_t >= self.park_after_s
+            if self.policy == "terrain_auto" and (
+                    self.firm_t >= self.firm_dwell_s or steep or park):
                 self._start_transition("TRACK")
 
         elif self.transition_target == "HOVER":
@@ -376,6 +396,8 @@ def main() -> None:
                 hover_slope_limit_deg=float(
                     parameter("hover_slope_limit_deg", 6.0).value
                 ),
+                park_after_s=float(parameter("park_after_s", 5.0).value),
+                park_slope_deg=float(parameter("park_slope_deg", 2.0).value),
                 settle_gap_m=float(parameter("settle_gap_m", 0.03).value),
                 settle_gap_tolerance_m=float(
                     parameter("settle_gap_tolerance_m", 0.008).value
@@ -403,6 +425,7 @@ def main() -> None:
             self.gear_pos: float | None = None
             self.slope_deg = 0.0
             self.pose = (0.0, 0.0, 0.0)
+            self.odom_seen = False
             self.costmap = None
             # terrain for mode selection: "costmap" (look ahead on /terrain_costmap,
             # AGENTS.md cost bands) or "truth" (Gazebo ground truth under the vehicle)
@@ -515,6 +538,7 @@ def main() -> None:
             yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y),
                              1.0 - 2.0 * (q.y * q.y + q.z * q.z))
             self.pose = (p.x, p.y, yaw)
+            self.odom_seen = True
             # tilt of the body z axis from vertical = slope under the vehicle
             cos_tilt = 1.0 - 2.0 * (q.x * q.x + q.y * q.y)
             self.slope_deg = math.degrees(math.acos(max(-1.0, min(1.0, cos_tilt))))
@@ -543,6 +567,11 @@ def main() -> None:
             return linear, angular
 
         def tick(self) -> None:
+            linear, angular = self.current_cmd()
+            if self.modes.gear == "tracks" and not self.odom_seen:
+                # slope and position unknown until the first /odom: hold the
+                # starting mode instead of choosing one blind
+                return
             enabled, legs = self.modes.step(
                 self.dt,
                 self.mobility_terrain(),
@@ -550,6 +579,8 @@ def main() -> None:
                 gap=self.gap,
                 gear_pos=self.gear_pos,
                 slope_deg=self.slope_deg,
+                moving=abs(linear) > 0.01 or abs(angular) > 0.01,
+                over_water=self.terrain == "WATER",
             )
             share = self.modes.lift_share
             if self.pub_share is not None:
@@ -559,7 +590,6 @@ def main() -> None:
                 )
             self.pub_enable.publish(Bool(data=enabled))
             self.pub_legs.publish(Float64(data=legs))
-            linear, angular = self.current_cmd()
             command = Twist()
             command.linear.x = linear
             command.angular.z = angular

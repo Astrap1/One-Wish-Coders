@@ -21,9 +21,11 @@ vehicle_mobility:
     gear_joints: [track_left_joint, track_right_joint]
     track_share_firm: 0.2          # cushion load share in TRACK mode, firm level ground
     track_share_slope: 0.6         # ... and on slopes steeper than the hover limit
-    hover_slope_limit_deg: 6.0
+    hover_slope_limit_deg: 4.0     # 2 x 200 N fans hold station up to ~6 deg; manoeuvre on the cushion below ~4 deg
     settle_gap_m: 0.03             # skirt gap when the vehicle rests on its tracks
     settle_gap_tolerance_m: 0.008
+    park_after_s: 5.0              # stopped this long on a slope in HOVER -> park on the tracks
+    park_slope_deg: 2.0            # ... when the slope is steeper than this (not over water)
     ground_cmd_topic: /vehicle/cmd_vel_tracks
     gear_cmd_topic: /vehicle/tracks_cmd
     terrain_source: costmap        # mode from the /terrain_costmap bands, looking ahead

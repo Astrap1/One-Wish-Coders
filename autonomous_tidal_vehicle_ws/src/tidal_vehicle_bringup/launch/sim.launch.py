@@ -73,7 +73,7 @@ def _setup(context):
     urdf = (desc_share / "urdf" / veh["urdf"]).read_text()
     params = str(sim_share / "config" / veh["params"])
     safety_params = str(safety_share / "config" / "safety_params.yaml")
-    tide = world_name in TIDE_WORLDS
+    tide = any(world_name.startswith(w) for w in TIDE_WORLDS)
     # Spawn the vehicle at HOME (0, 0) unless the world file already includes it.
     spawn = f"<uri>model://{veh['model']}</uri>" not in world_file.read_text()
 
@@ -93,7 +93,7 @@ def _setup(context):
         *([Node(package="ros_gz_sim", executable="create", output="screen",
                 arguments=["-world", world_name, "-name", veh["model"],
                            "-file", str(desc_share / "models" / veh["model"] / "model.sdf"),
-                           "-x", "0", "-y", "0", "-z", str(SPAWN_Z.get(world_name, 0.002))])]
+                           "-x", "0", "-y", "0", "-z", str(next((z for w, z in SPAWN_Z.items() if world_name.startswith(w)), 0.002))])]
           if spawn else []),
         Node(package="ros_gz_bridge", executable="parameter_bridge", name="ros_gz_bridge",
              output="screen", parameters=[{"config_file": str(bridge_cfg), "use_sim_time": True}]),

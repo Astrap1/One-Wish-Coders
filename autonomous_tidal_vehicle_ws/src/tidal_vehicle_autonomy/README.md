@@ -6,7 +6,7 @@ Owns route proposals, path following, local obstacle response and delivery missi
 
 ### global_planner
 
-The global planner listens to /terrain_costmap, /odom, /mission_goal, /terrain_state and /scan, then publishes a terrain-aware /planned_path.
+The global planner listens to /terrain_costmap, /odom, /mission_goal, /terrain_state, /scan, /safety_status and reset scenario events. It publishes the active /planned_path, Safety's /return_path and lifecycle /mission_event messages.
 
 For the first integration slice, map, odometry and goal must use the same frame, normally map. The node refuses to mix frames until the common transform tree is available.
 
@@ -28,6 +28,26 @@ Global-planner LiDAR parameters:
 | --- | ---: | --- |
 | obstacle_inflation_radius_m | 1.7 m | Estimated vehicle half-diagonal plus about 0.25 m clearance. |
 | obstacle_max_range_m | 8.0 m | Farthest scan return used by local planning. |
+
+Return behavior:
+
+- `return_required=true` latches return mode and replaces the outbound route with a fresh route to HOME;
+- the return route is published on both /return_path for Safety and /planned_path for the follower;
+- every terrain cost-map update republishes a newly stamped route, including when the selected cells are unchanged;
+- /return_path is refreshed at 2 Hz while returning so Safety cannot see a stale route because of callback ordering;
+- reaching the delivery endpoint publishes `delivery_confirmed`;
+- reaching HOME publishes `mission_complete` and empty routes;
+- the existing `reset` scenario event clears the latch and publishes `mission_reset`.
+
+Global-planner return parameters:
+
+| Parameter | Default | Meaning |
+| --- | ---: | --- |
+| home_x_m | 0.0 m | HOME x coordinate. Must match Safety. |
+| home_y_m | 0.0 m | HOME y coordinate. Must match Safety. |
+| home_frame | map | Frame containing HOME. |
+| goal_event_tolerance_m | 0.3 m | Endpoint distance that triggers a mission event. |
+| return_path_refresh_rate_hz | 2.0 Hz | Return-only refresh rate for Safety's freshness check. |
 
 ### path_follower
 
@@ -64,9 +84,9 @@ Path-follower parameters:
 ## Remaining milestones
 
 1. Replace the initial LiDAR pose assumption with Person 4's final sensor transform.
-2. Respect the Safety return instruction while publishing current outbound and return routes against terrain state.
-3. Tune LiDAR inflation, usable range and path-following parameters against the integrated simulated vehicle.
+2. Tune LiDAR inflation, usable range and path-following parameters against the integrated simulated vehicle.
+3. Verify the HOME parameters against Person 4's final world and Person 2's launch configuration.
 
 ## Safety-return integration
 
-Autonomy subscribes to /safety_status. When return_required is true, it must latch the request, stop proposing the outbound route, and publish a freshly computed, stamped /return_path from the current pose to HOME. Recalculate and republish both outbound and return paths whenever the terrain cost map changes. Autonomy must not clear a safety return request; only mission_reset starts a new outbound mission.
+Autonomy subscribes to /safety_status. When return_required is true, it latches the request, stops proposing the outbound route, and publishes a freshly computed, stamped /return_path from the current pose to HOME. The same route becomes the active /planned_path. Both outbound and return paths are recomputed and republished whenever the terrain cost map changes. Autonomy does not clear a safety return request in response to a later false status; the reset scenario and resulting mission_reset start a new outbound mission.

@@ -55,14 +55,14 @@ the same bands. A path that crosses a `90+` or `-1` cell is invalid.
 
 ## Role 1: Autonomy implementation status
 
-- Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state` and `/scan` and publishes `/planned_path` only.
+- Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state`, `/scan`, `/safety_status` and reset scenario events. It publishes the active `/planned_path`, Safety's `/return_path` and lifecycle `/mission_event` messages.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
 - Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-wheel terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
 - The planner replans after cost-map, goal or terrain-state updates, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe.
 - Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay, and a changed scan triggers route reassessment without modifying Simulation's terrain map.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
 - The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames.
-- Added seventeen ROS-independent planner, follower and LiDAR tests and three ROS topic integration tests.
+- Added seventeen ROS-independent planner, follower and LiDAR tests and five ROS topic integration tests.
 - Verified the autonomy package builds in WSL and both `global_planner` and `path_follower` start successfully.
 
 ### Path follower implementation details
@@ -111,7 +111,25 @@ Default LiDAR parameters are:
 
 For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 1.7 m circular inflation is based on an approximately 2.5 m by 1.5 m vehicle footprint plus about 0.25 m clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when available.
 
-Live simulated-odometry and LiDAR tuning, final sensor-frame integration and Safety-requested return-path handling remain the next Role 1 milestones. Autonomy does not publish `/cmd_vel`.
+### Return mission implementation details
+
+A `return_required=true` message on `/safety_status` latches return mode. The planner immediately invalidates the outbound route, plans from the current odometry position to the configured HOME position and publishes the fresh route on `/return_path`. It also publishes that route on `/planned_path`, making it the path follower's active route while preserving `/return_path` as the copy Safety validates.
+
+Every terrain cost-map update forces a newly stamped route publication, even when A* selects the same cells. A return-only 2 Hz refresh prevents callback ordering from making Safety treat that route as old, without resetting the path follower. Later `return_required=false` messages do not cancel the latch. The existing `reset` scenario event clears the mission and routes, then Autonomy publishes `mission_reset`.
+
+Autonomy publishes `delivery_confirmed` when odometry reaches the outbound path endpoint and `mission_complete` when it reaches the HOME path endpoint. Empty active and return paths are published at completion so the path follower proposes a stop while Safety resets to `PRELAUNCH`.
+
+Default return parameters are:
+
+| Parameter | Default | Purpose |
+| --- | ---: | --- |
+| `home_x_m` | `0.0 m` | HOME position in the configured frame. |
+| `home_y_m` | `0.0 m` | HOME position in the configured frame. |
+| `home_frame` | `map` | Frame containing HOME. |
+| `goal_event_tolerance_m` | `0.3 m` | Distance from a path endpoint that triggers a mission event. |
+| `return_path_refresh_rate_hz` | `2.0 Hz` | Keep Safety's validated return route fresh without resetting the follower. |
+
+The HOME values must match Person 2's safety parameters. Live simulated-odometry and LiDAR tuning and final sensor-frame integration remain the next Role 1 milestones. Autonomy does not publish `/cmd_vel`.
 
 ## Three-day build plan
 

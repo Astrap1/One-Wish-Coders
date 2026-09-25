@@ -1,6 +1,6 @@
 === Per-link world bounding boxes (TRACK mode, metres) ===
-hull               origin (+0.000, +0.000, +0.500)  size (+2.430, +1.394, +1.200)  tris 14880
-skirt              origin (+0.000, +0.000, +0.230)  size (+2.502, +1.502, +0.288)  tris 4800
+hull               origin (+0.000, +0.000, +0.500)  size (+2.484, +1.484, +1.200)  tris 25666
+skirt              origin (+0.000, +0.000, +0.230)  size (+2.500, +1.500, +0.288)  tris 7584
 lift_fan           origin (+0.450, +0.000, +0.740)  size (+0.555, +0.563, +0.082)  tris 548
 thrust_fan_left    origin (-0.930, +0.350, +1.030)  size (+0.092, +0.501, +0.488)  tris 524
 thrust_fan_right   origin (-0.930, -0.350, +1.030)  size (+0.092, +0.501, +0.488)  tris 524
@@ -12,14 +12,14 @@ payload_box        origin (-0.420, +0.000, +0.740)  size (+0.643, +0.490, +0.405
 lidar              origin (+0.000, +0.000, +1.440)  size (+0.103, +0.103, +0.076)  tris 1284
 camera             origin (+1.070, +0.000, +0.800)  size (+0.093, +0.125, +0.084)  tris 352
 
-OVERALL bbox min (-1.258, -0.751, -0.000) max (+1.251, +0.751, +1.480) size (+2.509, +1.502, +1.480)
-TOTAL triangles: 55564
+OVERALL bbox min (-1.258, -0.750, -0.000) max (+1.250, +0.750, +1.480) size (+2.508, +1.500, +1.480)
+TOTAL triangles: 69134
 
 === AGENTS.md Version 2 checks ===
-[PASS] Skirt footprint length                            2.502 m  (spec 2.5 ± 0.01)
-[PASS] Skirt footprint width                             1.502 m  (spec 1.5 ± 0.01)
-[PASS] Overall length (incl. rudders)                    2.509 m  (spec <= 2.53)
-[PASS] Overall width (tracks inboard)                    1.502 m  (spec <= 1.505)
+[PASS] Skirt footprint length                            2.500 m  (spec 2.5 ± 0.01)
+[PASS] Skirt footprint width                             1.500 m  (spec 1.5 ± 0.01)
+[PASS] Overall length (incl. rudders)                    2.508 m  (spec <= 2.53)
+[PASS] Overall width (tracks inboard)                    1.500 m  (spec <= 1.505)
 [PASS] Hull top (bow bay), TRACK mode                    0.950 m  (spec <= 1.0)
 [PASS] LiDAR on the centreline above base_link (|x|+|y|)    0.000 m  (spec 0.0 ± 0.001)
 [PASS] Tracks touch ground in TRACK mode (min z)        -0.000 m  (spec 0.0 ± 0.004)
@@ -34,8 +34,8 @@ TOTAL triangles: 55564
 [PASS] Payload box height (core)                         0.350 m  (spec 0.35 ± 0.01)
 [PASS] Total mass (incl. 30 kg payload)                300.000 kg  (spec 300.0 ± 0.05)
 [PASS] Centre-of-mass height, TRACK mode                 0.476 m  (spec <= 0.5)
-       (CoM x -0.090 m before the generator balances the hull; CoM height / beam = 0.32)
-[PASS] Triangle budget                                55564.000 tri  (spec <= 150000)
+       (CoM x -0.096 m before the generator balances the hull; CoM height / beam = 0.32)
+[PASS] Triangle budget                                69134.000 tri  (spec <= 150000)
 
 === HOVER mode (frame 100) ===
 [PASS] Cushion gap under the skirt                       0.050 m  (spec 0.05 ± 0.003)

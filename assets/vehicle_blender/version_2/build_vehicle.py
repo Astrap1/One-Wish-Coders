@@ -72,7 +72,7 @@ HOVER_RISE = HOVER_GAP - SKIRT_BOTTOM_Z    # TRACK -> HOVER height change (+)
 BAG_R = 0.09                   # bag-skirt tube radius (slim so the tracks fit inboard)
 BAG_Z = 0.23                   # bag-skirt tube centre height
 BAG_CORNER_R = 0.30            # plan-view corner radius of the bag centreline
-N_FINGERS = 120                # skirt finger segments around the perimeter
+N_FINGERS = 96                 # skirt finger segments around the perimeter
 SKIRT_TOP_Z = BAG_Z + BAG_R    # 0.32
 FINGER_FLEX = 0.05             # bottom band of flexible fingers: no collision
 
@@ -138,6 +138,8 @@ MAT_DEFS = {
     "olive":       ((0.115, 0.135, 0.040),     0.65, 0.0),
     "dark_green":  ((0.035, 0.055, 0.022),     0.60, 0.0),
     "rubber":      ((0.012, 0.012, 0.012),     0.85, 0.0),
+    "neoprene":    ((0.018, 0.019, 0.020),     0.55, 0.0),    # coated skirt fabric
+    "tail_lamp":   ((0.600, 0.020, 0.010),     0.15, 0.0),
     "gunmetal":    ((0.045, 0.047, 0.050),     0.40, 0.7),
     "aluminium":   ((0.550, 0.550, 0.560),     0.35, 1.0),
     "blade":       ((0.030, 0.030, 0.032),     0.45, 0.0),
@@ -489,23 +491,36 @@ def build_skirt():
         for k in range(seg):
             pb.faces.new((a[k], b[k], b[(k + 1) % seg], a[(k + 1) % seg]))
     bmesh.ops.recalc_face_normals(pb, faces=pb.faces)
-    L.add(pb, "rubber", tag="bag")
+    L.add(pb, "neoprene", tag="bag")
 
-    # Segmented fingers hanging under the outer edge of the bag
-    for p, n in resample_closed(outline, N_FINGERS):
+    # Segmented fingers hanging from the underside of the bag. Each finger is
+    # a curved, tapered plate: it leaves the bag just below its widest point,
+    # follows the bag's outer curve and flares slightly outward at the tip,
+    # like the loop-and-finger skirts of light hovercraft.
+    n_seg = 5
+    # Fingers overlap their neighbours slightly (no see-through gaps);
+    # alternate ones sit 3 mm further out so the overlaps don't z-fight.
+    for i_f, (p, n) in enumerate(resample_closed(outline, N_FINGERS)):
         n3 = Vector((n.x, n.y, 0))
         t3 = Vector((-n.y, n.x, 0))
         c = Vector((p.x, p.y, 0))
-        top, bot = c + 0.065 * n3 + Vector((0, 0, BAG_Z - 0.04)), \
-            c + 0.085 * n3 + Vector((0, 0, SKIRT_BOTTOM_Z))
+        stagger = -0.003 if i_f % 2 else 0.0
         fb = bmesh.new()
-        vs = []
-        for base, w in ((bot, 0.048), (top, 0.056)):
-            for dt, dn in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
-                vs.append(fb.verts.new(base + dt * w / 2 * t3 + dn * 0.005 * n3))
-        for q in [(0, 1, 2, 3), (7, 6, 5, 4), (0, 4, 5, 1), (1, 5, 6, 2),
-                  (2, 6, 7, 3), (3, 7, 4, 0)]:
-            fb.faces.new([vs[i] for i in q])
+        rows = []
+        for i in range(n_seg + 1):
+            f = i / n_seg                                   # 0 = top, 1 = tip
+            z = (BAG_Z - 0.02) + (SKIRT_BOTTOM_Z - (BAG_Z - 0.02)) * f
+            out = 0.074 + stagger + 0.010 * math.sin(math.pi * f * 0.8)   # stays < BAG_R
+            w = 0.086 - 0.008 * f                             # taper towards the tip
+            th = 0.009 - 0.004 * f
+            base = c + out * n3 + Vector((0, 0, z))
+            rows.append([fb.verts.new(base + dt * w / 2 * t3 + dn * th / 2 * n3)
+                         for dt, dn in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
+        for a, b in zip(rows[:-1], rows[1:]):
+            for k in range(4):
+                fb.faces.new((a[k], a[(k + 1) % 4], b[(k + 1) % 4], b[k]))
+        fb.faces.new(list(reversed(rows[0])))
+        fb.faces.new(rows[-1])
         bmesh.ops.recalc_face_normals(fb, faces=fb.faces)
         L.add(fb, "rubber", tag="fingers")
     return L
@@ -515,16 +530,53 @@ def build_hull():
     L = Link("hull", (0, 0, 0.50))
 
     # --- main rigid hull (buoyancy / plenum body), raked bow ---------------
+    # The topsides start on the skirt-attachment flange directly over the bag
+    # and tuck in slightly towards the deck, so hull and skirt read as one
+    # craft instead of a tub standing on a ring.
     L.add(bm_loft([
         (HULL_BOTTOM_Z, -1.10, 1.02, 0.56, 0.26),
-        (0.36, -1.16, 1.12, 0.62, 0.30),
-        (0.62, -1.18, 1.16, 0.64, 0.31),
-        (DECK_Z, -1.16, 1.12, 0.62, 0.30),
+        (SKIRT_TOP_Z + 0.02, -1.19, 1.17, 0.665, 0.33),
+        (0.42, -1.205, 1.195, 0.68, 0.34),
+        (0.60, -1.19, 1.17, 0.665, 0.33),
+        (0.67, -1.17, 1.14, 0.645, 0.31),
+        (DECK_Z, -1.14, 1.10, 0.615, 0.29),
     ]), "olive", tag="hull_body")
+    # skirt-attachment flange: a plate over the top of the bag, out to the
+    # footprint edge, with the bag clamped underneath by a bolted strip
+    fl_hx, fl_hy, fl_rc = SKIRT_L / 2 - 0.012, SKIRT_W / 2 - 0.012, BAG_CORNER_R + BAG_R - 0.01
+    L.add(bm_loft([
+        (SKIRT_TOP_Z - 0.012, -fl_hx, fl_hx, fl_hy, fl_rc),
+        (SKIRT_TOP_Z + 0.022, -fl_hx, fl_hx, fl_hy, fl_rc),
+    ]), "dark_green", tag="skirt_flange")
+    clamp = rr_outline(-fl_hx + 0.004, fl_hx - 0.004, fl_hy - 0.004, fl_rc,
+                       nc=10, nsx=20, nsy=10)
+    L.add(bm_tube([(p.x, p.y, SKIRT_TOP_Z + 0.005) for p, _ in clamp],
+                  0.008, seg=8, closed=True), "gunmetal")
+    for p, n in resample_closed(clamp, 64):                   # clamp-strip bolts
+        L.add(bm_cyl(0.008, 0.008, seg=8), "aluminium",
+              T(p.x - 0.03 * n.x, p.y - 0.03 * n.y, SKIRT_TOP_Z + 0.026))
     # rub rail around the gunwale
     L.add(bm_tube([(p.x, p.y, 0.60) for p, _ in
-                   rr_outline(-1.185, 1.165, 0.645, 0.31, nc=8, nsx=14, nsy=6)],
+                   rr_outline(-1.195, 1.175, 0.668, 0.33, nc=8, nsx=14, nsy=6)],
                   0.018, seg=8, closed=True), "gunmetal")
+    # lower chine strake: breaks up the topsides and throws spray outward
+    L.add(bm_tube([(p.x, p.y, 0.42) for p, _ in
+                   rr_outline(-1.21, 1.20, 0.683, 0.34, nc=8, nsx=14, nsy=6)],
+                  0.010, seg=6, closed=True), "dark_green")
+    # battery-bay vent louvres on both sides (below the rub rail)
+    for sy in (1, -1):
+        y = sy * 0.676
+        L.add(bm_box(0.46, 0.012, 0.10, bevel=0.004), "dark_green", T(-0.10, y, 0.505))
+        for k in range(5):
+            L.add(bm_box(0.42, 0.016, 0.008, bevel=0.002), "gunmetal",
+                  T(-0.10, y + sy * 0.004, 0.468 + 0.019 * k))
+        # registration / warning placard
+        L.add(bm_box(0.16, 0.006, 0.06), "label", T(0.60, sy * 0.681, 0.51))
+    # stern: tail lamps and a transom step
+    for sy in (1, -1):
+        L.add(bm_box(0.012, 0.10, 0.04, bevel=0.004), "tail_lamp",
+              T(-1.203, sy * 0.30, 0.53))
+    L.add(bm_box(0.05, 0.46, 0.04, bevel=0.008), "gunmetal", T(-1.215, 0, 0.47))
     # anti-slip walkway panels along both deck edges
     for sy in (1, -1):
         L.add(bm_box(0.90, 0.16, 0.008), "dark_green", T(-0.05, sy * 0.49, DECK_Z + 0.004))
@@ -538,6 +590,24 @@ def build_hull():
         (DECK_Z - 0.01, 0.80, 1.10, 0.46, 0.10),
         (BAY_TOP_Z, 0.86, 1.00, 0.40, 0.08),
     ]), "dark_green", tag="bow_bay")
+    # tinted side windows (status displays behind), following the bay's side slope
+    side_tilt = math.degrees(math.atan2(0.06, BAY_TOP_Z - DECK_Z + 0.01))   # ~14 deg
+    for s in (1, -1):
+        L.add(bm_box(0.13, 0.006, 0.09, bevel=0.003), "lens",
+              T(0.93, s * 0.432, 0.83) @ R('X', s * side_tilt))
+        L.add(bm_box(0.15, 0.004, 0.11, bevel=0.003), "gunmetal",
+              T(0.93, s * 0.429, 0.83) @ R('X', s * side_tilt))
+    # camera bezel + sun visor on the sloped nose, around the front camera
+    nose_tilt = -math.degrees(math.atan2(0.10, BAY_TOP_Z - DECK_Z + 0.01))
+    L.add(bm_box(0.014, 0.17, 0.12, bevel=0.006), "gunmetal",
+          T(CAM_X - 0.012, 0, CAM_Z) @ R('Y', nose_tilt))
+    L.add(bm_box(0.05, 0.17, 0.010, bevel=0.003), "dark_green",
+          T(CAM_X - 0.02, 0, CAM_Z + 0.066) @ R('Y', 8))
+    # roof grab rail
+    for s in (1, -1):
+        L.add(bm_tube([(0.89, s * 0.33, BAY_TOP_Z), (0.89, s * 0.33, BAY_TOP_Z + 0.035),
+                       (0.97, s * 0.33, BAY_TOP_Z + 0.035), (0.97, s * 0.33, BAY_TOP_Z)],
+                      0.008, seg=8), "gunmetal")
     for s in (1, -1):   # IR / work lamps on the sloped nose
         L.add(bm_cyl(0.035, 0.03, seg=16), "lamp",
               T(1.07, s * 0.26, 0.82) @ R('Y', 65))
@@ -551,15 +621,34 @@ def build_hull():
 
     # --- centre sensor mast for the LiDAR (directly above base_link) ------
     mast_top = LIDAR_Z - LIDAR_H / 2
-    L.add(bm_cyl(0.035, mast_top - DECK_Z, seg=20), "gunmetal",
-          T(LIDAR_X, 0, (DECK_Z + mast_top) / 2), tag="mast")
-    L.add(bm_cyl(0.07, 0.03, seg=24, r2=0.035), "gunmetal", T(LIDAR_X, 0, DECK_Z + 0.015))
-    L.add(bm_cyl(0.07, 0.008, seg=24), "gunmetal", T(LIDAR_X, 0, mast_top - 0.004))
-    for k in range(3):   # mast gussets
-        L.add(bm_box(0.10, 0.008, 0.10), "dark_green",
-              T(LIDAR_X, 0, DECK_Z + 0.05) @ R('Z', 120 * k) @ T(0.07, 0, 0))
+    base_top = DECK_Z + 0.12
+    # sloped base housing (mast electronics, cable gland)
+    L.add(bm_loft([
+        (DECK_Z - 0.005, LIDAR_X - 0.13, LIDAR_X + 0.13, 0.11, 0.05),
+        (DECK_Z + 0.05, LIDAR_X - 0.12, LIDAR_X + 0.12, 0.10, 0.05),
+        (base_top, LIDAR_X - 0.07, LIDAR_X + 0.07, 0.065, 0.05),
+    ]), "dark_green", tag="mast")
+    L.add(bm_box(0.004, 0.10, 0.04, bevel=0.002), "gunmetal",
+          T(LIDAR_X + 0.123, 0, DECK_Z + 0.03))                     # service plate
+    # faired, tapered mast
+    L.add(bm_cyl(0.045, mast_top - 0.03 - base_top, seg=28, r2=0.034), "dark_green",
+          T(LIDAR_X, 0, (base_top + mast_top - 0.03) / 2), tag="mast")
+    for z, r in ((base_top + 0.005, 0.05), (base_top + 0.26, 0.043)):   # collars
+        L.add(bm_cyl(r, 0.018, seg=28, bevel=0.004), "gunmetal", T(LIDAR_X, 0, z))
+    # cable conduit up the back of the mast
+    L.add(bm_tube([(LIDAR_X - 0.052, 0, base_top), (LIDAR_X - 0.045, 0, base_top + 0.25),
+                   (LIDAR_X - 0.040, 0, mast_top - 0.04)], 0.008, seg=8), "blade")
+    # head: flared neck and a bolted aluminium mounting plate under the LiDAR
+    L.add(bm_cyl(0.034, 0.02, seg=28, r2=0.05), "gunmetal", T(LIDAR_X, 0, mast_top - 0.02))
+    L.add(bm_cyl(0.056, 0.008, seg=32, bevel=0.002), "aluminium",
+          T(LIDAR_X, 0, mast_top - 0.004))
+    for k in range(4):
+        L.add(bm_cyl(0.005, 0.004, seg=8), "gunmetal",
+              T(LIDAR_X, 0, mast_top + 0.001) @ R('Z', 45 + 90 * k) @ T(0.046, 0, 0))
 
     # --- lift fan duct (static parts), offset forward ----------------------
+    L.add(bm_ring(LIFT_ROTOR_R + 0.04, LIFT_ROTOR_R + 0.10, DECK_Z - 0.005, DECK_Z + 0.025,
+                  seg=48), "dark_green", T(LIFT_X, 0, 0))    # raised deck plinth
     L.add(bm_ring(LIFT_ROTOR_R + 0.02, LIFT_ROTOR_R + 0.04, DECK_Z - 0.10, DECK_Z + 0.08, seg=48),
           "olive", T(LIFT_X, 0, 0), tag="lift_duct")
     L.add(bm_tube(circle_pts(LIFT_ROTOR_R + 0.03, 48), 0.014, seg=8, closed=True), "gunmetal",

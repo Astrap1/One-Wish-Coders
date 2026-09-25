@@ -45,8 +45,17 @@
 // Otherwise it falls back to a flat ground height. Water surfaces come from
 // the TerrainZones world system, because water has no collision geometry.
 //
+// Load sharing (Version 2, TRACK mode): a value s in (0, 1] on lift_share
+// makes the cushion carry that fraction of the weight while the tracks carry
+// the rest. Each corner then gets a constant r * s * F0 (no spring term, so
+// the cushion never lifts the vehicle off its tracks), still venting above
+// the design gap. A negative or NaN value switches load sharing off and
+// restores the normal hover law. Vehicles that never publish lift_share
+// (Version 1) behave exactly as before.
+//
 // Topics (all under /model/<model_name>/):
 //   subscribes  hover_enabled (gz.msgs.Boolean), thrust_left, thrust_right (gz.msgs.Double, N),
+//               lift_share (gz.msgs.Double, 0..1; < 0 or NaN = off),
 //               cmd_heading (gz.msgs.Double, rad; NaN = heading hold off),
 //               cmd_vel_hover (gz.msgs.Twist: linear.x m/s, angular.z rad/s) —
 //               hover-mode velocity control. The fan thrusts are then computed
@@ -54,7 +63,8 @@
 //               how ROS /cmd_vel drives the vehicle in HOVER mode. A command
 //               older than <cmd_timeout> is treated as "stop".
 //   publishes   cushion_gap (gz.msgs.Double, mean gap m), corner_gaps (gz.msgs.Double_V),
-//               hover_state (gz.msgs.StringMsg), terrain (gz.msgs.StringMsg)
+//               hover_state (gz.msgs.StringMsg: OFF | SPIN_UP | FAN_ON_NO_SUPPORT |
+//               HOVER | LOAD_SHARE | SPIN_DOWN), terrain (gz.msgs.StringMsg)
 
 #include <gz/msgs/boolean.pb.h>
 #include <gz/msgs/double.pb.h>
@@ -201,6 +211,7 @@ class AirCushion : public System,
     // Transport
     const std::string ns = "/model/" + this->name + "/";
     this->node.Subscribe(ns + "hover_enabled", &AirCushion::OnEnable, this);
+    this->node.Subscribe(ns + "lift_share", &AirCushion::OnLiftShare, this);
     this->node.Subscribe(ns + "thrust_left", &AirCushion::OnThrustLeft, this);
     this->node.Subscribe(ns + "thrust_right", &AirCushion::OnThrustRight, this);
     this->node.Subscribe(ns + "cmd_heading", &AirCushion::OnHeading, this);
@@ -271,10 +282,11 @@ class AirCushion : public System,
     const math::Vector3d v = *vOpt, w = *wOpt;
 
     bool enabled, velMode;
-    double cmdL, cmdR, hdg, vRef, rRef, cmdAge;
+    double cmdL, cmdR, hdg, vRef, rRef, cmdAge, share;
     {
       std::lock_guard<std::mutex> lock(this->mutex);
       enabled = this->hoverEnabled;
+      share = this->liftShare;
       cmdL = this->thrustCmd[0];
       cmdR = this->thrustCmd[1];
       hdg = this->headingCmd;
@@ -333,6 +345,9 @@ class AirCushion : public System,
       if (comp) rays = &comp->Data();
     }
 
+    const bool sharing = std::isfinite(share) && share >= 0.0;
+    share = sharing ? std::min(share, 1.0) : 1.0;
+
     math::Vector3d fTot, tTot;
     double fCushion = 0.0;
     std::array<double, 4> gap{};
@@ -369,9 +384,19 @@ class AirCushion : public System,
       if (this->ramp > 0.0)
       {
         const double dh = gap[i] - this->hTarget;
-        F = (dh <= 0 ? this->ramp * this->f0 - this->k * dh
-                     : this->ramp * this->f0 * std::exp(-dh / this->lambda))
-            - this->c * hdot;
+        if (sharing)
+        {
+          // Load share: constant fraction of the corner load, venting above
+          // the design gap; the tracks carry the rest.
+          const double f = this->ramp * share * this->f0;
+          F = (dh <= 0 ? f : f * std::exp(-dh / this->lambda)) - this->c * hdot;
+        }
+        else
+        {
+          F = (dh <= 0 ? this->ramp * this->f0 - this->k * dh
+                       : this->ramp * this->f0 * std::exp(-dh / this->lambda))
+              - this->c * hdot;
+        }
         F = std::clamp(F, 0.0, this->ramp * this->fMaxFactor * this->f0);
       }
       fCushion += F;
@@ -452,6 +477,7 @@ class AirCushion : public System,
     std::string state;
     if (!enabled) state = this->ramp > 0 ? "SPIN_DOWN" : "OFF";
     else if (this->ramp < 1.0) state = "SPIN_UP";
+    else if (sharing) state = "LOAD_SHARE";
     else state = onCushion ? "HOVER" : "FAN_ON_NO_SUPPORT";
 
     if (t - this->lastPub >= this->pubPeriod - 1e-9)
@@ -483,6 +509,8 @@ class AirCushion : public System,
 
   private: void OnEnable(const msgs::Boolean &_m)
   { std::lock_guard<std::mutex> l(this->mutex); this->hoverEnabled = _m.data(); }
+  private: void OnLiftShare(const msgs::Double &_m)
+  { std::lock_guard<std::mutex> l(this->mutex); this->liftShare = _m.data(); }
   // Direct fan commands switch velocity mode off (manual / scripted tests)
   private: void OnThrustLeft(const msgs::Double &_m)
   { std::lock_guard<std::mutex> l(this->mutex); this->thrustCmd[0] = _m.data(); this->velMode = false; }
@@ -525,6 +553,7 @@ class AirCushion : public System,
   private: std::array<double, 4> prevGap{{1, 1, 1, 1}};
   private: std::array<double, 2> thrustCmd{{0, 0}};
   private: bool useRaycast{true}, rayWorks{false}, hoverEnabled{false};
+  private: double liftShare{std::numeric_limits<double>::quiet_NaN()};
   private: bool configured{false};
   private: double pubPeriod{0.05}, lastPub{-1e9};
   private: std::mutex mutex;

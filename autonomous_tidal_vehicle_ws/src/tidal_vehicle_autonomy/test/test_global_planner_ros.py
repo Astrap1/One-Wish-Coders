@@ -1,4 +1,4 @@
-"""ROS-level tests for terrain and LiDAR-triggered replanning."""
+"""ROS-level tests for terrain, LiDAR and return-route replanning."""
 
 from math import inf
 from time import monotonic
@@ -8,16 +8,28 @@ from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
 
+from tidal_vehicle_interfaces.msg import SafetyStatus
 from tidal_vehicle_autonomy.global_planner_node import GlobalPlannerNode
 
 
-class PathCapture(Node):
+class PlannerCapture(Node):
     def __init__(self) -> None:
-        super().__init__("global_planner_path_capture")
+        super().__init__("global_planner_capture")
         self.paths: list[Path] = []
+        self.return_paths: list[Path] = []
+        self.mission_events: list[str] = []
         self.create_subscription(Path, "/planned_path", self.paths.append, 10)
+        self.create_subscription(Path, "/return_path", self.return_paths.append, 10)
+        self.create_subscription(
+            String,
+            "/mission_event",
+            lambda message: self.mission_events.append(message.data),
+            10,
+        )
 
 
 def _spin_for(executor: SingleThreadedExecutor, seconds: float = 0.25) -> None:
@@ -71,15 +83,30 @@ def _scan(measured_range: float) -> LaserScan:
     return message
 
 
+def _safety_status(return_required: bool, reason: str = "") -> SafetyStatus:
+    message = SafetyStatus()
+    message.return_required = return_required
+    message.reason = reason
+    return message
+
+
+def _status_qos() -> QoSProfile:
+    return QoSProfile(
+        depth=1,
+        reliability=ReliabilityPolicy.RELIABLE,
+        durability=DurabilityPolicy.TRANSIENT_LOCAL,
+    )
+
+
 def _planner_test_nodes() -> tuple[
     GlobalPlannerNode,
     Node,
-    PathCapture,
+    PlannerCapture,
     SingleThreadedExecutor,
 ]:
     planner = GlobalPlannerNode()
     publisher = Node("global_planner_mock_publishers")
-    capture = PathCapture()
+    capture = PlannerCapture()
     executor = SingleThreadedExecutor()
     for node in (planner, publisher, capture):
         executor.add_node(node)
@@ -89,7 +116,7 @@ def _planner_test_nodes() -> tuple[
 def _destroy_test_nodes(
     planner: GlobalPlannerNode,
     publisher: Node,
-    capture: PathCapture,
+    capture: PlannerCapture,
     executor: SingleThreadedExecutor,
 ) -> None:
     for node in (capture, publisher, planner):
@@ -168,6 +195,124 @@ def test_lidar_obstacle_causes_detour_and_clear_scan_restores_route() -> None:
 
         restored_path = capture.paths[-1]
         assert all(pose.pose.position.y == 3.5 for pose in restored_path.poses)
+    finally:
+        _destroy_test_nodes(planner, publisher, capture, executor)
+        rclpy.shutdown()
+
+
+def test_safety_request_switches_to_fresh_latched_return_route() -> None:
+    rclpy.init()
+    planner, publisher, capture, executor = _planner_test_nodes()
+
+    try:
+        costmap_publisher = publisher.create_publisher(
+            OccupancyGrid, "/terrain_costmap", 10
+        )
+        odom_publisher = publisher.create_publisher(Odometry, "/odom", 10)
+        goal_publisher = publisher.create_publisher(
+            PoseStamped, "/mission_goal", 10
+        )
+        status_publisher = publisher.create_publisher(
+            SafetyStatus,
+            "/safety_status",
+            _status_qos(),
+        )
+        _spin_for(executor, 0.1)
+
+        open_map = _costmap([0] * 27, width=9, height=3)
+        costmap_publisher.publish(open_map)
+        odom_publisher.publish(_odometry(x_m=6.5, y_m=1.5))
+        goal_publisher.publish(_goal(x_m=8.5, y_m=1.5))
+        _spin_for(executor)
+
+        assert capture.paths[-1].poses[-1].pose.position.x == 8.5
+        status_publisher.publish(
+            _safety_status(True, "Tide margin requires return")
+        )
+        _spin_for(executor)
+
+        assert capture.return_paths
+        return_path = capture.return_paths[-1]
+        assert return_path.poses[-1].pose.position.x == 0.5
+        assert return_path.poses[-1].pose.position.y == 0.5
+        assert [
+            (pose.pose.position.x, pose.pose.position.y)
+            for pose in capture.paths[-1].poses
+        ] == [
+            (pose.pose.position.x, pose.pose.position.y)
+            for pose in return_path.poses
+        ]
+
+        return_count = len(capture.return_paths)
+        planned_count = len(capture.paths)
+        _spin_for(executor, 0.6)
+        assert len(capture.return_paths) > return_count
+        assert len(capture.paths) == planned_count
+
+        return_count = len(capture.return_paths)
+        costmap_publisher.publish(open_map)
+        _spin_for(executor)
+        assert len(capture.return_paths) > return_count
+
+        status_publisher.publish(_safety_status(False))
+        odom_publisher.publish(_odometry(x_m=5.5, y_m=1.5))
+        _spin_for(executor)
+        assert capture.return_paths[-1].poses[-1].pose.position.x == 0.5
+    finally:
+        _destroy_test_nodes(planner, publisher, capture, executor)
+        rclpy.shutdown()
+
+
+def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
+    rclpy.init()
+    planner, publisher, capture, executor = _planner_test_nodes()
+
+    try:
+        costmap_publisher = publisher.create_publisher(
+            OccupancyGrid, "/terrain_costmap", 10
+        )
+        odom_publisher = publisher.create_publisher(Odometry, "/odom", 10)
+        goal_publisher = publisher.create_publisher(
+            PoseStamped, "/mission_goal", 10
+        )
+        status_publisher = publisher.create_publisher(
+            SafetyStatus,
+            "/safety_status",
+            _status_qos(),
+        )
+        scenario_publisher = publisher.create_publisher(
+            String,
+            "/scenario_event",
+            10,
+        )
+        _spin_for(executor, 0.1)
+
+        costmap_publisher.publish(_costmap([0, 0, 0]))
+        odom_publisher.publish(_odometry())
+        goal_publisher.publish(_goal())
+        _spin_for(executor)
+
+        odom_publisher.publish(_odometry(x_m=2.5, y_m=0.5))
+        _spin_for(executor)
+        assert capture.mission_events.count("delivery_confirmed") == 1
+
+        status_publisher.publish(
+            _safety_status(True, "Payload delivered; return home")
+        )
+        _spin_for(executor)
+        assert capture.return_paths[-1].poses[-1].pose.position.x == 0.5
+
+        odom_publisher.publish(_odometry(x_m=0.5, y_m=0.5))
+        _spin_for(executor)
+        assert capture.mission_events.count("mission_complete") == 1
+        assert capture.paths[-1].poses == []
+
+        reset = String()
+        reset.data = "reset"
+        scenario_publisher.publish(reset)
+        _spin_for(executor)
+        assert capture.mission_events.count("mission_reset") == 1
+        assert capture.return_paths[-1].poses == []
     finally:
         _destroy_test_nodes(planner, publisher, capture, executor)
         rclpy.shutdown()

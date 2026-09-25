@@ -11,13 +11,13 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current terrain-risk map after the simulated tide update. |
 | `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health. 2 Hz. Battery from a stated power model (lift fan, thrust, wheels); mobility/link/payload/fault are parameters for fault injection. |
 | `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. |
-| `/planned_path` | Autonomy | Operator, Safety | `nav_msgs/Path` | Proposed route. |
+| `/planned_path` | Autonomy | Path follower, Operator, Safety | `nav_msgs/Path` | Active proposed route: outbound normally, HOME route while return is latched. |
 | `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Fresh route from current pose to the fixed HOME zone. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
 | `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Routed to the fans in HOVER mode or the wheels in GROUND mode. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
-| `/scenario_event` | Evaluation | Simulation, Safety | `std_msgs/String` | Controlled fault or scenario event. |
+| `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
 | `/points` | Simulation | Autonomy, Operator | `sensor_msgs/PointCloud2` | 16-channel 3D LiDAR, frame `lidar_link`, 10 Hz, 0.3–30 m. |
 | `/camera/image_raw`, `/camera/camera_info` | Simulation | Operator | `sensor_msgs/Image`, `CameraInfo` | Front camera, frame `camera_link`, 640×480 at 15 Hz. |
 | `/gps/fix` | Simulation | Operator | `sensor_msgs/NavSatFix` | Simulated GNSS (world origin at Sungei Buloh, 1.4466 N 103.7300 E), 10 Hz. |
@@ -80,11 +80,19 @@ Autonomy publishes `/mission_event` at each meaningful lifecycle transition:
 | `mission_complete` | Stop the vehicle and reset to `PRELAUNCH`. |
 | `mission_reset` | Stop the vehicle and reset to `PRELAUNCH`. |
 
+Autonomy emits `delivery_confirmed` when odometry reaches the outbound path endpoint and `mission_complete` when it reaches the HOME path endpoint. On completion or reset, it publishes empty active paths so the path follower proposes a stop.
+
 When Safety sets `return_required=true`, Autonomy must stop proposing the
-outbound route and publish a freshly stamped `/return_path` to HOME. Safety
-accepts that route only when it arrives after the return request, ends within
-the configured HOME tolerance, and remains valid against the latest terrain
-cost map. Until then, Safety publishes a zero command.
+outbound route and publish a freshly stamped `/return_path` to HOME. The same
+HOME route is published on `/planned_path` as the path follower's active route.
+Safety accepts the return route only when it arrives after the return request,
+ends within the configured HOME tolerance, and remains valid against the latest
+terrain cost map. Until then, Safety publishes a zero command. Every terrain
+cost-map update requires a fresh path publication even when A* selects the same
+cells. While returning, Autonomy refreshes `/return_path` without republishing
+`/planned_path`, preventing callback ordering from resetting freshness or path
+follower progress. A later false `return_required` value does not clear the latched return;
+the existing `reset` scenario event clears it.
 
 `VehicleHealth` is raw simulation telemetry. Safety calculates the estimated
 return energy, return margin and return ETA from `/return_path`,

@@ -1,4 +1,4 @@
-"""ROS 2 planner for terrain-aware outbound and return routes."""
+"""ROS 2 planner for terrain-aware or LiDAR-only outbound and return routes."""
 
 import json
 from math import atan2, hypot
@@ -8,6 +8,7 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import (
     DurabilityPolicy, QoSProfile, ReliabilityPolicy, qos_profile_sensor_data,
 )
@@ -29,8 +30,8 @@ from .planner_core import GridCell, GridCostMap, plan_path
 
 
 class GlobalPlannerNode(Node):
-    def __init__(self) -> None:
-        super().__init__("global_planner")
+    def __init__(self, parameter_overrides: list[Parameter] | None = None) -> None:
+        super().__init__("global_planner", parameter_overrides=parameter_overrides)
         self.declare_parameter("blocked_cost_threshold", 90)
         self.declare_parameter("require_matching_frame", True)
         # Version 1 is approximately 1.2 m by 0.7 m. Use its half-diagonal
@@ -48,6 +49,15 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("home_frame", "map")
         self.declare_parameter("goal_event_tolerance_m", 2.0)
         self.declare_parameter("return_path_refresh_rate_hz", 2.0)
+        # An experimental V3 profile can deliberately avoid terrain-cost
+        # policy.  It plans through a bounded, otherwise empty grid and marks
+        # only confirmed LiDAR returns as no-go.  The grid is geometry for A*,
+        # not a subscription to or interpretation of /terrain_costmap.
+        self.declare_parameter("lidar_only_navigation", False)
+        self.declare_parameter(
+            "lidar_only_bounds_m", [-12.0, 108.0, -30.0, 30.0]
+        )
+        self.declare_parameter("lidar_only_resolution_m", 1.0)
 
         self._base_costmap: GridCostMap | None = None
         self._static_clearance_costmap: GridCostMap | None = None
@@ -69,6 +79,9 @@ class GlobalPlannerNode(Node):
         self._scan_frame_warning_active = False
         self._mission_event_history: list[dict[str, object]] = []
         self._mission_event_sequence = 0
+        self._lidar_only_navigation = bool(
+            self.get_parameter("lidar_only_navigation").value
+        )
 
         inflation_radius = self._float_parameter("obstacle_inflation_radius_m")
         obstacle_min_range = self._float_parameter("obstacle_min_range_m")
@@ -104,6 +117,10 @@ class GlobalPlannerNode(Node):
             )
         if not self._string_parameter("home_frame"):
             raise ValueError("home_frame must not be empty")
+        if self._lidar_only_navigation:
+            self._base_costmap = self._lidar_only_grid()
+            self._static_clearance_costmap = self._base_costmap
+            self._rebuild_planning_costmap()
         self._obstacle_filter = ObstaclePersistenceFilter(
             confirmation_scans=confirmation_scans,
             clear_scans=clear_scans,
@@ -114,10 +131,16 @@ class GlobalPlannerNode(Node):
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.TRANSIENT_LOCAL,
         )
-        self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
+        if not self._lidar_only_navigation:
+            self.create_subscription(
+                OccupancyGrid, "/terrain_costmap", self._on_costmap, 10
+            )
         self.create_subscription(Odometry, "/odom", self._on_odometry, 20)
         self.create_subscription(PoseStamped, "/mission_goal", self._on_goal, 10)
-        self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
+        if not self._lidar_only_navigation:
+            self.create_subscription(
+                TerrainState, "/terrain_state", self._on_terrain_state, 10
+            )
         self.create_subscription(
             LaserScan, "/scan", self._on_scan, qos_profile_sensor_data
         )
@@ -148,9 +171,12 @@ class GlobalPlannerNode(Node):
             self._on_return_path_refresh_timer,
         )
 
-        self.get_logger().info(
-            "Global planner ready; waiting for map, pose, mission goal, and LiDAR"
+        inputs = (
+            "pose, mission goal, and LiDAR"
+            if self._lidar_only_navigation
+            else "map, pose, mission goal, and LiDAR"
         )
+        self.get_logger().info(f"Global planner ready; waiting for {inputs}")
 
     def _float_parameter(self, name: str) -> float:
         return float(self.get_parameter(name).value)
@@ -164,7 +190,48 @@ class GlobalPlannerNode(Node):
             raise ValueError(f"{name} must be a positive integer")
         return value
 
+    def _lidar_only_grid(self) -> GridCostMap:
+        """Create the fixed free-space geometry used by LiDAR-only planning."""
+        bounds = [
+            float(value)
+            for value in self.get_parameter("lidar_only_bounds_m").value
+        ]
+        if len(bounds) != 4:
+            raise ValueError(
+                "lidar_only_bounds_m must be [min_x, max_x, min_y, max_y]"
+            )
+        min_x, max_x, min_y, max_y = bounds
+        resolution = self._float_parameter("lidar_only_resolution_m")
+        if resolution <= 0.0 or max_x <= min_x or max_y <= min_y:
+            raise ValueError(
+                "LiDAR-only bounds must increase and resolution must be positive"
+            )
+        width = round((max_x - min_x) / resolution)
+        height = round((max_y - min_y) / resolution)
+        if width <= 0 or height <= 0:
+            raise ValueError("LiDAR-only bounds produce an empty planning grid")
+        if abs(width * resolution - (max_x - min_x)) > 1e-6 or abs(
+            height * resolution - (max_y - min_y)
+        ) > 1e-6:
+            raise ValueError("LiDAR-only bounds must align with the grid resolution")
+        return GridCostMap(
+            width=width,
+            height=height,
+            costs=[0] * (width * height),
+            resolution=resolution,
+            origin_x=min_x,
+            origin_y=min_y,
+            blocked_cost=int(self.get_parameter("blocked_cost_threshold").value),
+        )
+
+    def _planning_frame(self) -> str:
+        if self._lidar_only_navigation or self._costmap_msg is None:
+            return self._string_parameter("home_frame")
+        return self._costmap_msg.header.frame_id
+
     def _on_costmap(self, message: OccupancyGrid) -> None:
+        if self._lidar_only_navigation:
+            return
         previous_costmap = self._base_costmap
         previous_geometry = self._costmap_geometry(previous_costmap)
         try:
@@ -305,7 +372,9 @@ class GlobalPlannerNode(Node):
         self.get_logger().info("Mission reset; waiting for a new goal")
 
     def _on_scan(self, message: LaserScan) -> None:
-        if self._base_costmap is None or self._costmap_msg is None or self._pose is None:
+        if self._base_costmap is None or self._pose is None:
+            return
+        if not self._lidar_only_navigation and self._costmap_msg is None:
             return
         if not self._map_and_odometry_frames_match():
             return
@@ -328,7 +397,7 @@ class GlobalPlannerNode(Node):
         # second temporary inflation would grow the same obstacle again and
         # can incorrectly close an otherwise valid detour. Keep the overlay
         # for genuinely unmapped/new obstacles only.
-        if self._static_clearance_costmap is not None:
+        if not self._lidar_only_navigation and self._static_clearance_costmap is not None:
             obstacles = frozenset(
                 cell
                 for cell in obstacles
@@ -467,7 +536,7 @@ class GlobalPlannerNode(Node):
         if (
             self._mission_finished
             or self._costmap is None
-            or self._costmap_msg is None
+            or (not self._lidar_only_navigation and self._costmap_msg is None)
             or self._pose is None
             or target is None
         ):
@@ -558,7 +627,7 @@ class GlobalPlannerNode(Node):
             or not self._return_path_available
             or self._last_return_path_cells is None
             or self._costmap is None
-            or self._costmap_msg is None
+            or (not self._lidar_only_navigation and self._costmap_msg is None)
         ):
             return
         # Refresh only Safety's copy, preserving path-follower progress.
@@ -583,7 +652,7 @@ class GlobalPlannerNode(Node):
 
     def _path_message(self, cells: list[GridCell]) -> Path:
         path = Path()
-        path.header.frame_id = self._costmap_msg.header.frame_id
+        path.header.frame_id = self._planning_frame()
         path.header.stamp = self.get_clock().now().to_msg()
         for cell in cells:
             pose = PoseStamped()
@@ -598,10 +667,7 @@ class GlobalPlannerNode(Node):
     def _empty_path_message(self) -> Path:
         path = Path()
         path.header.stamp = self.get_clock().now().to_msg()
-        if self._costmap_msg is not None:
-            path.header.frame_id = self._costmap_msg.header.frame_id
-        else:
-            path.header.frame_id = self._string_parameter("home_frame")
+        path.header.frame_id = self._planning_frame()
         return path
 
     def _publish_empty_return_path(self) -> None:
@@ -689,7 +755,7 @@ class GlobalPlannerNode(Node):
         frames = {
             frame
             for frame in (
-                self._costmap_msg.header.frame_id,
+                self._planning_frame(),
                 self._pose.header.frame_id,
             )
             if frame
@@ -711,7 +777,7 @@ class GlobalPlannerNode(Node):
         frames = {
             frame
             for frame in (
-                self._costmap_msg.header.frame_id,
+                self._planning_frame(),
                 self._pose.header.frame_id,
                 target_frame,
             )

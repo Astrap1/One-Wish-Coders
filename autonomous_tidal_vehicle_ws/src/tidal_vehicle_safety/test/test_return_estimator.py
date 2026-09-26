@@ -4,6 +4,7 @@ from math import isclose
 from tidal_vehicle_safety.return_estimator import (
     GridCostmap,
     ReturnEstimatorConfig,
+    estimate_lidar_return,
     estimate_return,
     path_ends_at_home,
 )
@@ -60,6 +61,18 @@ def test_estimate_rejects_unknown_or_no_go_cells():
 
     assert not estimate_return([(1.0, 1.0), (3.0, 1.0)], _grid(unknown), 50.0, 100.0, _config()).valid
     assert not estimate_return([(1.0, 1.0), (3.0, 1.0)], _grid(blocked), 50.0, 100.0, _config()).valid
+
+
+def test_lidar_return_estimate_does_not_sample_costmap_cells():
+    estimate = estimate_lidar_return(
+        [(1.0, 1.0), (3.0, 1.0)], 50.0, 100.0, _config()
+    )
+
+    assert estimate.valid
+    assert isclose(estimate.route_length_m, 2.0)
+    assert isclose(estimate.estimated_energy_percent, 12.0)
+    assert isclose(estimate.margin_percent, 38.0)
+    assert isclose(estimate.eta_s, 4.0)
 
 
 def test_mixed_track_hover_route_accounts_for_transition_cost_and_time():

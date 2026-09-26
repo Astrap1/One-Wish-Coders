@@ -14,6 +14,7 @@ from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
@@ -141,6 +142,75 @@ def _destroy_test_nodes(
     for node in (capture, publisher, planner):
         executor.remove_node(node)
         node.destroy_node()
+
+
+def test_lidar_only_planning_ignores_terrain_costs_and_detours_for_scan() -> None:
+    rclpy.init()
+    planner = GlobalPlannerNode(
+        parameter_overrides=[
+            Parameter("lidar_only_navigation", value=True),
+            Parameter("lidar_only_bounds_m", value=[0.0, 4.0, 0.0, 3.0]),
+            Parameter("obstacle_inflation_radius_m", value=0.0),
+        ]
+    )
+    publisher = Node("lidar_only_planner_mock_publishers")
+    capture = PlannerCapture("lidar_only_planner_capture")
+    executor = SingleThreadedExecutor()
+    for node in (planner, publisher, capture):
+        executor.add_node(node)
+
+    try:
+        # In LiDAR-only mode the terrain topic is not an Autonomy input. This
+        # blocked map therefore cannot remove the route; the blank bounded
+        # grid is the only route geometry until scans confirm obstacles.
+        costmap_publisher = publisher.create_publisher(
+            OccupancyGrid, "/terrain_costmap", 10
+        )
+        odom_publisher = publisher.create_publisher(Odometry, "/odom", 10)
+        goal_publisher = publisher.create_publisher(PoseStamped, "/mission_goal", 10)
+        scan_publisher = publisher.create_publisher(LaserScan, "/scan", 10)
+        _spin_for(executor, 0.1)
+
+        costmap_publisher.publish(_costmap([100] * 12, width=4, height=3))
+        odom_publisher.publish(_odometry())
+        goal_publisher.publish(_goal())
+        _spin_for(executor)
+
+        assert capture.paths
+        expected_path = [
+            (0.5, 0.5),
+            (1.5, 0.5),
+            (2.5, 0.5),
+        ]
+        assert [
+            (pose.pose.position.x, pose.pose.position.y)
+            for pose in capture.paths[-1].poses
+        ] == expected_path
+
+        # A changed map is also ignored: it must not republish or alter the
+        # LiDAR-only route.
+        route_count = len(capture.paths)
+        costmap_publisher.publish(_costmap([0] * 12, width=4, height=3))
+        _spin_for(executor, 0.2)
+        assert len(capture.paths) == route_count
+        assert [
+            (pose.pose.position.x, pose.pose.position.y)
+            for pose in capture.paths[-1].poses
+        ] == expected_path
+
+        # The second matching hit confirms the obstacle and makes A* route
+        # around it. A single raw scan must not cause a swerve.
+        scan_publisher.publish(_scan(1.0))
+        scan_publisher.publish(_scan(1.0))
+        _spin_for(executor)
+
+        assert capture.paths[-1].poses
+        assert any(pose.pose.position.y > 0.5 for pose in capture.paths[-1].poses)
+    finally:
+        for node in (capture, publisher, planner):
+            executor.remove_node(node)
+            node.destroy_node()
+        rclpy.shutdown()
 
 
 def test_planner_clears_previous_path_when_route_becomes_blocked() -> None:

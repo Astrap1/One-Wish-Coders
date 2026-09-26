@@ -182,13 +182,27 @@ def main():
                     (orientation.x, orientation.y, orientation.z, orientation.w),
                     self.lidar_height,
                 )
-            ranges, a0, inc = cloud_to_ranges(pts, self.bins, self.min_h, self.max_h,
-                                              self.rmin, self.rmax, self.box,
-                                              self.radius, above_ground,
-                                              self.ground_clearance,
-                                              (self.ground_obstacle_height
-                                               if self.ground_obstacle_height > 0.0
-                                               else None))
+            # Use names for optional filters: the footprint-radius alias
+            # precedes height_above_ground in cloud_to_ranges(), so positional
+            # arguments here can turn the scalar clearance into an invalid
+            # height array and kill the live V3 LiDAR process.
+            ranges, a0, inc = cloud_to_ranges(
+                pts,
+                bins=self.bins,
+                min_h=self.min_h,
+                max_h=self.max_h,
+                rmin=self.rmin,
+                rmax=self.rmax,
+                self_box=self.box,
+                self_radius=self.radius,
+                height_above_ground=above_ground,
+                ground_clearance=self.ground_clearance,
+                ground_obstacle_height=(
+                    self.ground_obstacle_height
+                    if self.ground_obstacle_height > 0.0
+                    else None
+                ),
+            )
             s = LaserScan()
             s.header = msg.header
             s.angle_min, s.angle_increment = a0, inc

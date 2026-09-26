@@ -12,6 +12,7 @@ from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import OccupancyGrid, Path
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Bool
 
@@ -113,6 +114,51 @@ def test_supervisor_forwards_healthy_command_and_holds_critical_fault():
         assert capture.commands
         assert capture.commands[-1].linear.x == 0.0
         assert capture.commands[-1].angular.z == 0.0
+    finally:
+        for node in (capture, publisher, supervisor):
+            executor.remove_node(node)
+            node.destroy_node()
+        rclpy.shutdown()
+
+
+def test_reference_only_mode_forwards_lidar_route_across_no_go_map():
+    rclpy.init()
+    supervisor = SafetySupervisor(
+        parameter_overrides=[Parameter("costmap_reference_only", value=True)]
+    )
+    publisher = Node("safety_reference_only_mock_publishers")
+    capture = CommandCapture()
+    executor = SingleThreadedExecutor()
+    for node in (supervisor, publisher, capture):
+        executor.add_node(node)
+
+    try:
+        costmap_pub = publisher.create_publisher(OccupancyGrid, "/terrain_costmap", 10)
+        health_pub = publisher.create_publisher(VehicleHealth, "/vehicle_health", 10)
+        terrain_pub = publisher.create_publisher(TerrainState, "/terrain_state", 10)
+        goal_pub = publisher.create_publisher(PoseStamped, "/mission_goal", 10)
+        planned_pub = publisher.create_publisher(Path, "/planned_path", 10)
+        return_pub = publisher.create_publisher(Path, "/return_path", 10)
+        proposed_pub = publisher.create_publisher(Twist, "/cmd_vel_proposed", 10)
+        _spin_for(executor, 0.1)
+
+        blocked_map = _costmap()
+        blocked_map.data = [100] * 100
+        costmap_pub.publish(blocked_map)
+        health_pub.publish(_health(100.0))
+        terrain_pub.publish(_terrain())
+        goal_pub.publish(PoseStamped())
+        planned_pub.publish(_path([(1.0, 1.0), (2.0, 1.0)]))
+        return_pub.publish(_path([(2.0, 1.0), (0.0, 0.0)]))
+        _spin_for(executor)
+
+        proposed = Twist()
+        proposed.linear.x = 0.5
+        proposed_pub.publish(proposed)
+        _spin_for(executor)
+
+        assert supervisor._estimate.valid
+        assert capture.commands[-1].linear.x == 0.5
     finally:
         for node in (capture, publisher, supervisor):
             executor.remove_node(node)

@@ -161,6 +161,51 @@ def estimate_return(
     )
 
 
+def estimate_lidar_return(
+    path: Sequence[Point2],
+    battery_percent: float,
+    mobility_health_percent: float,
+    config: ReturnEstimatorConfig,
+) -> ReturnEstimate:
+    """Estimate a LiDAR-only return without sampling terrain-map values.
+
+    This deliberately uses the conservative hover profile for every segment.
+    Obstacle validation belongs to Autonomy's confirmed LiDAR overlay; a
+    terrain-cost map remains a display/reference input, not a route veto.
+    """
+    if not path:
+        return ReturnEstimate(False, "Return route is empty.")
+    if not 0.0 < mobility_health_percent <= 100.0:
+        return ReturnEstimate(False, "Mobility health cannot support an estimate.")
+    if config.hover_nominal_speed_mps <= 0.0:
+        return ReturnEstimate(False, "Return-estimator configuration is invalid.")
+
+    terrain_multiplier = 1.0 + config.mobility_degradation_weight * (
+        1.0 - mobility_health_percent / 100.0
+    )
+    route_length_m = sum(
+        hypot(end[0] - start[0], end[1] - start[1])
+        for start, end in _segments(path)
+    )
+    raw_energy_percent = (
+        route_length_m * config.hover_energy_percent_per_m * terrain_multiplier
+    )
+    eta_s = route_length_m / (config.hover_nominal_speed_mps / terrain_multiplier)
+    buffer_percent = max(
+        config.minimum_buffer_percent,
+        raw_energy_percent * config.contingency_ratio,
+    )
+    estimated_energy_percent = raw_energy_percent + buffer_percent
+    return ReturnEstimate(
+        True,
+        "LiDAR return route is valid.",
+        route_length_m,
+        estimated_energy_percent,
+        battery_percent - estimated_energy_percent,
+        eta_s,
+    )
+
+
 def _segments(path: Sequence[Point2]) -> list[tuple[Point2, Point2]]:
     return list(zip(path, path[1:]))
 

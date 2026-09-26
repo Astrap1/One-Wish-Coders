@@ -46,6 +46,7 @@ def test_speed_aware_sensor_range_grows_and_clamps() -> None:
     assert speed_aware_sensor_range(4.0, 8.0, 30.0, 1.0, clearance_m=2.0) == 14.0
     assert speed_aware_sensor_range(4.0, 8.0, 30.0, 1.0) == 12.0
     assert speed_aware_sensor_range(13.9, 8.0, 30.0, 1.0) == 30.0
+    assert speed_aware_sensor_range(0.0, 30.0, 30.0, 1.0) == 30.0
 
 
 def test_stopping_reach_grows_with_speed() -> None:

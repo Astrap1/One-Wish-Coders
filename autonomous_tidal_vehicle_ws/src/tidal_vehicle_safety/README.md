@@ -39,6 +39,15 @@ then adds the larger of an 8 percentage-point buffer or 20% contingency. These
 are transparent simulation assumptions, not field-validated vehicle-performance
 claims.
 
+For `vehicle:=v3`, `costmap_reference_only:=true` switches Safety to a
+LiDAR-route profile: it does not subscribe to `/terrain_costmap`, use terrain
+cells as a route veto, or impose zone speed limits. It validates that the
+return path reaches HOME, then estimates every segment with the conservative
+hover-energy model. LiDAR obstacle validation remains Autonomy's job, while
+telemetry, vehicle faults, battery/fuel margin, tide conditions and Safety's
+exclusive `/cmd_vel` authority remain enforced. Versions 1 and 2 retain the
+terrain-aware estimator.
+
 The current Gazebo vehicle is **Version 1**, which has wheels and is deliberately
 launched with `hover_only`; it does not demonstrate tracked travel or mode
 transitions. Accordingly, `track_mode_enabled: false` is the default safety

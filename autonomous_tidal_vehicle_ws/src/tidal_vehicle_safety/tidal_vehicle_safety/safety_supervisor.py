@@ -10,6 +10,7 @@ import math
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Bool, String
 
@@ -21,6 +22,7 @@ from .return_estimator import (
     GridCostmap,
     ReturnEstimate,
     ReturnEstimatorConfig,
+    estimate_lidar_return,
     estimate_return,
     path_ends_at_home,
 )
@@ -30,9 +32,12 @@ from .zone_limits import zone_limit_ahead
 class SafetySupervisor(Node):
     """Allow only safe proposed commands to reach the simulated vehicle."""
 
-    def __init__(self) -> None:
-        super().__init__("safety_supervisor")
+    def __init__(self, parameter_overrides: list[Parameter] | None = None) -> None:
+        super().__init__("safety_supervisor", parameter_overrides=parameter_overrides)
         self._declare_parameters()
+        self._costmap_reference_only = bool(
+            self.get_parameter("costmap_reference_only").value
+        )
         self._phase = MissionPhase.PRELAUNCH
         self._state = HOLD
         self._reason = "Awaiting a mission goal and current telemetry."
@@ -50,7 +55,7 @@ class SafetySupervisor(Node):
         self._remote_enabled = False
         self._return_path_points: list[tuple[float, float]] = []
         self._last_costmap_signature: Optional[tuple[object, ...]] = None
-        self._estimate = ReturnEstimate(False, "Awaiting a return route and terrain cost map.")
+        self._estimate = ReturnEstimate(False, "Awaiting a return route and vehicle health.")
 
         status_qos = QoSProfile(
             depth=1,
@@ -70,7 +75,10 @@ class SafetySupervisor(Node):
         self.create_subscription(Twist, "/operator_cmd_vel", self._on_remote_command, 10)
         self.create_subscription(VehicleHealth, "/vehicle_health", self._on_health, 10)
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain, 10)
-        self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
+        if not self._costmap_reference_only:
+            self.create_subscription(
+                OccupancyGrid, "/terrain_costmap", self._on_costmap, 10
+            )
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Path, "/planned_path", self._on_planned_path, 10)
         self.create_subscription(Path, "/return_path", self._on_return_path, 10)
@@ -134,6 +142,9 @@ class SafetySupervisor(Node):
             # mud/roots/debris, elevated risk] in m/s; [0.0] = off
             "zone_speed_limits_mps": [0.0],
             "brake_decel_mps2": 1.0,
+            # V3's LiDAR-only autonomy profile makes this map a dashboard
+            # reference, not a Safety route or energy veto.
+            "costmap_reference_only": False,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -147,6 +158,8 @@ class SafetySupervisor(Node):
         self._last_terrain_at = self._now_s()
 
     def _on_costmap(self, message: OccupancyGrid) -> None:
+        if self._costmap_reference_only:
+            return
         now = self._now_s()
         info = message.info
         self._costmap = GridCostmap(
@@ -347,8 +360,8 @@ class SafetySupervisor(Node):
         )
 
     def _refresh_return_estimate(self) -> None:
-        if self._health is None or self._costmap is None:
-            self._estimate = ReturnEstimate(False, "Awaiting raw health and terrain cost map.")
+        if self._health is None:
+            self._estimate = ReturnEstimate(False, "Awaiting vehicle health.")
             return
         if not path_ends_at_home(
             self._return_path_points,
@@ -356,6 +369,17 @@ class SafetySupervisor(Node):
             self._parameter("home_tolerance_m"),
         ):
             self._estimate = ReturnEstimate(False, "Return route does not end within HOME tolerance.")
+            return
+        if self._costmap_reference_only:
+            self._estimate = estimate_lidar_return(
+                self._return_path_points,
+                self._health.battery_percent,
+                self._health.mobility_health_percent,
+                self._estimator_config(),
+            )
+            return
+        if self._costmap is None:
+            self._estimate = ReturnEstimate(False, "Awaiting terrain cost map.")
             return
         self._estimate = estimate_return(
             self._return_path_points,
@@ -368,6 +392,8 @@ class SafetySupervisor(Node):
     def _outbound_path_current(self) -> bool:
         if self._planned_path_received_at is None:
             return False
+        if self._costmap_reference_only:
+            return True
         return (
             self._costmap_changed_at is None
             or self._planned_path_received_at >= self._costmap_changed_at
@@ -386,6 +412,11 @@ class SafetySupervisor(Node):
             return False
         if self._phase is not MissionPhase.RETURNING:
             return True
+        if self._costmap_reference_only:
+            return (
+                self._return_requested_at is not None
+                and self._return_path_received_at >= self._return_requested_at
+            )
         return (
             self._return_requested_at is not None
             and self._return_path_received_at >= self._return_requested_at
@@ -450,7 +481,7 @@ class SafetySupervisor(Node):
         self._last_remote_command_at = None
         self._remote_enabled = False
         self._return_path_points = []
-        self._estimate = ReturnEstimate(False, "Awaiting a return route and terrain cost map.")
+        self._estimate = ReturnEstimate(False, "Awaiting a return route and vehicle health.")
         self._state = HOLD
         self._reason = reason
         self._publish_stop()

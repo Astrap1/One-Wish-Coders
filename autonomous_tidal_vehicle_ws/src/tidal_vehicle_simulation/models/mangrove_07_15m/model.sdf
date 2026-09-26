@@ -13,7 +13,7 @@
     <link name="glb_collision_link">
       <pose>0 0 1.088 0 0 0</pose>
       <collision name="glb_mesh_collision">
-        <geometry><mesh><uri>model://mangrove_imported/meshes/mangrovetree.obj</uri><scale>5.35 5.35 5.35</scale></mesh></geometry>
+        <geometry><cylinder><radius>1.3</radius><length>5.0</length></cylinder></geometry>
       </collision>
     </link>
   </model>

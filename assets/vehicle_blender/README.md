@@ -19,6 +19,12 @@ blender --background --python assets/vehicle_blender/version_3/build_vehicle.py
 python3 autonomous_tidal_vehicle_ws/src/tidal_vehicle_description/scripts/gen_description_v3.py
 ```
 
+Version 3 heavy-load presentation variant (visual only: about 350 kg of strapped deck cargo, woodland camouflage and generic military markings; `-- --no-camo` keeps the olive paint). It reuses `build_vehicle.py` but never writes the simulation meshes, SDF or URDF, so the Gazebo model keeps its 100 kg payload. Outputs `version_3/hovercraft_v3_heavy_load.blend` and `version_3/renders/heavy_load/` (including `load_log.txt`: load masses, overload figures and LiDAR clearance):
+
+```bash
+blender --background --python assets/vehicle_blender/version_3/build_heavy_load.py
+```
+
 Rebuild Version 2 (Blender 4.2+, or the pip `bpy` 4.2 module with `python3`):
 
 ```bash

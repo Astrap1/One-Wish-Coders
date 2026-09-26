@@ -143,6 +143,11 @@ LIDAR_X, LIDAR_Z = 0.0, 1.82   # 16-ch 3D LiDAR on a centre mast, above base_lin
 LIDAR_R, LIDAR_H = 0.0515, 0.0717
 CAM_X_B = 1.07
 CAM_X, CAM_Z = S * CAM_X_B, 0.80          # front RGB camera optical centre (bow bay nose)
+# Front near-field LiDAR on the bow bay: 180 deg ahead, beams -25..+5 deg. It
+# covers the mast LiDAR's blind zone in front of the bow (low rocks, the edge
+# of a bank) out to 15 m; lidar_scan_node merges both into /scan.
+FRONT_LIDAR_X, FRONT_LIDAR_Z = 1.18, 1.04   # optical centre
+FRONT_LIDAR_VFOV = (-25, 5)
 MAST_CAM_Z = 1.66              # rear / left / right cameras on the mast, below the LiDAR
 MAST_CAM_R = 0.075             # optical centre distance from the mast axis
 MAST_CAM_PITCH_DEG = 15        # tilted down to see the water around the hull
@@ -856,6 +861,15 @@ def build_hull():
               M @ T(MAST_CAM_R - 0.03, 0, 0), tag="mast_cameras")
         L.add(bm_cyl(0.015, 0.01, seg=16), "lens",
               M @ T(MAST_CAM_R - 0.004, 0, 0) @ R('Y', 90 + MAST_CAM_PITCH_DEG))
+
+    # --- front near-field LiDAR on a short plinth on the bow bay ----------
+    fb = FRONT_LIDAR_Z - LIDAR_H / 2
+    L.add(bm_cyl(0.042, fb - BAY_TOP_Z + 0.01, seg=24, r2=0.036), "dark_green",
+          T(FRONT_LIDAR_X, 0, (fb + BAY_TOP_Z - 0.01) / 2), tag="front_lidar")
+    L.add(bm_cyl(LIDAR_R, 0.020, seg=32, bevel=0.003), "aluminium", T(FRONT_LIDAR_X, 0, fb + 0.010))
+    L.add(bm_cyl(LIDAR_R - 0.002, 0.032, seg=32), "lens", T(FRONT_LIDAR_X, 0, fb + 0.036),
+          tag="front_lidar")
+    L.add(bm_cyl(LIDAR_R, 0.020, seg=32, bevel=0.003), "aluminium", T(FRONT_LIDAR_X, 0, fb + 0.062))
     return L
 
 
@@ -1108,6 +1122,10 @@ def sensor_table():
                      "vfov_deg": [-15, 15], "range_m": [0.3, 30.0], "rate_hz": 10},
         "front_camera": {"parent": "camera", "xyz": [CAM_X, 0, CAM_Z], "rpy": [0, 0, 0],
                          "type": "camera"},
+        "lidar_front": {"parent": "hull", "xyz": [FRONT_LIDAR_X, 0, FRONT_LIDAR_Z],
+                        "rpy": [0, 0, 0], "type": "gpu_lidar", "channels": 8,
+                        "hfov_deg": 180, "vfov_deg": list(FRONT_LIDAR_VFOV),
+                        "range_m": [0.2, 15.0], "rate_hz": 10},
     }
     pitch = math.radians(MAST_CAM_PITCH_DEG)
     for name, yaw in (("rear_camera", math.pi), ("left_camera", math.pi / 2),

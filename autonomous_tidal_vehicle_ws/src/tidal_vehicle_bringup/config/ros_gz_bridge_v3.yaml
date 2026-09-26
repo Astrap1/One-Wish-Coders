@@ -35,6 +35,11 @@
   direction: GZ_TO_ROS
 
 # ---------------- sensors ----------------------------------------------------
+- ros_topic_name: /points_front             # front near-field LiDAR (lidar_front_link), 180 deg ahead
+  gz_topic_name: /world/WORLD/model/hovercraft_v3/link/base_link/sensor/lidar_front/scan/points
+  ros_type_name: sensor_msgs/msg/PointCloud2
+  gz_type_name: gz.msgs.PointCloudPacked
+  direction: GZ_TO_ROS
 - ros_topic_name: /points                   # 16-channel 3D LiDAR (lidar_link); /scan is derived from it
   gz_topic_name: /world/WORLD/model/hovercraft_v3/link/lidar_link/sensor/lidar_3d/scan/points
   ros_type_name: sensor_msgs/msg/PointCloud2

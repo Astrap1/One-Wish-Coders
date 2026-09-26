@@ -1054,6 +1054,31 @@
       ],
       "type": "camera"
     },
+    "lidar_front": {
+      "parent": "hull",
+      "xyz": [
+        1.18,
+        0,
+        1.04
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "type": "gpu_lidar",
+      "channels": 8,
+      "hfov_deg": 180,
+      "vfov_deg": [
+        -25,
+        5
+      ],
+      "range_m": [
+        0.2,
+        15.0
+      ],
+      "rate_hz": 10
+    },
     "rear_camera": {
       "parent": "hull",
       "xyz": [

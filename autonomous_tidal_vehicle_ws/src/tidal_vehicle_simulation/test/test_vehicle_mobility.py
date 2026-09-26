@@ -225,6 +225,30 @@ def test_tracks_retract_after_climb_or_over_water() -> None:
     assert modes.mode == "HOVER"
 
 
+def test_bump_on_the_bank_does_not_retract_tracks() -> None:
+    modes = _tracks(slope_dwell_s=0.1)
+    _enter_v2_hover(modes)
+    for _ in range(2):
+        modes.step(0.1, terrain="FIRM", slope_deg=16.0,
+                   hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    modes.step(0.1, terrain="FIRM", slope_deg=16.0,
+               hover_state="HOVER", gap=0.05, gear_pos=0.0)
+    for _ in range(3):
+        modes.step(0.1, terrain="FIRM", slope_deg=16.0,
+                   hover_state="LOAD_SHARE", gap=0.03, gear_pos=0.0)
+    assert modes.mode == "TRACK"
+    # one short dip below the deploy slope, then a reading just under it
+    for slope in (9.0, 13.5, 15.0, 12.0, 15.0):
+        modes.step(0.1, terrain="FIRM", slope_deg=slope,
+                   hover_state="LOAD_SHARE", gap=0.03, gear_pos=0.0)
+    assert modes.mode == "TRACK"
+    # the crest: the slope stays low, so the tracks retract
+    for _ in range(6):
+        modes.step(0.1, terrain="FIRM", slope_deg=2.0,
+                   hover_state="LOAD_SHARE", gap=0.03, gear_pos=0.0)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "HOVER"
+
+
 def test_tracks_settle_on_vertical_speed_on_uneven_ground() -> None:
     modes = _tracks()
     _enter_v2_hover(modes)
@@ -264,3 +288,43 @@ def test_series_hybrid_burns_fuel_and_holds_battery() -> None:
         battery.step(1.0, True, "HOVER", 8.33, 0.0)
     assert 99.0 < battery.percent <= 100.0             # the generator carries the load
     assert 85.0 < battery.fuel_percent < 95.0          # about 2.5-3 L of 30 L per hour
+
+
+def test_command_ramps_smooth_speeding_up_and_turning_only() -> None:
+    slew = MODULE.slew
+    assert slew(0.0, 2.0, 0.5, 0.1) == 0.05            # speeding up is ramped
+    assert slew(2.0, 0.0, 0.5, 0.1, instant_toward_zero=True) == 0.0   # stops at once
+    assert abs(slew(0.4, -0.4, 0.4, 0.1) - 0.36) < 1e-9  # a turn reversal is ramped
+    assert slew(0.0, 1.0, 0.0, 0.1) == 1.0               # 0 = off
+
+
+def test_descent_speed_cap_follows_the_braking_left() -> None:
+    cap = MODULE.descent_speed_limit
+    assert cap(1.0, 1.42, 3.0, 0.5) is None               # level: no cap
+    assert 1.5 < cap(5.0, 1.42, 3.0, 0.5) < 2.0           # braking reduced by gravity
+    assert cap(15.0, 1.42, 3.0, 0.5) == 0.5               # beyond what reverse thrust holds
+
+
+def test_v3_steep_descent_brings_the_tracks_down() -> None:
+    modes = _tracks(track_deploy_slope_deg=8.0, track_descent_slope_deg=7.0,
+                    descent_dwell_s=0.2)
+    _enter_v2_hover(modes)
+    for _ in range(3):                # nose-down 12 deg on the firm bank
+        modes.step(0.1, terrain="MUD", terrain_here="FIRM", descent_deg=12.0,
+                   hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+
+
+def test_descent_braking_is_off_by_default_and_ignores_water() -> None:
+    modes = _tracks()
+    _enter_v2_hover(modes)
+    for _ in range(5):
+        modes.step(0.1, terrain="FIRM", descent_deg=15.0,
+                   hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    assert modes.mode == "HOVER"
+    modes = _tracks(track_descent_slope_deg=7.0, descent_dwell_s=0.1)
+    _enter_v2_hover(modes)
+    for _ in range(5):
+        modes.step(0.1, terrain="WATER", terrain_here="WATER", over_water=True,
+                   descent_deg=15.0, hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    assert modes.mode == "HOVER"

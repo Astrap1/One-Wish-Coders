@@ -24,6 +24,8 @@
   <joint name="camera_left_link_joint" type="fixed"><parent link="base_link"/><child link="camera_left_link"/><origin xyz="4.59243e-18 0.075 1.16" rpy="0 0.261799 1.5708"/></joint>
   <link name="camera_right_link"/>
   <joint name="camera_right_link_joint" type="fixed"><parent link="base_link"/><child link="camera_right_link"/><origin xyz="4.59243e-18 -0.075 1.16" rpy="0 0.261799 -1.5708"/></joint>
+  <link name="lidar_front_link"/>
+  <joint name="lidar_front_link_joint" type="fixed"><parent link="base_link"/><child link="lidar_front_link"/><origin xyz="1.18 0 0.54" rpy="0 0 0"/></joint>
   <joint name="imu_joint" type="fixed"><parent link="base_link"/><child link="imu_link"/><origin xyz="0 0 0" rpy="0 0 0"/></joint>
   <joint name="skirt_joint" type="fixed"><parent link="base_link"/><child link="skirt"/><origin xyz="0 0 -0.27" rpy="0 0 0"/></joint>
   <joint name="lift_fan_joint" type="continuous"><parent link="base_link"/><child link="lift_fan"/><origin xyz="0.54 0 0.24" rpy="0 0 0"/><axis xyz="0 0 1"/></joint>

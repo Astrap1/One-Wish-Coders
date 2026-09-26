@@ -25,6 +25,8 @@ vehicle_mobility:
     settle_gap_m: 0.03             # skirt gap when the vehicle rests on its tracks
     settle_gap_tolerance_m: 0.008
     slope_dwell_s: 1.5             # climb must persist this long (edges and bumps are brief)
+    track_exit_slope_deg: 10.0     # leave TRACK once the climb is below this ...
+    track_exit_dwell_s: 0.5        # ... for this long (a bump on the bank does not retract)
     settle_vz_mps: 0.03            # settled on the tracks once vertical motion stops (uneven ground)
     ground_cmd_topic: /vehicle/cmd_vel_tracks
     gear_cmd_topic: /vehicle/tracks_cmd

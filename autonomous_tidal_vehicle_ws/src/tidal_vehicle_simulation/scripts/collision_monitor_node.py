@@ -136,11 +136,13 @@ def main() -> None:
             if jolt > self.jolt_threshold and t - self.last_contact_t > 0.5:
                 self.report("imu", "unknown", jolt_side(dx, dy), "", jolt)
 
+    from rclpy.executors import ExternalShutdownException
+
     rclpy.init()
     node = CollisionMonitor()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

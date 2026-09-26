@@ -23,6 +23,16 @@ Parameters (config/vehicle_mobility.yaml, section lidar_scan):
   ground_clearance_m           required protrusion above the terrain surface
   ground_obstacle_height_m     top of the terrain-relative obstacle slice (0 = off)
   range_min_m / range_max_m, bins
+
+Alternative ground filter (Person 4; OFF by default, kept for worlds whose
+terrain profile is not built in -- the corridor filter above is the active one):
+  slope_ground_filter_deg      along each bearing, a return that rises from the
+  slope_ground_step_m          ground before it by no more than this slope (plus
+                               a small step) is ground; anything steeper is an
+                               obstacle. Needs no terrain map. 0 = off.
+  level_with_imu               measure those slopes level, using the IMU's roll
+                               and pitch (/imu), so a tilted vehicle does not
+                               see level ground as a slope
 """
 import math
 
@@ -42,11 +52,15 @@ def cloud_to_ranges(
     height_above_ground=None,
     ground_clearance=0.0,
     ground_obstacle_height=None,
+    *,
+    exclude=None,
 ):
     """xyz: (N,3) points in the lidar frame -> (ranges[bins], angle_min, increment).
     Pure numpy, no ROS, so it can be tested offline."""
     xyz = np.asarray(xyz, dtype=float)
     finite = np.all(np.isfinite(xyz), axis=1)
+    if exclude is not None:                    # e.g. slope_ground_mask() below
+        finite &= ~np.asarray(exclude, dtype=bool)
     if height_above_ground is not None:
         height_above_ground = np.asarray(height_above_ground, dtype=float)
         if len(height_above_ground) != len(xyz):
@@ -79,6 +93,55 @@ def cloud_to_ranges(
         idx = np.clip(((a + math.pi) / (2 * math.pi) * bins).astype(int), 0, bins - 1)
         np.minimum.at(ranges, idx, r[keep])
     return ranges, -math.pi, 2 * math.pi / bins
+
+
+def level_points(xyz, roll, pitch):
+    """Rotate lidar-frame points by the vehicle's roll and pitch (radians,
+    REP-103) into a level frame with the same heading."""
+    cr, sr, cp, sp = math.cos(roll), math.sin(roll), math.cos(pitch), math.sin(pitch)
+    rx = np.array([[1, 0, 0], [0, cr, -sr], [0, sr, cr]])
+    ry = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
+    return np.asarray(xyz, dtype=float) @ (ry @ rx).T
+
+
+def slope_ground_mask(xyz, bins, max_slope_deg, lidar_height, step=0.15, attitude=None):
+    """True for returns that belong to the ground, by slope rather than by a
+    terrain map. Along each bearing the returns are walked outwards from the
+    ground under the vehicle (lidar_height below the LiDAR): a return is ground
+    if it rises from the last ground return by no more than max_slope_deg (plus
+    `step` for small bumps); falling away is always ground. attitude = (roll,
+    pitch) levels the points first. Non-finite points are never ground."""
+    xyz = np.asarray(xyz, dtype=float).reshape(-1, 3)
+    ground = np.zeros(len(xyz), dtype=bool)
+    fin = np.nonzero(np.all(np.isfinite(xyz), axis=1))[0]
+    if len(fin) == 0:
+        return ground
+    pts = xyz[fin] if attitude is None else level_points(xyz[fin], *attitude)
+    n = len(pts)
+    r = np.hypot(pts[:, 0], pts[:, 1])
+    b = np.clip(((np.arctan2(pts[:, 1], pts[:, 0]) + math.pi) / (2 * math.pi) * bins)
+                .astype(int), 0, bins - 1)
+    order = np.lexsort((r, b))
+    bs, rs, zs = b[order], r[order], pts[order, 2]
+    first = np.r_[True, bs[1:] != bs[:-1]]
+    rank = np.arange(n) - np.maximum.accumulate(np.where(first, np.arange(n), 0))
+    last_r = np.zeros(bins)
+    last_z = np.full(bins, -float(lidar_height))
+    tan_s = math.tan(math.radians(max_slope_deg))
+    g_sorted = np.zeros(n, dtype=bool)
+    for k in range(int(rank.max()) + 1):
+        sel = np.nonzero(rank == k)[0]
+        bb = bs[sel]
+        dr = np.maximum(rs[sel] - last_r[bb], 1e-3)
+        is_g = zs[sel] - last_z[bb] <= tan_s * dr + step
+        g_sorted[sel] = is_g
+        upd = sel[is_g]
+        last_r[bs[upd]] = rs[upd]
+        last_z[bs[upd]] = zs[upd]
+    g = np.zeros(n, dtype=bool)
+    g[order] = g_sorted
+    ground[fin] = g
+    return ground
 
 
 def corridor_terrain_height(x):
@@ -159,11 +222,25 @@ def main():
             self.ground_obstacle_height = float(
                 p("ground_obstacle_height_m", 0.0).value
             )
+            self.slope_deg = float(p("slope_ground_filter_deg", 0.0).value)
+            self.slope_step = float(p("slope_ground_step_m", 0.15).value)
+            self.level_imu = bool(p("level_with_imu", False).value)
+            self.attitude = None
             self.odom = None
             self.pub = self.create_publisher(LaserScan, "/scan", qos_profile_sensor_data)
             self.create_subscription(PointCloud2, "/points", self.on_cloud, qos_profile_sensor_data)
             if self.ground_filter:
                 self.create_subscription(Odometry, "/odom", self.on_odom, 20)
+            if self.slope_deg > 0.0 and self.level_imu:
+                from sensor_msgs.msg import Imu
+                self.create_subscription(Imu, "/imu", self.on_imu, qos_profile_sensor_data)
+
+        def on_imu(self, msg):
+            q = msg.orientation
+            self.attitude = (
+                math.atan2(2 * (q.w * q.x + q.y * q.z), 1 - 2 * (q.x * q.x + q.y * q.y)),
+                math.asin(max(-1.0, min(1.0, 2 * (q.w * q.y - q.z * q.x)))),
+            )
 
         def on_odom(self, msg):
             self.odom = msg
@@ -182,6 +259,11 @@ def main():
                     (orientation.x, orientation.y, orientation.z, orientation.w),
                     self.lidar_height,
                 )
+            exclude = None
+            if self.slope_deg > 0.0:
+                exclude = slope_ground_mask(pts, self.bins, self.slope_deg,
+                                            self.lidar_height, self.slope_step,
+                                            self.attitude if self.level_imu else None)
             # Use names for optional filters: the footprint-radius alias
             # precedes height_above_ground in cloud_to_ranges(), so positional
             # arguments here can turn the scalar clearance into an invalid
@@ -202,6 +284,7 @@ def main():
                     if self.ground_obstacle_height > 0.0
                     else None
                 ),
+                exclude=exclude,
             )
             s = LaserScan()
             s.header = msg.header
@@ -212,11 +295,13 @@ def main():
             s.ranges = ranges.astype(np.float32).tolist()
             self.pub.publish(s)
 
+    from rclpy.executors import ExternalShutdownException
+
     rclpy.init()
     node = LidarScan()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

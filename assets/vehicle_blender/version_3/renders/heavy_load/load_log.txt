@@ -1,0 +1,20 @@
+Vehicle Version 3, heavy-load presentation variant (visual only)
+
+Deck load (estimated):
+  sealed payload box (rated payload)    100 kg
+  stacked equipment case                 45 kg
+  3 x 20 L jerry cans, full              72 kg
+  4 x ration / water crates             100 kg
+  2 x rolled kit bags                    30 kg
+  total                                 347 kg  (3.5x the 100 kg rated payload)
+
+All-up mass with this load: about 777 kg (rated: 530 kg)
+Cushion pressure rises by 1.47x to about 1.5 kPa; static thrust-to-weight falls from 0.18 to about 0.12.
+An overload demonstration only; the Gazebo model keeps the 100 kg payload.
+
+LiDAR clearance:
+  stacked case   top 1.42 m at x -0.50; lowest LiDAR beam there 1.68 m -> clear
+  jerry cans     top 1.23 m at x +0.00; lowest LiDAR beam there 1.82 m -> clear
+  crates         top 1.23 m at x +0.23; lowest LiDAR beam there 1.76 m -> clear
+  kit bags       top 0.97 m at x +0.85; lowest LiDAR beam there 1.59 m -> clear
+OVERALL: load clear of the LiDAR beams

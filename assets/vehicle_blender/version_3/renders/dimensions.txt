@@ -1,5 +1,5 @@
 === Per-link world bounding boxes (TRACK mode, metres) ===
-hull               origin (+0.000, +0.000, +0.500)  size (+2.984, +1.784, +1.537)  tris 35638
+hull               origin (+0.000, +0.000, +0.500)  size (+2.984, +1.784, +1.537)  tris 36870
 skirt              origin (+0.000, +0.000, +0.230)  size (+3.000, +1.800, +0.288)  tris 8464
 lift_fan           origin (+0.540, +0.000, +0.740)  size (+0.666, +0.676, +0.082)  tris 548
 thrust_fan_left    origin (-1.100, +0.450, +1.160)  size (+0.092, +0.696, +0.678)  tris 524
@@ -17,7 +17,7 @@ lidar              origin (+0.000, +0.000, +1.820)  size (+0.103, +0.103, +0.076
 camera             origin (+1.284, +0.000, +0.800)  size (+0.111, +0.150, +0.084)  tris 352
 
 OVERALL bbox min (-1.500, -0.900, +0.000) max (+1.500, +0.900, +1.860) size (+3.000, +1.800, +1.860)
-TOTAL triangles: 81410
+TOTAL triangles: 82642
 
 === AGENTS.md Version 3 checks ===
 [PASS] Skirt footprint length                            3.000 m  (spec 3.0 ± 0.01)
@@ -42,7 +42,7 @@ TOTAL triangles: 81410
 [PASS] Total mass (incl. 100 kg payload)               530.000 kg  (spec 530.0 ± 0.05)
 [PASS] CoM height / beam, TRACK mode (roll stability)    0.299   (spec <= 0.33)
        (CoM x -0.147 m before the generator balances the hull; CoM height / beam = 0.30)
-[PASS] Triangle budget                                81410.000 tri  (spec <= 150000)
+[PASS] Triangle budget                                82642.000 tri  (spec <= 150000)
 
 === HOVER mode (frame 100) ===
 [PASS] Cushion gap under the skirt                       0.050 m  (spec 0.05 ± 0.003)

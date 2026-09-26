@@ -45,6 +45,10 @@ class ModeMachine:
         settle_gap_tolerance_m: float = 0.008,
         slope_dwell_s: float = 1.5,
         settle_vz_mps: float = 0.01,
+        track_exit_slope_deg: float | None = None,
+        track_exit_dwell_s: float = 0.5,
+        track_descent_slope_deg: float = 0.0,
+        descent_dwell_s: float = 0.3,
     ) -> None:
         if policy not in {"hover_only", "terrain_auto"}:
             raise ValueError("mode_policy must be hover_only or terrain_auto")
@@ -65,7 +69,19 @@ class ModeMachine:
         self.settle_gap_tolerance_m = settle_gap_tolerance_m
         self.slope_dwell_s = slope_dwell_s
         self.settle_vz_mps = settle_vz_mps
+        # TRACK ends only when the climb is clearly over (below this slope for
+        # track_exit_dwell_s), so a bump on the bank does not retract the tracks
+        self.track_exit_slope_deg = (track_deploy_slope_deg - 4.0
+                                     if track_exit_slope_deg is None else track_exit_slope_deg)
+        self.track_exit_dwell_s = track_exit_dwell_s
+        # Descent braking (0 = off): a hovercraft cannot hold itself on a slope
+        # steeper than its reverse thrust allows, so on a sustained nose-down
+        # slope at or above this on firm ground the tracks come down and brake.
+        self.track_descent_slope_deg = track_descent_slope_deg
+        self.descent_dwell_s = descent_dwell_s
+        self.descent_t = 0.0
         self.steep_t = 0.0
+        self.climb_over_t = 0.0
         self.mode = "TRACK"
         self.transition_target: str | None = None
         self.phase_t = 0.0
@@ -119,12 +135,15 @@ class ModeMachine:
         tilt_deg: float | None = None,
         pivot: bool = False,
         vz: float | None = None,
+        descent_deg: float = 0.0,
+        terrain_here: str | None = None,
     ) -> tuple[bool, float]:
         self.phase_t += dt
         self.firm_t = self.firm_t + dt if terrain == "FIRM" else 0.0
         if self.gear == "tracks":
             return self._step_tracks(dt, terrain, hover_state, gap, gear_pos, slope_deg,
-                                     moving, over_water, vz)
+                                     moving, over_water, vz, descent_deg,
+                                     terrain if terrain_here is None else terrain_here)
 
         if self.mode == "TRACK":
             self.hover_enabled = False
@@ -179,6 +198,8 @@ class ModeMachine:
         moving: bool,
         over_water: bool,
         vz: float | None,
+        descent_deg: float = 0.0,
+        terrain_here: str = "FIRM",
     ) -> tuple[bool, float]:
         # Tracks are for a deliberate, sustained forward climb on firm land.
         # They are never selected merely because the vehicle is stopped, is
@@ -191,18 +212,37 @@ class ModeMachine:
         )
         self.steep_t = self.steep_t + dt if climbing else 0.0
         steep_climb = self.steep_t >= self.slope_dwell_s
+        # Descent braking uses the ground under the vehicle: the look-ahead
+        # already sees the flat mud at the foot of the bank.
+        braking = self.track_descent_slope_deg > 0.0
+        descending = (
+            braking
+            and self.policy == "terrain_auto"
+            and terrain_here == "FIRM"
+            and not over_water
+            and descent_deg >= self.track_descent_slope_deg
+        )
+        self.descent_t = self.descent_t + dt if descending else 0.0
+        steep_descent = self.descent_t >= self.descent_dwell_s
+        # Hysteresis for leaving TRACK: water or non-firm ground ends it at
+        # once; on firm ground the slope must stay below the exit slope.
+        off_firm = (terrain_here if braking else terrain) != "FIRM" or over_water
+        level = (climb_slope_deg < self.track_exit_slope_deg
+                 and (not braking or descent_deg < self.track_descent_slope_deg - 3.0))
+        self.climb_over_t = self.climb_over_t + dt if level else 0.0
+        climb_over = off_firm or self.climb_over_t >= self.track_exit_dwell_s
         if self.mode == "TRACK":
             self.legs = 0.0
             self.lift_share = self.track_share()
             self.hover_enabled = self.lift_share > 0.0
-            if self.policy == "terrain_auto" and not climbing:
+            if self.policy == "terrain_auto" and climb_over:
                 self._start_transition("HOVER")
 
         elif self.mode == "HOVER":
             self.hover_enabled = True
             self.lift_share = None
             self.legs = self.retract_position
-            if steep_climb:
+            if steep_climb or steep_descent:
                 self._start_transition("TRACK")
 
         elif self.transition_target == "HOVER":
@@ -299,6 +339,41 @@ def zone_speed_limit(costs: list[int], limits: list[float]) -> float | None:
             if lo <= c <= hi:
                 out = limit if out is None else min(out, limit)
     return out
+
+
+def slew(current: float, target: float, max_rate: float, dt: float,
+         instant_toward_zero: bool = False) -> float:
+    """Move `current` toward `target` by at most max_rate * dt (0 = no limit).
+    With instant_toward_zero, reductions in magnitude are not limited (a stop
+    or a slow-down is never delayed; only speeding up is smoothed)."""
+    if max_rate <= 0.0:
+        return target
+    if instant_toward_zero and abs(target) <= abs(current) and target * current >= 0.0:
+        return target
+    step = max_rate * dt
+    return current + max(-step, min(step, target - current))
+
+
+def descent_speed_limit(descent_deg: float, brake_decel: float, stop_distance: float,
+                        crawl: float, start_deg: float = 3.0) -> float | None:
+    """Speed cap on a nose-down slope: gravity eats into the reverse-thrust
+    braking (a_eff = a_brake - g sin(slope)), so keep the stopping distance
+    within stop_distance. None on level ground or uphill; `crawl` once the
+    slope is steeper than the brakes can hold."""
+    if descent_deg < start_deg:
+        return None
+    a_eff = brake_decel - 9.81 * math.sin(math.radians(descent_deg))
+    if a_eff <= 0.05:
+        return crawl
+    return max(crawl, math.sqrt(2.0 * a_eff * stop_distance))
+
+
+def quat_roll_pitch(q) -> tuple[float, float]:
+    """(roll, pitch) in radians from a quaternion with x, y, z, w fields.
+    REP-103: pitch > 0 is nose-down."""
+    roll = math.atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y))
+    pitch = math.asin(max(-1.0, min(1.0, 2.0 * (q.w * q.y - q.z * q.x))))
+    return roll, pitch
 
 
 class Battery:
@@ -448,6 +523,12 @@ def main() -> None:
                     parameter("track_deploy_slope_deg", 14.0).value
                 ),
                 slope_dwell_s=float(parameter("slope_dwell_s", 1.5).value),
+                track_exit_slope_deg=float(parameter("track_exit_slope_deg", 10.0).value),
+                track_exit_dwell_s=float(parameter("track_exit_dwell_s", 0.5).value),
+                track_descent_slope_deg=float(
+                    parameter("track_descent_slope_deg", 0.0).value
+                ),
+                descent_dwell_s=float(parameter("descent_dwell_s", 0.3).value),
                 settle_vz_mps=float(parameter("settle_vz_mps", 0.01).value),
                 settle_gap_m=float(parameter("settle_gap_m", 0.03).value),
                 settle_gap_tolerance_m=float(
@@ -479,6 +560,20 @@ def main() -> None:
             if len(self.zone_limits) != 4:
                 self.zone_limits = []
             self.brake_decel = float(parameter("brake_decel_mps2", 1.0).value)
+            # Smoother driving (0 = off): the command sent to the fans and
+            # tracks may change only this fast. Speeding up and turning are
+            # ramped; slowing down is never delayed.
+            self.max_accel = float(parameter("max_linear_accel_mps2", 0.0).value)
+            self.max_yaw_accel = float(parameter("max_yaw_accel_rps2", 0.0).value)
+            self.out_v, self.out_w = 0.0, 0.0
+            # IMU attitude (tilt) for slope decisions instead of the pose; and
+            # a speed cap on descents, where gravity reduces the braking
+            # (hover_brake_decel_mps2 = reverse thrust / mass; 0 = off).
+            self.use_imu = bool(parameter("use_imu_attitude", False).value)
+            self.hover_brake = float(parameter("hover_brake_decel_mps2", 0.0).value)
+            self.descent_stop_m = float(parameter("descent_stop_distance_m", 3.0).value)
+            self.descent_crawl = float(parameter("descent_crawl_mps", 0.5).value)
+            self.descent_deg = 0.0
             self.speed = 0.0
             self.cmd = Twist()
             self.cmd_stamp = None
@@ -521,6 +616,10 @@ def main() -> None:
                 JointState, "/joint_states", self.on_joints, 10
             )
             self.create_subscription(Odometry, "/odom", self.on_odom, 10)
+            if self.use_imu:
+                from sensor_msgs.msg import Imu
+                from rclpy.qos import qos_profile_sensor_data
+                self.create_subscription(Imu, "/imu", self.on_imu, qos_profile_sensor_data)
             if self.terrain_source == "costmap" or self.zone_limits:
                 self.create_subscription(
                     OccupancyGrid, "/terrain_costmap", self.on_costmap, 10
@@ -620,10 +719,16 @@ def main() -> None:
             self.speed = math.hypot(t.x, t.y)
             # A forward climb only: side tilt, descending and a stationary
             # attitude do not deploy the tracks. REP-103 pitch > 0 is nose-down.
-            roll = math.atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y))
-            pitch = math.asin(max(-1.0, min(1.0, 2.0 * (q.w * q.y - q.z * q.x))))
+            if not self.use_imu:
+                self.set_attitude(*quat_roll_pitch(q))
+
+        def on_imu(self, message) -> None:
+            self.set_attitude(*quat_roll_pitch(message.orientation))
+
+        def set_attitude(self, roll: float, pitch: float) -> None:
             self.slope_deg = math.degrees(max(-pitch, abs(roll)))
             self.climb_slope_deg = max(0.0, -math.degrees(pitch))
+            self.descent_deg = max(0.0, math.degrees(pitch))
 
         def on_cmd(self, message: Twist) -> None:
             self.cmd = message
@@ -641,6 +746,11 @@ def main() -> None:
             zone = self.zone_limit()
             if zone is not None:
                 limit = min(limit, zone)
+            if self.hover_brake > 0.0 and self.modes.mode != "TRACK":
+                down = descent_speed_limit(self.descent_deg, self.hover_brake,
+                                           self.descent_stop_m, self.descent_crawl)
+                if down is not None:
+                    limit = min(limit, down)
             linear = max(
                 -limit,
                 min(limit, self.cmd.linear.x),
@@ -653,6 +763,10 @@ def main() -> None:
 
         def tick(self) -> None:
             linear, angular = self.current_cmd()
+            self.out_v = slew(self.out_v, linear, self.max_accel, self.dt,
+                              instant_toward_zero=True)
+            self.out_w = slew(self.out_w, angular, self.max_yaw_accel, self.dt)
+            linear, angular = self.out_v, self.out_w
             if self.modes.gear == "tracks" and not self.odom_seen:
                 # slope and position unknown until the first /odom: hold the
                 # starting mode instead of choosing one blind
@@ -667,6 +781,8 @@ def main() -> None:
                 moving=abs(linear) > 0.01 or abs(angular) > 0.01,
                 over_water=self.terrain == "WATER",
                 vz=self.vz,
+                descent_deg=self.descent_deg,
+                terrain_here=self.terrain,
             )
             share = self.modes.lift_share
             if self.pub_share is not None:
@@ -731,11 +847,13 @@ def main() -> None:
                 terrain.corridor_traversable = True
                 self.pub_tstate.publish(terrain)
 
+    from rclpy.executors import ExternalShutdownException
+
     rclpy.init()
     node = VehicleMobility()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

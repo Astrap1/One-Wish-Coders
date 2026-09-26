@@ -5,7 +5,10 @@
     <static>true</static>
     <link name="visual_only_link">
       <!-- Terrain at (14, 7) is approximately 0.03 m above world zero. -->
-      <pose>0 0 -0.20 1.5708 0 0</pose>
+      <!-- The GLB's trunk is off its origin, at (2.85, -1.86) m unscaled: this
+           offset puts the visible tree on the collision proxy and the
+           /terrain_costmap footprint. GPU LiDAR sees visuals, so they must match. -->
+      <pose>-11.400 7.440 -0.20 1.5708 0 0</pose>
       <visual name="imported_mangrove_visual"><geometry><mesh><uri>model://mangrove_imported/meshes/Mangrovetree.glb</uri><scale>4.0 4.0 4.0</scale></mesh></geometry></visual>
     </link>
     <!-- The converted GLB mesh is the authoritative visual and collision geometry. -->

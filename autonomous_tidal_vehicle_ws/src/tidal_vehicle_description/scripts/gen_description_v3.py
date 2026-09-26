@@ -41,7 +41,8 @@ PLUGIN_LIB = "tidal_vehicle_plugins"          # built by tidal_vehicle_simulatio
 RENAME = {"hull": "base_link", "lidar": "lidar_link", "camera": "camera_link"}
 SENSOR_FRAME = {"lidar_3d": "lidar_link", "front_camera": "camera_link", "imu": "imu_link",
                 "navsat": "base_link", "rear_camera": "camera_rear_link",
-                "left_camera": "camera_left_link", "right_camera": "camera_right_link"}
+                "left_camera": "camera_left_link", "right_camera": "camera_right_link",
+                "lidar_front": "lidar_front_link"}
 # Contact sensors: links whose collisions report hits on /vehicle/contacts/<link>
 CONTACT_LINKS = ("hull", "skirt", "track_left", "track_right")
 # Mast cameras: ROS topic prefix and the fixed URDF frame each one publishes in
@@ -177,6 +178,25 @@ def sensors_xml(name, sensors, render_sensors):
             <horizontal><samples>360</samples><resolution>1</resolution>
               <min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal>
             <vertical><samples>{LIDAR_CHANNELS}</samples><resolution>1</resolution>
+              <min_angle>{math.radians(s['vfov_deg'][0]):.5f}</min_angle>
+              <max_angle>{math.radians(s['vfov_deg'][1]):.5f}</max_angle></vertical>
+          </scan>
+          <range><min>{s['range_m'][0]}</min><max>{s['range_m'][1]}</max><resolution>0.01</resolution></range>
+          <noise><type>gaussian</type><mean>0</mean><stddev>0.01</stddev></noise>
+        </lidar>
+      </sensor>""")
+        elif sname == "lidar_front":
+            out.append(f"""
+      <!-- Front near-field LiDAR (bow bay): 180 deg ahead, beams tilted down to
+           see low rocks and bank edges in the mast LiDAR's blind zone. Merged
+           into /scan by lidar_scan_node. -->
+      <sensor name="{sname}" type="gpu_lidar">{pose}
+        <always_on>1</always_on><update_rate>{s['rate_hz']}</update_rate><visualize>0</visualize>
+        <lidar>
+          <scan>
+            <horizontal><samples>181</samples><resolution>1</resolution>
+              <min_angle>-1.5708</min_angle><max_angle>1.5708</max_angle></horizontal>
+            <vertical><samples>{s['channels']}</samples><resolution>1</resolution>
               <min_angle>{math.radians(s['vfov_deg'][0]):.5f}</min_angle>
               <max_angle>{math.radians(s['vfov_deg'][1]):.5f}</max_angle></vertical>
           </scan>
@@ -540,7 +560,7 @@ def write_urdf(links, ext_pref="auto"):
         out.append(f'  <link name="{ln(name)}">{inert}{vis}{coll}</link>')
     out.append('  <link name="imu_link"/>')
     for sname, frame in (("rear_camera", "camera_rear_link"), ("left_camera", "camera_left_link"),
-                         ("right_camera", "camera_right_link")):
+                         ("right_camera", "camera_right_link"), ("lidar_front", "lidar_front_link")):
         sc = SENSORS[sname]
         rel = [sc["xyz"][i] - links["hull"]["origin_xyz"][i] for i in range(3)]
         out.append(f'  <link name="{frame}"/>')

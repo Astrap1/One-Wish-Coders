@@ -156,3 +156,24 @@ def test_corridor_ground_height_transform_ignores_nonfinite_points() -> None:
 
     assert heights[0] == pytest.approx(1.25)
     assert np.isinf(heights[1])
+
+
+def test_optional_slope_filter_keeps_a_bank_but_not_a_rock() -> None:
+    """Person 4's map-free ground filter (off by default): a 15 deg bank ahead
+    is ground, a rock face rising steeply from the ground is an obstacle."""
+    ground_z = -1.87                                    # ground under the vehicle
+    bank = [[d, 0.0, ground_z + max(0.0, d - 5.0) * np.tan(np.radians(15))]
+            for d in np.arange(3.0, 12.0, 0.5)]
+    # ground then a rock face, all on one bearing (the filter walks each bearing)
+    rock = [[4.0, 2.0, ground_z], [6.0, 3.0, ground_z],
+            [6.1, 3.05, ground_z + 0.4], [6.2, 3.1, ground_z + 0.8]]
+    pts = np.array(bank + rock)
+    ground = MODULE.slope_ground_mask(pts, 720, 25.0, 1.87)
+    assert ground[: len(bank)].all()
+    assert not ground[-1] and not ground[-2]
+
+    ranges, angle_min, increment = cloud_to_ranges(
+        pts, bins=720, min_h=-1.80, max_h=0.5, exclude=ground)
+    rock_bin = int((np.arctan2(3.0, 6.0) - angle_min) / increment)
+    assert np.isfinite(ranges[rock_bin])
+    assert not np.isfinite(ranges[int((0.0 - angle_min) / increment)])   # bank ignored

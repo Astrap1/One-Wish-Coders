@@ -3,6 +3,7 @@
 
 from nav_msgs.msg import OccupancyGrid
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 
@@ -93,7 +94,7 @@ def main(args: list[str] | None = None) -> None:
     node = TerrainCostmapNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

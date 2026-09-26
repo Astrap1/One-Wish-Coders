@@ -41,7 +41,7 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
     Stated assumption: each open vent bleeds about 0.85 m³/s of cushion air, similar to the skirt's own leakage. The lift fan is assumed to have the flow margin for one open pair, and no lift loss is modelled. Version 1 doesn't set these parameters and is unchanged.
 - Gazebo's `TrackController` and `TrackedVehicle` drive the tracks from `/vehicle/cmd_vel_tracks`.
 - `hover::TerrainZones` water only counts where the water surface is above the measured ground. A water zone can also rise over time (`<rise>`, `<rise_duration>`).
-- No Gazebo buoyancy for Version 2 in the tidal corridor. The world's graded buoyancy treats everything below z = 0 as water, and the corridor ground is pitched below z = 0 just past HOME, so the hull floated off its tracks. Water support comes from the cushion over `TerrainZones` water, and solid ground lies under the water. The integration test world (flat ground at z = 0) keeps buoyancy for the channel.
+- No Gazebo buoyancy for Version 2 in the tidal corridor. Water support comes from the cushion over `TerrainZones` water, and solid ground lies under the water. The corridor uses a flat simplified collision shore so the virtual water surface begins continuously at low tide; its 0.55 m rise over 30 simulated seconds is mirrored by the visual sheet and `/terrain_state`. The integration test world (flat ground at z = 0) keeps buoyancy for the channel.
 
 **Mode control** (`vehicle_mobility_node`, `config/vehicle_mobility_v2.yaml`, `gear: tracks`, `mode_policy: terrain_auto`):
 

@@ -17,12 +17,12 @@
          AirCushion plugin uses this WATER level as a physical hover surface:
          it maintains its configured skirt gap above the rising water, rather
          than treating the tide as visual-only buoyancy. -->
-    <plugin filename="tidal_vehicle_plugins" name="hover::TerrainZones"><ground_height>0.0</ground_height><zone><name>tidal_channel</name><type>WATER</type><min>4 -8</min><max>18 8</max><level>0.02</level><rise>2.40</rise><rise_start>0</rise_start><rise_duration>30.0</rise_duration></zone><zone><name>mudflat</name><type>MUD</type><min>18 -8</min><max>32 8</max></zone></plugin>
+    <plugin filename="tidal_vehicle_plugins" name="hover::TerrainZones"><ground_height>0.0</ground_height><zone><name>tidal_channel</name><type>WATER</type><min>4 -8</min><max>18 8</max><level>0.02</level><rise>0.55</rise><rise_start>0</rise_start><rise_duration>30.0</rise_duration></zone><zone><name>mudflat</name><type>MUD</type><min>18 -8</min><max>32 8</max></zone></plugin>
     <!-- Detailed terrain visual with a deliberately simple DART/Bullet collision
          surface. TerrainZones and the dynamic cost map carry the mission
          traversal semantics; this prevents the decorative heightmap from
          consuming the entire real-time budget. -->
-    <include><uri>model://terrain_demo</uri><name>demo_terrain</name><pose>0 0 0 0 0.08 0</pose></include>
+    <include><uri>model://terrain_demo</uri><name>demo_terrain</name><pose>0 0 0 0 0 0</pose></include>
     <!-- HOME: firm shore staging zone, shared with Safety's default map-frame pose. -->
     <!-- The vehicle (vehicle:=v2 tracked, or v1 wheeled) is spawned here by sim.launch.py. -->
     <!-- Dense irregular mangrove grove: 7-15 m tall, with safe spacing between canopies. -->
@@ -65,21 +65,24 @@
     <include><uri>model://rock_imported</uri><name>rock_left_04</name><pose>-10 -3 0 0 0 3.10</pose></include>
     <include><uri>model://rock_imported</uri><name>rock_left_05</name><pose>-35 15 0 0 0 4.20</pose></include>
     <include><uri>model://rock_imported</uri><name>rock_left_06</name><pose>-9 16 0 0 0 5.40</pose></include>
-    <!-- The terrain model below is the full 50 x 50 m inclined platform. -->
+    <!-- The terrain model below is the full 50 x 50 m level collision platform. -->
     <!-- The visible water and the AirCushion's TerrainZones surface share the
-         tide manager's 0.02 m initial level and 2.40 m / 30 s rise.  The
+         tide manager's 0.02 m initial level and 0.55 m / 30 s rise.  The
          model pose is the sheet's top surface, so moving it also preserves
          the visual water level seen by the operator. -->
     <model name="coastal_water">
-      <pose>11 0 0.02 0 0 0</pose>
+      <!-- Render the tide across the complete 80 x 60 m operator map. The
+           narrower TerrainZones channel remains the authoritative physical
+           support and navigation-risk corridor. -->
+      <pose>0 0 0.02 0 0 0</pose>
       <static>false</static>
       <link name="water_link">
         <gravity>false</gravity>
         <!-- A thin sheet keeps the operator view visibly level; the moving
              support surface itself is supplied by TerrainZones/AirCushion. -->
-        <visual name="rising_water_surface"><pose>0 0 -0.01 0 0 0</pose><geometry><box><size>14 16 0.02</size></box></geometry><material><ambient>0.04 0.12 0.11 1</ambient><diffuse>0.12 0.30 0.27 1</diffuse><specular>0.20 0.32 0.28 1</specular><pbr><metal><albedo_map>model://terrain/materials/tidal_water.png</albedo_map><roughness>0.18</roughness><metalness>0.0</metalness></metal></pbr></material></visual>
+        <visual name="rising_water_surface"><pose>0 0 -0.01 0 0 0</pose><geometry><box><size>80 60 0.02</size></box></geometry><material><ambient>0.04 0.12 0.11 1</ambient><diffuse>0.12 0.30 0.27 1</diffuse><specular>0.20 0.32 0.28 1</specular><pbr><metal><albedo_map>model://terrain/materials/tidal_water.png</albedo_map><roughness>0.18</roughness><metalness>0.0</metalness></metal></pbr></material></visual>
       </link>
-      <plugin filename="libtide_visual_system.so" name="tidal_vehicle_simulation::TideVisualSystem"><initial_level_m>0.02</initial_level_m><rise_m>2.40</rise_m><duration_s>30.0</duration_s></plugin>
+      <plugin filename="libtide_visual_system.so" name="tidal_vehicle_simulation::TideVisualSystem"><initial_level_m>0.02</initial_level_m><rise_m>0.55</rise_m><duration_s>30.0</duration_s></plugin>
     </model>
   </world>
 </sdf>

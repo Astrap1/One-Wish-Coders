@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from math import atan2, cos, hypot, pi, sin
 from typing import Sequence
 
+from .motion_limits import stopping_distance
+
 Waypoint = tuple[float, float]
 
 
@@ -155,7 +157,12 @@ def path_points_ahead(
 def stopping_reach(speed: float, brake_decel: float, reaction_s: float = 1.0,
                    minimum_m: float = 2.0) -> float:
     """How far ahead to look for a slower zone: reaction plus braking distance."""
-    return max(minimum_m, speed * reaction_s + speed * speed / (2.0 * max(brake_decel, 0.1)))
+    return stopping_distance(
+        max(0.0, speed),
+        max(0.1, brake_decel),
+        max(0.0, reaction_s),
+        max(0.0, minimum_m),
+    )
 
 
 def curvature_speed_limit(heading_error: float, lookahead_m: float,
@@ -167,3 +174,13 @@ def curvature_speed_limit(heading_error: float, lookahead_m: float,
     if curvature < 1e-6:
         return None
     return (lateral_accel / curvature) ** 0.5
+
+
+def lateral_accel_yaw_rate_limit(
+    speed_mps: float, lateral_accel_mps2: float
+) -> float | None:
+    """Return the yaw-rate limit that keeps v * yaw_rate within lateral accel."""
+    speed = abs(speed_mps)
+    if speed < 1.0e-6 or lateral_accel_mps2 <= 0.0:
+        return None
+    return lateral_accel_mps2 / speed

@@ -40,7 +40,6 @@ Version 3 is being designed for 30 km/h cruise and 50 km/h max over open water (
 **NOTICE to Person 1 (Autonomy): changes made in your package on 2026-09-26 by Person 4, at the team's request.** The split cost band now works end to end. Please review them. They are **off by default**: Versions 1 and 2 behave exactly as before, and only `vehicle:=v3` switches them on (`sim.launch.py`, `VEHICLES["v3"]["follower"]`).
 8. **Done: speed by zone.** `path_follower` has a new parameter, `zone_speed_limits_mps` (`[firm, open water, mud/roots/debris, elevated]`, `[0.0]` = off). When it's on, the follower subscribes to `/terrain_costmap`, samples the planned path from the vehicle out to its stopping distance (1 s reaction plus braking at `brake_decel_mps2`), and caps `max_linear_speed` at the slowest zone on that stretch, so it slows *before* a slower zone. New helpers are in `path_follower_core.py` (`zone_speed_limit`, `path_points_ahead`, `stopping_reach`), with tests in `test/test_speed_limits.py`.
 9. **Done: slow for curves.** `lateral_accel_limit_mps2` (0 = off) caps speed at √(a/κ), using the pure-pursuit curvature κ = 2 sin(error) / lookahead (`curvature_speed_limit`). Version 3 uses 1.0 m/s².
-10. **Done: longer look-ahead at speed; still open: obstacle range.** `lookahead_time_s` (0 = off) lengthens the lookahead to that many seconds of travel (Version 3: 1 s). The launch sets `obstacle_inflation_radius_m` to 2.0 m for Version 3. **Still yours:** `obstacle_max_range_m` (8 m) is shorter than Version 3's stopping distance above about 15 km/h. The zone limits keep the vehicle at 10 km/h near roots and debris, but consider scaling the range with speed, up to the 30 m LiDAR range.
 
 **NOTICE to Person 2 (Safety): changes made in your package on 2026-09-26 by Person 4, at the team's request.** Please review them. They are **off by default** and switched on only for `vehicle:=v3` (`VEHICLES["v3"]["safety"]`).
 11. **Done: zone speed limits.** `safety_supervisor` has new parameters, `zone_speed_limits_mps` (`[0.0]` = off) and `brake_decel_mps2`. When they're on, it subscribes to `/odom` and clamps both autonomous and remote `/cmd_vel` to the slowest zone between the vehicle and its stopping distance (`zone_limits.py`, tests in `test/test_zone_limits.py`). For Version 3 the launch also raises your state limits: CRUISE 13.9 m/s, CAUTION 2.8 m/s, RETURN 8.3 m/s. **Still yours:** HOLD when a LiDAR obstacle is closer than the stopping distance at the current speed.
@@ -49,6 +48,7 @@ Version 3 is being designed for 30 km/h cruise and 50 km/h max over open water (
 **Person 3 (Environment), `tidal_vehicle_simulation` worlds and `tide_manager`**
 13. **Mark open, surveyed water.** Publish cost `20`--`29` only for water that is surveyed and free of roots and debris. Keep other water at `30`--`59`. Rising tide or new debris must move cells back to `30`+.
 14. **Optional:** a long open-water stretch (≥ 150 m) so a Version 3 demo can show speed. Person 4 will build a separate Version 3 speed test world regardless.
+18. **Corridor collision footprints need recalibration for Version 3 (found 2026-09-26).** In a live `vehicle:=v3` corridor run, at pose `(20.69, 7.15)` the LiDAR produced 191 in-map returns; 157 landed on cells published as traversable cost `47`, including root/collision geometry around `(20, 5--6)`. V3's correct 2 m footprint inflation then closed every safe route and Autonomy published an empty path/HOLD. Expand the cost-100 footprints to cover the actual LiDAR/collision extents of mangrove roots and rocks, or widen/relocate the obstacles so a 3.0 × 1.8 m vehicle has a real route. Do not ask Autonomy to ignore those physical returns.
 
 **Person 5 (Operator), `tidal_vehicle_operator`**
 15. **Fuel and speed display.** `VehicleHealth.fuel_percent` now exists (Version 3: diesel left; Versions 1 and 2: −1, meaning no fuel tank). Please feed it to the dashboard's Fuel card, and show speed against the current zone limit.
@@ -166,12 +166,13 @@ The dashboard may expose a circular fallback remote-control panel for operator d
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
 - Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-ground (TRACK) terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
 - The planner rebuilds the active route after a new goal, an actual terrain-cost change, a relevant confirmed obstacle or a Safety return request. It preserves active-path geometry across odometry movement, unchanged cost-map refreshes and duplicate terrain-state telemetry so the follower is not repeatedly reset onto equally good A* variants. Odometry movement of at least half a map cell still refreshes Safety's prospective return path, and mission completion is checked on every odometry update.
-- Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay. Two consecutive detections confirm a cell, five consecutive misses clear it, and newly confirmed cells only trigger route reassessment when they affect the active outbound or return route. This prevents scan flicker from repeatedly switching paths without modifying Simulation's terrain map.
+- Added LiDAR obstacle projection: raw `/scan` hit cells are temporally confirmed before footprint inflation, preventing overlapping inflated cells from confirming scan ghosts. New obstacles replan only when they affect the outbound or return route; unrelated removals retain the existing safe detour, while a fully cleared overlay or blocked mission triggers route recovery. Simulation's terrain map remains unchanged.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
 - The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames. A timestamp-only refresh of identical path geometry preserves follower progress instead of resetting it to the first waypoint.
-- Added nineteen ROS-independent planner, follower and LiDAR tests and eight ROS topic integration tests (27 Autonomy tests total).
-- The shared launcher now selects LiDAR inflation by vehicle: `0.75 m` for Version 1 and `1.7 m` for Version 2. The standalone planner default remains the Version 1 value.
-- Hardened the `global_planner` and `path_follower` entry points against ROS shutdown races; both processes now exit cleanly when the shared launch is interrupted.
+- Added 32 ROS-independent planner, follower, motion-limit and LiDAR tests and eight ROS topic integration tests (40 Autonomy tests total).
+- The shared launcher selects LiDAR inflation by vehicle: `0.75 m` for Version 1, `1.7 m` for Version 2 and `2.0 m` for Version 3. The standalone planner default remains the Version 1 value.
+- Version 3 now uses speed-aware 8--30 m sensing, a sensor/clearance-limited 6.55 m/s proposal ceiling, 1.5 s lookahead, moving yaw limited by 1.0 m/s² lateral acceleration, an 8 m final slowdown and a 0.3 m mission-event tolerance. In the final static integration run it published `delivery_confirmed`, returned automatically and published `mission_complete`; outbound maximum path error was 0.52 m, and it settled stationary 0.22 m from the HOME grid endpoint.
+- Hardened the `global_planner` and `path_follower` entry points against common ROS shutdown races. Standalone shutdown is clean; one final WSL full-launch run still required launch to kill `global_planner` and Gazebo after mission completion, so shared-launch teardown remains an integration issue.
 - Restored the autonomy package's `ament_python` build-tool declaration and verified the full eight-package workspace build.
 - Verified live simulated odometry and LiDAR integration. The full launcher completed an autonomous delivery and HOME return while Safety remained the only `/cmd_vel` publisher. A later Version 2 static-world regression confirmed the `1.7 m` inflation override, Safety in `CRUISE`, and movement from approximately `x=0.00 m` to `x=5.32 m`; the newly added supervised remote-control path did not interfere with autonomous proposals.
 
@@ -204,24 +205,28 @@ Default path-follower parameters are:
 
 The follower proposes a zero command when the path is empty, odometry is missing or stale, frames do not match, or the goal is reached. The global planner publishes an empty path once when a new terrain map invalidates a previously published route. This prevents continued tracking of a stale route. Repeated publications with the same frame and waypoint geometry are treated as freshness updates and do not reset the follower's progress index.
 
+Version 3 launch overrides are: `max_linear_speed=13.9`, `max_angular_speed=0.62`, `lookahead_distance=1.5`, `lookahead_time_s=1.5`, `heading_gain=0.7`, `slow_down_distance=8.0`, `lateral_accel_limit_mps2=1.0`, `obstacle_detection_range_m=30.0` and `obstacle_clearance_m=2.0`. The last two cap the actual autonomous proposal at about 6.55 m/s under the 1 s reaction/1.0 m/s² braking assumptions; moving yaw is capped so `v × |yaw_rate| <= 1.0 m/s²`.
 The follower is independent of `TRACK` (Version 1: `WHEEL`), `TRANSITION` and `HOVER` actuator behaviour. Person 2 retains final command authority and remains the only publisher of `/cmd_vel`; Person 4 translates the approved body-motion command into wheel, lift-fan and propulsion-fan behaviour.
 
 ### LiDAR obstacle response implementation details
 
 The global planner keeps Simulation's `/terrain_costmap` unchanged as its base map. Each `/scan` update is converted from polar range measurements into world coordinates using the vehicle pose from `/odom`, then into terrain-grid cells. Invalid, infinite, too-near and over-range measurements are ignored. Detected cells are expanded by the configured safety radius and marked no-go only in an internal copy used by A*.
 
-Dynamic cells use temporal hysteresis instead of allowing each scan to replace the previous obstacle set. A cell must appear in two consecutive scans before it is added, while five consecutive misses are required before a confirmed cell is removed. Brief LiDAR dropouts therefore retain the existing detour. A newly confirmed cell runs A* immediately only if it intersects the active path or prospective return path; unrelated detections are retained in the overlay and considered during the next normal replan. A confirmed removal runs A* so the direct route can return. If an obstacle removes every safe route, the planner publishes an empty `/planned_path`.
+Dynamic raw hit cells use temporal hysteresis before footprint inflation. A hit must appear in two consecutive scans before it is added, while five consecutive misses are required before it is removed. Brief LiDAR dropouts therefore retain the existing detour without letting overlapping inflated footprints confirm a moving scan artifact. A newly confirmed cell runs A* immediately only if it intersects the active path or prospective return path. Unrelated removals do not reset a safe detour; clearing the whole overlay or removing cells while no route exists triggers route recovery. If obstacles remove every safe route, the planner publishes an empty `/planned_path`.
 
 Default LiDAR parameters are:
 
 | Parameter | Default | Purpose |
 | --- | ---: | --- |
-| `obstacle_inflation_radius_m` | `0.75 m` | Standalone and Version 1 default. The shared Version 2 launch overrides this with `1.7 m`. |
+| `obstacle_inflation_radius_m` | `0.75 m` | Standalone/Version 1 default; shared launch uses `1.7 m` for V2 and `2.0 m` for V3. |
+| `obstacle_min_range_m` | `8.0 m` | Minimum useful planning look-ahead, even at low speed. |
 | `obstacle_max_range_m` | `8.0 m` | Ignore detections beyond the useful local planning distance. |
+| `obstacle_brake_decel_mps2` | `1.0 m/s²` | Braking assumption for speed-aware scan range. |
+| `obstacle_reaction_time_s` | `1.0 s` | Reaction allowance added before braking. |
 | `obstacle_confirmation_scans` | `2` | Consecutive detections required before a cell becomes blocked. |
 | `obstacle_clear_scans` | `5` | Consecutive misses required before a blocked cell is removed. |
 
-For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 0.75 m circular inflation is based on Version 1's approximately 1.2 m by 0.7 m footprint plus a small clearance. The shared launcher uses 1.7 m for Version 2's approximately 1.46 m half-diagonal plus clearance. Person 4's final sensor-frame transform must replace the remaining odometry-position assumption.
+The LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction; that horizontal transform is exact for Versions 2 and 3. The 0.75 m circular inflation is based on Version 1's footprint. The shared launcher uses 1.7 m for Version 2 and 2.0 m for Version 3. On V3 the scan range grows from 8 m to at most 30 m as stopping distance increases, including the 2 m clearance.
 
 ### Return mission implementation details
 
@@ -241,11 +246,13 @@ Default return parameters are:
 | `goal_event_tolerance_m` | `2.0 m` | Delivery/HOME zone radius that triggers a mission event. |
 | `return_path_refresh_rate_hz` | `2.0 Hz` | Keep Safety's validated return route fresh without resetting the follower. |
 
+The shared Version 3 launch overrides `goal_event_tolerance_m` to `0.3 m`; together with its 8 m final slowdown this prevents mission events from clearing the route while the larger craft is still travelling quickly.
+
 The HOME values must match Person 2's safety parameters. The changing map-frame tide map is integrated through the shared launcher; Person 1 and Person 4 should tune the final sensor transform and route geometry against the corridor before the demo. Autonomy does not publish `/cmd_vel`.
 
 ## Role 4: Vehicle simulation and integration status
 
-- **Version 3 built (2026-09-26), not the demo vehicle.** `vehicle:=v3` (`cameras:=all` adds the rear, left and right cameras). It passes all its Gazebo checks: 50 km/h, braking from 50 km/h in 58 m, turn radius 9 m at 10 km/h and 77 m at 30 km/h, the 15° ramp on the tracks, and the Version 2 scenarios. The collision test reports "skirt front hit wall". Full ROS missions in the integration world complete with zero false collisions and with the zone speed limits held. Details: `docs/VEHICLE_V3_PLAN.md` (*Status*) and `docs/VEHICLE_SIMULATION.md` (*Version 3*). Not yet run in the tidal corridor.
+- **Version 3 built (2026-09-26), not the demo vehicle.** `vehicle:=v3` (`cameras:=all` adds the rear, left and right cameras). It passes all its Gazebo checks: 50 km/h, braking from 50 km/h in 58 m, turn radius 9 m at 10 km/h and 77 m at 30 km/h, the 15° ramp on the tracks, and the Version 2 scenarios. The collision test reports "skirt front hit wall". Full ROS missions in the integration world complete with zero false collisions and with the zone speed limits held. Details: `docs/VEHICLE_V3_PLAN.md` (*Status*) and `docs/VEHICLE_SIMULATION.md` (*Version 3*). A 2026-09-26 corridor diagnostic found the physical obstacle/cost-map mismatch recorded in Person 3 request 18; the corridor mission is not yet passable.
 - **Version 2 delivered on `main` and is the launch default.** It includes the Blender model (visually polished to Version 1's standard, with the hull blended into the skirt), SDF/URDF, the mobility controller (`gear: tracks`), a bridge configuration and the test worlds described in `docs/VEHICLE_SIMULATION.md`. Launch with `ros2 launch tidal_vehicle_bringup sim.launch.py`, or add `vehicle:=v1` for the fallback.
 - **Gazebo physics verified:** all 19 Version 2 checks pass (`tools/vehicle_tests/analyze.py`):
   - hover gap 5.05 cm held with the tracks retracted;

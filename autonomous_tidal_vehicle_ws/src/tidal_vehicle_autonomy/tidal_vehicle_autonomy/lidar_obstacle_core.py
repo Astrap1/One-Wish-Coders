@@ -84,7 +84,7 @@ def obstacle_cells_from_scan(
         inflation_radius,
     )
 
-    obstacles: set[GridCell] = set()
+    hits: set[GridCell] = set()
     for index, measured_range in enumerate(ranges):
         distance = float(measured_range)
         if not isfinite(distance) or distance < range_min or distance > range_max:
@@ -96,14 +96,67 @@ def obstacle_cells_from_scan(
         hit_cell = costmap.grid_from_world(hit_x, hit_y)
         if not costmap.in_bounds(hit_cell):
             continue
-        obstacles.update(_inflated_cells(costmap, hit_cell, inflation_radius))
+        hits.add(hit_cell)
 
     # The cell containing the sensor is occupied by the vehicle itself and
     # must remain a valid A* start. Coarse-grid inflation can otherwise reach
     # back into this cell even when the detected obstacle is outside the
     # configured vehicle clearance.
-    obstacles.discard(costmap.grid_from_world(robot_x, robot_y))
-    return frozenset(obstacles)
+    return inflate_obstacle_cells(
+        costmap,
+        hits,
+        inflation_radius,
+        excluded_cells={costmap.grid_from_world(robot_x, robot_y)},
+    )
+
+
+def inflate_obstacle_cells(
+    costmap: GridCostMap,
+    centres: Iterable[GridCell],
+    inflation_radius: float,
+    excluded_cells: Iterable[GridCell] = (),
+) -> frozenset[GridCell]:
+    """Inflate confirmed hit centres after temporal filtering."""
+    if not isfinite(inflation_radius) or inflation_radius < 0.0:
+        raise ValueError("Obstacle inflation radius must be finite and non-negative")
+    inflated: set[GridCell] = set()
+    for centre in centres:
+        if costmap.in_bounds(centre):
+            inflated.update(_inflated_cells(costmap, centre, inflation_radius))
+    inflated.difference_update(excluded_cells)
+    return frozenset(inflated)
+
+
+def obstacle_change_requires_replan(
+    previous: Iterable[GridCell],
+    current: Iterable[GridCell],
+    active_path: Iterable[GridCell] | None,
+    return_path: Iterable[GridCell] | None = None,
+) -> bool:
+    """Return whether an overlay change can invalidate or restore a route.
+
+    Removals that do not clear the overlay cannot make the current route
+    unsafe, so retain the existing detour instead of making the follower chase
+    every equally valid A* alternative. When no active route exists, any
+    removal may reopen one and is assessed immediately.
+    """
+    previous_cells = set(previous)
+    current_cells = set(current)
+    active_cells = None if active_path is None else set(active_path)
+    return_cells = None if return_path is None else set(return_path)
+
+    removed = previous_cells - current_cells
+    if removed and (active_cells is None or not current_cells):
+        return True
+
+    added = current_cells - previous_cells
+    if not added:
+        return False
+    if active_cells is None:
+        return True
+    if added.intersection(active_cells):
+        return True
+    return return_cells is not None and bool(added.intersection(return_cells))
 
 
 def overlay_obstacles(

@@ -4,8 +4,14 @@ Added by Person 4 with the split cost band (AGENTS.md, *Shared terrain-cost
 semantics*); the follower only uses them when given zone limits."""
 from math import pi
 
+from tidal_vehicle_autonomy.motion_limits import (
+    sensor_limited_speed,
+    speed_aware_sensor_range,
+    stopping_distance,
+)
 from tidal_vehicle_autonomy.path_follower_core import (
     curvature_speed_limit,
+    lateral_accel_yaw_rate_limit,
     path_points_ahead,
     Pose2D,
     stopping_reach,
@@ -21,6 +27,24 @@ def test_zone_limit_uses_the_slowest_cell() -> None:
     assert zone_speed_limit([5], LIMITS) == 4.2              # firm shore
     assert zone_speed_limit([95, -1], LIMITS) is None        # no-go / unknown: planner's job
     assert zone_speed_limit([25], []) is None                # off (Version 2)
+
+
+def test_shared_stopping_distance_supports_a_zero_minimum() -> None:
+    assert abs(stopping_distance(4.0, 1.0) - 12.0) < 1e-9
+    assert stopping_distance(0.0, 1.0) == 0.0
+
+
+def test_sensor_limited_speed_stops_within_the_available_range() -> None:
+    speed = sensor_limited_speed(30.0, 1.0, 1.0)
+    assert abs(speed - 6.8102496759) < 1e-9
+    assert abs(stopping_distance(speed, 1.0, 1.0) - 30.0) < 1e-9
+
+
+def test_speed_aware_sensor_range_grows_and_clamps() -> None:
+    assert speed_aware_sensor_range(0.0, 8.0, 30.0, 1.0) == 8.0
+    assert speed_aware_sensor_range(4.0, 8.0, 30.0, 1.0, clearance_m=2.0) == 14.0
+    assert speed_aware_sensor_range(4.0, 8.0, 30.0, 1.0) == 12.0
+    assert speed_aware_sensor_range(13.9, 8.0, 30.0, 1.0) == 30.0
 
 
 def test_stopping_reach_grows_with_speed() -> None:
@@ -42,3 +66,9 @@ def test_curvature_limit() -> None:
     v = curvature_speed_limit(pi / 6, 5.0, 1.0)                    # k = 0.2 /m
     assert abs(v - (1.0 / 0.2) ** 0.5) < 1e-9
     assert curvature_speed_limit(pi / 6, 5.0, 0.0) is None         # off (Version 2)
+
+
+def test_lateral_acceleration_caps_yaw_rate_while_moving() -> None:
+    assert abs(lateral_accel_yaw_rate_limit(2.8, 1.0) - (1.0 / 2.8)) < 1e-9
+    assert lateral_accel_yaw_rate_limit(0.0, 1.0) is None
+    assert lateral_accel_yaw_rate_limit(2.8, 0.0) is None

@@ -11,15 +11,17 @@ from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.node import Node
 
+from .motion_limits import sensor_limited_speed
 from .path_follower_core import (
+    FollowerConfig,
+    Pose2D,
+    Waypoint,
     compute_command,
     curvature_speed_limit,
-    FollowerConfig,
+    lateral_accel_yaw_rate_limit,
     normalise_angle,
     path_points_ahead,
-    Pose2D,
     stopping_reach,
-    Waypoint,
     zone_speed_limit,
 )
 
@@ -61,7 +63,29 @@ class PathFollowerNode(Node):
         self._brake_decel = self._parameter("brake_decel_mps2")
         self._lateral_accel = self._parameter("lateral_accel_limit_mps2")
         self._lookahead_time = self._parameter("lookahead_time_s")
+        self._reaction_time = self._parameter("reaction_time_s")
+        self._obstacle_detection_range = self._parameter(
+            "obstacle_detection_range_m"
+        )
+        self._obstacle_clearance = self._parameter("obstacle_clearance_m")
         self._costmap: tuple | None = None
+        if self._lookahead_time < 0.0 or self._reaction_time < 0.0:
+            raise ValueError("lookahead_time_s and reaction_time_s must be non-negative")
+        if self._obstacle_detection_range < 0.0:
+            raise ValueError("obstacle_detection_range_m must be non-negative")
+        if self._obstacle_clearance < 0.0:
+            raise ValueError("obstacle_clearance_m must be non-negative")
+        if (
+            self._obstacle_detection_range > 0.0
+            and self._obstacle_clearance >= self._obstacle_detection_range
+        ):
+            raise ValueError("obstacle_clearance_m must be below detection range")
+        if (
+            self._zone_limits or self._obstacle_detection_range > 0.0
+        ) and self._brake_decel <= 0.0:
+            raise ValueError(
+                "brake_decel_mps2 must be positive when motion limits are active"
+            )
         if self._zone_limits:
             self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
 
@@ -92,6 +116,9 @@ class PathFollowerNode(Node):
             "brake_decel_mps2": 1.0,
             "lateral_accel_limit_mps2": 0.0,
             "lookahead_time_s": 0.0,
+            "reaction_time_s": 1.0,
+            "obstacle_detection_range_m": 0.0,
+            "obstacle_clearance_m": 0.0,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -152,9 +179,18 @@ class PathFollowerNode(Node):
             curve = curvature_speed_limit(error, config.lookahead_distance, self._lateral_accel)
             if curve is not None:
                 linear_x = min(linear_x, curve)
+        angular_z = command.angular_z
+        if self._lateral_accel > 0.0 and linear_x > 0.0:
+            measured = self._odometry.twist.twist.linear
+            reference_speed = max(linear_x, hypot(measured.x, measured.y))
+            yaw_limit = lateral_accel_yaw_rate_limit(
+                reference_speed, self._lateral_accel
+            )
+            if yaw_limit is not None:
+                angular_z = max(-yaw_limit, min(angular_z, yaw_limit))
         proposed = Twist()
         proposed.linear.x = linear_x
-        proposed.angular.z = command.angular_z
+        proposed.angular.z = angular_z
         self._command_publisher.publish(proposed)
 
         if command.goal_reached and not self._goal_reported:
@@ -169,17 +205,31 @@ class PathFollowerNode(Node):
     def _speed_limited_config(self, pose: Pose2D) -> FollowerConfig:
         """This tick's config: max speed capped by the slowest zone between
         the vehicle and its stopping distance, lookahead scaled with speed."""
-        if not self._zone_limits and self._lookahead_time <= 0.0:
+        if (not self._zone_limits
+                and self._lookahead_time <= 0.0
+                and self._obstacle_detection_range <= 0.0):
             return self._config
         twist = self._odometry.twist.twist.linear
         speed = hypot(twist.x, twist.y)
         changes = {}
+        max_speed = self._config.max_linear_speed
+        if self._obstacle_detection_range > 0.0:
+            max_speed = min(
+                max_speed,
+                sensor_limited_speed(
+                    self._obstacle_detection_range - self._obstacle_clearance,
+                    self._brake_decel,
+                    self._reaction_time,
+                ),
+            )
         if self._lookahead_time > 0.0:
             changes["lookahead_distance"] = max(self._config.lookahead_distance,
                                                 speed * self._lookahead_time)
         if self._zone_limits and self._costmap is not None:
             res, width, height, ox, oy, data = self._costmap
-            reach = stopping_reach(speed, self._brake_decel)
+            reach = stopping_reach(
+                speed, self._brake_decel, reaction_s=self._reaction_time
+            )
             costs = []
             for x, y in path_points_ahead(pose, self._path, self._progress_index, reach):
                 col, row = int(floor((x - ox) / res)), int(floor((y - oy) / res))
@@ -187,7 +237,9 @@ class PathFollowerNode(Node):
                     costs.append(int(data[row * width + col]))
             zone = zone_speed_limit(costs, self._zone_limits)
             if zone is not None:
-                changes["max_linear_speed"] = max(0.05, min(self._config.max_linear_speed, zone))
+                max_speed = max(0.05, min(max_speed, zone))
+        if max_speed < self._config.max_linear_speed:
+            changes["max_linear_speed"] = max_speed
         return replace(self._config, **changes) if changes else self._config
 
     def _frames_match(self) -> bool:

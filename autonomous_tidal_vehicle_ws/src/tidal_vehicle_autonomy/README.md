@@ -18,7 +18,7 @@ Terrain cost-map encoding is fixed as follows:
 
 If replanning makes a previously published route unsafe, the planner publishes an empty path to invalidate it.
 
-LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Valid detections are inflated and added to an internal planning copy of the terrain map. A cell must be detected in two consecutive scans before it becomes blocked and must be absent for five consecutive scans before it is cleared. Newly confirmed cells trigger replanning only when they intersect the active outbound/return route; confirmed removals allow the planner to recover a shorter route. The Simulation-owned /terrain_costmap is never modified.
+LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Raw hit cells must be detected in two consecutive scans before they are footprint-inflated and added to an internal planning copy; five misses clear a hit. New cells replan only when they intersect the active outbound/return route. Unrelated removals retain the current safe detour, while a cleared overlay or blocked mission triggers route recovery. The Simulation-owned /terrain_costmap is never modified.
 
 The active route remains geometrically stable while the vehicle follows it. Odometry movement updates Safety's prospective return path without rebuilding the follower's active path, and repeated cost maps with unchanged geometry and costs refresh route timestamps without rerunning A*. An actual terrain-cost change, a relevant confirmed obstacle, a new goal or a Safety return request still produces a fresh active route.
 
@@ -28,10 +28,15 @@ Global-planner LiDAR parameters:
 
 | Parameter | Default | Meaning |
 | --- | ---: | --- |
-| obstacle_inflation_radius_m | 0.75 m | Standalone/Version 1 default. The shared launcher uses 1.7 m for Version 2's larger footprint. |
+| obstacle_inflation_radius_m | 0.75 m | Standalone/V1 default; shared launch uses 1.7 m for V2 and 2.0 m for V3. |
+| obstacle_min_range_m | 8.0 m | Minimum useful local look-ahead. |
 | obstacle_max_range_m | 8.0 m | Farthest scan return used by local planning. |
+| obstacle_brake_decel_mps2 | 1.0 m/s² | Deceleration used to grow scan range with stopping distance. |
+| obstacle_reaction_time_s | 1.0 s | Reaction distance allowed before braking. |
 | obstacle_confirmation_scans | 2 | Consecutive detections required before a cell becomes blocked. |
 | obstacle_clear_scans | 5 | Consecutive misses required before a blocked cell is removed. |
+
+For `vehicle:=v3`, the planner range grows from 8 m to the 30 m sensor limit using 1 s reaction, 1.0 m/s² braking and 2.0 m clearance. The follower uses the remaining 28 m as its usable stopping range, giving an effective autonomous ceiling of about 6.55 m/s (23.6 km/h). Versions 1 and 2 keep their existing behavior.
 
 Return behavior:
 
@@ -84,12 +89,21 @@ Path-follower parameters:
 | slow_down_distance | 1.0 m | Distance over which forward speed reduces near the goal. |
 | rotate_in_place_angle | 0.7 rad | Heading error that stops forward motion while turning. |
 | odom_timeout | 0.5 s | Maximum age of odometry before proposing a stop. |
+| zone_speed_limits_mps | [0.0] | Four terrain-band limits; disabled by default. |
+| brake_decel_mps2 | 1.0 m/s² | Shared zone/sensor stopping assumption. |
+| lateral_accel_limit_mps2 | 0.0 | Curve and moving-yaw limit; disabled by default. |
+| lookahead_time_s | 0.0 s | Speed-scaled preview; disabled by default. |
+| reaction_time_s | 1.0 s | Reaction time included in stopping reach. |
+| obstacle_detection_range_m | 0.0 m | Sensor-based speed ceiling; disabled by default. |
+| obstacle_clearance_m | 0.0 m | Clearance subtracted from usable detection range. |
+
+V3 overrides these with a 1.5 s preview, 1.0 m/s² lateral limit, 0.62 rad/s yaw ceiling, 8 m final slowdown, 30 m detection and 2 m clearance. While moving, yaw is additionally capped so `speed × |yaw_rate|` stays within the lateral-acceleration limit.
 
 ## Remaining milestones
 
-1. Replace the initial LiDAR pose assumption with Person 4's final sensor transform.
-2. Tune LiDAR inflation, usable range and path-following parameters against the integrated simulated vehicle.
-3. Verify the HOME parameters against Person 4's final world and Person 2's launch configuration.
+1. Re-run the V3 corridor mission after Person 3 expands the cost-100 footprints to match the actual mangrove-root and rock collision/LiDAR extents.
+2. Verify the final 0.3 m delivery/HOME event tolerance in that corrected corridor; the static V3 integration mission already completes.
+3. Keep the sensor-safe speed and braking assumptions aligned if Person 4 changes LiDAR range, footprint or braking performance.
 
 ## Safety-return integration
 

@@ -2,7 +2,9 @@ from math import inf, nan, pi
 
 from tidal_vehicle_autonomy.lidar_obstacle_core import (
     ObstaclePersistenceFilter,
+    inflate_obstacle_cells,
     obstacle_cells_from_scan,
+    obstacle_change_requires_replan,
     overlay_obstacles,
 )
 from tidal_vehicle_autonomy.planner_core import GridCostMap, plan_path
@@ -127,3 +129,48 @@ def test_obstacle_filter_retains_confirmed_cell_through_brief_dropouts() -> None
     assert obstacle_filter.update(set()) == {(2, 1)}
     assert obstacle_filter.update(set()) == {(2, 1)}
     assert obstacle_filter.update(set()) == frozenset()
+
+
+def test_moving_single_scan_hits_do_not_confirm_through_inflation_overlap() -> None:
+    obstacle_filter = ObstaclePersistenceFilter(
+        confirmation_scans=2,
+        clear_scans=3,
+    )
+
+    assert obstacle_filter.update({(2, 2)}) == frozenset()
+    assert obstacle_filter.update({(3, 2)}) == frozenset()
+
+
+def test_inflates_confirmed_hit_centres_after_filtering() -> None:
+    obstacle_filter = ObstaclePersistenceFilter(confirmation_scans=2, clear_scans=3)
+    obstacle_filter.update({(3, 3)})
+    confirmed = obstacle_filter.update({(3, 3)})
+
+    blocked = inflate_obstacle_cells(_safe_map(), confirmed, 1.0)
+
+    assert blocked == {(3, 3), (2, 3), (4, 3), (3, 2), (3, 4)}
+
+
+def test_removed_obstacle_does_not_reset_an_existing_safe_detour() -> None:
+    path = [(0, 0), (1, 0), (2, 0)]
+
+    assert not obstacle_change_requires_replan(
+        previous={(4, 4), (5, 5)},
+        current={(5, 5)},
+        active_path=path,
+    )
+
+
+def test_obstacle_change_replans_for_route_risk_or_route_recovery() -> None:
+    path = [(0, 0), (1, 0), (2, 0)]
+
+    assert obstacle_change_requires_replan(set(), {(1, 0)}, path)
+    assert not obstacle_change_requires_replan(set(), {(4, 4)}, path)
+    assert obstacle_change_requires_replan({(4, 4)}, set(), path)
+    assert obstacle_change_requires_replan({(4, 4)}, set(), None)
+
+
+def test_return_route_is_also_protected_from_new_obstacles() -> None:
+    assert obstacle_change_requires_replan(
+        set(), {(3, 0)}, [(0, 0), (1, 0)], [(2, 0), (3, 0)]
+    )

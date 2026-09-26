@@ -18,9 +18,12 @@ from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState
 
 from .lidar_obstacle_core import (
     ObstaclePersistenceFilter,
+    inflate_obstacle_cells,
     obstacle_cells_from_scan,
+    obstacle_change_requires_replan,
     overlay_obstacles,
 )
+from .motion_limits import speed_aware_sensor_range
 from .planner_core import GridCell, GridCostMap, plan_path
 
 
@@ -33,7 +36,10 @@ class GlobalPlannerNode(Node):
         # plus a small clearance as the standalone default. The shared launch
         # overrides this with the Version 2 footprint-specific value.
         self.declare_parameter("obstacle_inflation_radius_m", 0.75)
+        self.declare_parameter("obstacle_min_range_m", 8.0)
         self.declare_parameter("obstacle_max_range_m", 8.0)
+        self.declare_parameter("obstacle_brake_decel_mps2", 1.0)
+        self.declare_parameter("obstacle_reaction_time_s", 1.0)
         self.declare_parameter("obstacle_confirmation_scans", 2)
         self.declare_parameter("obstacle_clear_scans", 5)
         self.declare_parameter("home_x_m", 0.0)
@@ -63,7 +69,15 @@ class GlobalPlannerNode(Node):
         self._mission_event_sequence = 0
 
         inflation_radius = self._float_parameter("obstacle_inflation_radius_m")
+        obstacle_min_range = self._float_parameter("obstacle_min_range_m")
         obstacle_max_range = self._float_parameter("obstacle_max_range_m")
+        obstacle_brake_decel = self._float_parameter("obstacle_brake_decel_mps2")
+        obstacle_reaction_time = self._float_parameter("obstacle_reaction_time_s")
+        self._obstacle_inflation_radius = inflation_radius
+        self._obstacle_min_range = obstacle_min_range
+        self._obstacle_max_range = obstacle_max_range
+        self._obstacle_brake_decel = obstacle_brake_decel
+        self._obstacle_reaction_time = obstacle_reaction_time
         confirmation_scans = self._positive_int_parameter(
             "obstacle_confirmation_scans"
         )
@@ -74,6 +88,14 @@ class GlobalPlannerNode(Node):
             raise ValueError(
                 "Obstacle inflation radius must be non-negative and range positive"
             )
+        if obstacle_min_range < 0.0 or obstacle_min_range > obstacle_max_range:
+            raise ValueError(
+                "Obstacle minimum range must be non-negative and not exceed maximum"
+            )
+        if obstacle_brake_decel <= 0.0:
+            raise ValueError("obstacle_brake_decel_mps2 must be positive")
+        if obstacle_reaction_time < 0.0:
+            raise ValueError("obstacle_reaction_time_s must be non-negative")
         if event_tolerance <= 0.0 or return_refresh_rate <= 0.0:
             raise ValueError(
                 "goal_event_tolerance_m and return_path_refresh_rate_hz must be positive"
@@ -293,8 +315,16 @@ class GlobalPlannerNode(Node):
             self.get_logger().error(f"Ignoring invalid LiDAR scan: {error}")
             return
 
+        stable_hits = self._obstacle_filter.update(obstacles)
+        stable_obstacles = inflate_obstacle_cells(
+            self._base_costmap,
+            stable_hits,
+            self._obstacle_inflation_radius,
+            excluded_cells={
+                self._base_costmap.grid_from_world(position.x, position.y)
+            },
+        )
         previous_obstacles = self._dynamic_obstacles
-        stable_obstacles = self._obstacle_filter.update(obstacles)
         if stable_obstacles == previous_obstacles:
             return
 
@@ -302,7 +332,7 @@ class GlobalPlannerNode(Node):
         self._rebuild_planning_costmap()
         self.get_logger().info(
             "LiDAR obstacle overlay now contains "
-            f"{len(stable_obstacles)} confirmed blocked cells"
+            f"{len(stable_hits)} confirmed hits / {len(stable_obstacles)} blocked cells"
         )
         if self._obstacle_change_requires_replan(
             previous_obstacles,
@@ -315,9 +345,18 @@ class GlobalPlannerNode(Node):
         message: LaserScan,
         scan_pose: tuple[float, float, float],
     ) -> frozenset[GridCell]:
+        linear = self._pose.twist.twist.linear
+        speed = hypot(linear.x, linear.y)
         scan_range_max = min(
             float(message.range_max),
-            self._float_parameter("obstacle_max_range_m"),
+            speed_aware_sensor_range(
+                speed,
+                self._obstacle_min_range,
+                self._obstacle_max_range,
+                self._obstacle_brake_decel,
+                self._obstacle_reaction_time,
+                clearance_m=self._obstacle_inflation_radius,
+            ),
         )
         return obstacle_cells_from_scan(
             self._base_costmap,
@@ -329,7 +368,7 @@ class GlobalPlannerNode(Node):
             angle_increment=float(message.angle_increment),
             range_min=float(message.range_min),
             range_max=scan_range_max,
-            inflation_radius=self._float_parameter("obstacle_inflation_radius_m"),
+            inflation_radius=0.0,
         )
 
     def _rebuild_planning_costmap(self) -> None:
@@ -346,22 +385,11 @@ class GlobalPlannerNode(Node):
         previous: frozenset[GridCell],
         current: frozenset[GridCell],
     ) -> bool:
-        removed = previous - current
-        if removed:
-            # A confirmed removal may restore a shorter route that the
-            # previous obstacle forced us to avoid.
-            return True
-
-        added = current - previous
-        if not added:
-            return False
-        if not self._path_available or self._last_path_cells is None:
-            return True
-        if added.intersection(self._last_path_cells):
-            return True
-        return (
-            self._last_return_path_cells is not None
-            and bool(added.intersection(self._last_return_path_cells))
+        return obstacle_change_requires_replan(
+            previous,
+            current,
+            self._last_path_cells if self._path_available else None,
+            self._last_return_path_cells,
         )
 
     @staticmethod

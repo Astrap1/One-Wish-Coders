@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import io
+import json
 from queue import Empty, Queue
 import threading
 import time
@@ -61,6 +62,7 @@ class BrowserDashboardNode(Node):
         self._planned_path: list[dict[str, float]] = []
         self._return_path: list[dict[str, float]] = []
         self._mission_events: list[dict[str, str]] = []
+        self._retained_mission_event_keys: set[tuple[object, str]] = set()
         self._cost_map: dict[str, object] = {"width": 0, "height": 0, "resolution": 1.0, "origin_x": 0.0, "origin_y": 0.0, "data": []}
         self._travelled_path: list[dict[str, float]] = []
         self._last_event_text = ""
@@ -70,7 +72,20 @@ class BrowserDashboardNode(Node):
         self._remote_requests: Queue[dict[str, object]] = Queue()
         self._remote_timeout_s = 0.35
 
-        self.create_subscription(String, "/mission_event", self._on_mission_event, 10)
+        mission_event_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self.create_subscription(
+            String, "/mission_event", self._on_mission_event, mission_event_qos
+        )
+        self.create_subscription(
+            String,
+            "/mission_event_history",
+            self._on_mission_event_history,
+            mission_event_qos,
+        )
         self.create_subscription(SafetyStatus, "/safety_status", self._on_safety_status, 10)
         self.create_subscription(VehicleHealth, "/vehicle_health", self._on_vehicle_health, 10)
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
@@ -170,23 +185,64 @@ class BrowserDashboardNode(Node):
             command.angular.z = -0.6
         self._remote_command_pub.publish(command)
 
-    def _append_event(self, text: str) -> None:
+    def _append_event(self, text: str, timestamp: str | None = None) -> None:
         text = text.strip()
         if not text or text == self._last_event_text:
             return
         self._last_event_text = text
-        self._mission_events.append({"time": time.strftime("%H:%M:%S"), "event": text})
+        self._mission_events.append(
+            {"time": timestamp or time.strftime("%H:%M:%S"), "event": text}
+        )
         self._mission_events = self._mission_events[-20:]
 
     def _on_mission_event(self, message: String) -> None:
         event = message.data.strip()
         self._append_event(f"mission: {event or '(empty event)'}")
+        self._apply_mission_event(event)
+        self._reason = f"Mission event: {event}"
+        self._publish_state()
+
+    def _on_mission_event_history(self, message: String) -> None:
+        """Restore the retained lifecycle timeline after a dashboard restart."""
+        try:
+            payload = json.loads(message.data)
+            raw_events = payload.get("events", [])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            self.get_logger().warning("Ignoring invalid /mission_event_history payload")
+            return
+
+        if not isinstance(raw_events, list):
+            self.get_logger().warning("Ignoring non-list /mission_event_history payload")
+            return
+
+        latest_event = ""
+        for item in raw_events[-20:]:
+            if not isinstance(item, dict):
+                continue
+            event = item.get("event")
+            if not isinstance(event, str):
+                continue
+            timestamp = item.get("time")
+            sequence = item.get("sequence")
+            key = (sequence, event)
+            if key not in self._retained_mission_event_keys:
+                self._retained_mission_event_keys.add(key)
+                self._append_event(
+                    f"mission: {event or '(empty event)'}",
+                    timestamp if isinstance(timestamp, str) else "--:--:--",
+                )
+            latest_event = event
+
+        if latest_event:
+            self._apply_mission_event(latest_event)
+            self._reason = f"Mission event: {latest_event}"
+        self._publish_state()
+
+    def _apply_mission_event(self, event: str) -> None:
         if event == "delivery_confirmed":
             self._mission_state = "DELIVERED"
         elif event in {"mission_complete", "mission_reset"}:
             self._mission_state = "HOLD"
-        self._reason = f"Mission event: {event}"
-        self._publish_state()
 
     def _on_safety_status(self, message: SafetyStatus) -> None:
         self._mission_state = message.state

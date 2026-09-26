@@ -83,7 +83,7 @@ def _tracks(policy: str = "terrain_auto", **kw) -> "ModeMachine":
     args = dict(
         policy=policy, gear="tracks", retract_position=0.25, fold_s=0.2,
         firm_dwell_s=0.2, settle_s=0.2, transition_timeout_s=2.0,
-        track_share_slope=0.6, track_deploy_slope_deg=15.0,
+        track_share_slope=0.6, track_deploy_slope_deg=14.0,
         slope_dwell_s=0.2,
         settle_gap_m=0.03, settle_gap_tolerance_m=0.008,
     )

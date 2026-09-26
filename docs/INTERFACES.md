@@ -10,15 +10,16 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate in `map`. In the default tidal-corridor launch, `tide_manager.py` is the sole publisher. The vehicle's 10 Hz low-tide placeholder is enabled only with `tide:=false` for static test worlds. |
 | `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current map-frame terrain-risk map. In the default tidal-corridor launch, `tide_manager.py` publishes it from the same channel/mud rectangles as Gazebo `TerrainZones`; `tide:=false` selects the static test-world map. |
 | `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health at 10 Hz. Battery uses a stated power model per vehicle (`config/vehicle_mobility_v2.yaml` for Version 2, `vehicle_mobility.yaml` for Version 1); mobility, link, payload and fault remain runtime fault-injection parameters. |
-| `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. The browser dashboard's **Dispatch demo delivery** control publishes the fixed demo goal `(104 m, 0 m)` in the `map` frame; HOME is `(0 m, 0 m)`, placing the two points on opposite firm banks. |
+| `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. The browser dashboard's **Dispatch demo delivery** control publishes the fixed demo goal `(104 m, 0 m)` in the `map` frame; HOME is `(0 m, 0 m)`, placing the two points on opposite firm banks. A new goal is accepted as a retarget request only during `OUTBOUND`. |
 | `/planned_path` | Autonomy | Path follower, Operator, Safety | `nav_msgs/Path` | Active proposed route: outbound normally, HOME route while return is latched. |
 | `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Prospective route from the current pose to HOME during outbound travel; freshly republished and activated when return is required. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
 | `/operator_remote_enabled` | Operator dashboard | Safety | `std_msgs/Bool` | Explicit control-source toggle. `true` selects supervised remote input and suppresses autonomous proposals; `false` returns command authority to Autonomy. Published reliably with transient-local durability so Safety receives the active selection after a restart. |
 | `/operator_cmd_vel` | Operator dashboard | Safety | `geometry_msgs/Twist` | Hold-to-run remote driving request. Safety is the only `/cmd_vel` publisher and caps this input to 0.8 m/s linear and 0.6 rad/s angular. The dashboard publishes at 10 Hz while a direction is held and sends zero on release; stale input stops the vehicle. |
-| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb above 15° (capped at 1.5 m/s). Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
+| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb at or above 14° (capped at 1.5 m/s). The 14° guard band reliably prepares for the physical 15° embankment. Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
-| `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
+| `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Latest lifecycle event used by Safety for its internal mission phase. Reliable, transient-local QoS lets late-starting consumers recover the current lifecycle transition. |
+| `/mission_event_history` | Autonomy | Operator | `std_msgs/String` (JSON) | Reliable, transient-local snapshot of the most recent 20 lifecycle events. The browser dashboard uses it to restore its mission-event timeline after a restart. |
 | `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
 | `/points` | Simulation | Autonomy, Operator | `sensor_msgs/PointCloud2` | 16-channel 3D LiDAR, frame `lidar_link`, 10 Hz, 0.3–30 m. |
 | `/camera/image_raw`, `/camera/camera_info` | Simulation | Operator | `sensor_msgs/Image`, `CameraInfo` | Front camera, frame `camera_link`, 640×480 at 15 Hz. |
@@ -53,15 +54,24 @@ Safety:
 
 | Cost | Meaning | Mobility used by vehicle controller |
 | --- | --- | --- |
-| `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb exceeds 15° (Version 1: `WHEEL`) |
-| `20`--`59` | Mud or shallow water | `HOVER` |
+| `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb is at or above 14° (a guard band for the 15° bank; Version 1: `WHEEL`) |
+| `20`--`29` | Open, surveyed water (no roots or debris): fast travel allowed | `HOVER` |
+| `30`--`59` | Mud, shallow water, root or debris zones | `HOVER` |
 | `60`--`89` | Elevated-risk mud or shallow water | Conservative `HOVER` |
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
 
 Safety samples these bands along `/return_path` using the conservative HOVER
 energy/speed profile. A 2D cost map cannot know whether a firm segment has the
-rare >15° forward climb that deploys Version 2 tracks.
+rare ≥14° forward climb that deploys Version 2 tracks.
+
+The `20`--`29` / `30`--`59` split was added on 2026-09-26 for Version 3's
+zone speed limits. The limits are: firm shore 15 km/h; open surveyed water
+cruise 30 km/h, max 50 km/h; mud, shallow water, roots and debris 10 km/h;
+elevated risk 10 km/h (see `AGENTS.md`, *Shared terrain-cost semantics*). Band
+checks at `19`, `60` and `90` are unchanged, so existing consumers keep working.
+Water is published at `30` until the environment workstream marks surveyed
+open water `20`--`29`.
 
 ## Vehicle-fault semantics
 
@@ -84,6 +94,18 @@ Autonomy publishes `/mission_event` at each meaningful lifecycle transition:
 | `mission_reset` | Stop the vehicle and reset to `PRELAUNCH`. |
 
 Autonomy emits `delivery_confirmed` when odometry reaches the outbound path endpoint and `mission_complete` when it reaches the HOME path endpoint. On completion or reset, it publishes empty active paths so the path follower proposes a stop.
+
+An operator may replace `/mission_goal` while the mission is `OUTBOUND`.
+Safety temporarily withholds autonomous motion until Autonomy publishes the
+fresh outbound route; Autonomy then replans from the vehicle's current pose.
+Once delivery is confirmed, or any return is latched, later delivery-goal
+updates are rejected and the HOME route remains authoritative.
+
+`/mission_event` is reliable and transient-local, retaining the most recent
+lifecycle transition for late-starting Safety and operator consumers. Autonomy
+also publishes a reliable, transient-local `/mission_event_history` JSON
+snapshot containing the latest 20 events for the browser dashboard; this is a
+small demo-facing retained timeline, not a general event database.
 
 When Safety sets `return_required=true`, Autonomy must stop proposing the
 outbound route and publish a freshly stamped `/return_path` to HOME. The same

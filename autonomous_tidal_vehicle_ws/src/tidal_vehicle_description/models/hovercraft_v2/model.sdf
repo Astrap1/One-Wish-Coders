@@ -441,9 +441,7 @@
     <!-- Air cushion + glide drag + fan thrust + mud resistance (tidal_vehicle_simulation).
          Gains are the tested Version 1 values scaled to the 300 kg vehicle: same
          cushion natural frequency and damping ratio, drag sized for a ~3 m/s top
-         speed at 2 x 200 N, yaw gains scaled with the yaw inertia. The live
-         demo uses conservative differential-thrust steering because that is
-         more stable than the unvalidated simplified rudder side-force model. -->
+         speed at 2 x 200 N, yaw gains scaled with the yaw inertia. -->
     <plugin filename="tidal_vehicle_plugins" name="hover::AirCushion">
       <link_name>base_link</link_name>
       <corner>0.935 0.480 -0.470</corner><corner>0.935 -0.480 -0.470</corner><corner>-0.935 0.480 -0.470</corner><corner>-0.935 -0.480 -0.470</corner>
@@ -472,14 +470,16 @@
       <water_yaw_drag>500</water_yaw_drag>
       <vent_length>0.06</vent_length>
       <rudder_wash_coeff>0.55</rudder_wash_coeff>
-      <!-- The visual rudders remain articulated, but the demo controller uses
-           differential fan thrust for yaw. A simplified side-force rudder
-           applied high above the cushion created an artificial roll couple in
-           DART during low-speed turns. -->
-      <rudder_control>false</rudder_control>
+      <!-- turning aids in HOVER: the yaw moment goes to the rudders first, then
+           the puff ports, then differential fan thrust (off on turn_aids = false).
+           Rudders fade in above 15 % of full thrust (both fans) and slew at most
+           1.5 rad/s, so they do not swing stop to stop at low speed. -->
+      <rudder_control>true</rudder_control>
       <rudder_max_angle>0.4363</rudder_max_angle>
-      <!-- Auxiliary side jets remain available for future validated tuning. -->
-      <puff_port_force>0.0</puff_port_force>
+      <rudder_min_thrust>60</rudder_min_thrust>
+      <rudder_rate>1.5</rudder_rate>
+      <!-- puff ports: bow/stern side vents of cushion air, 2*Cd*p*A each -->
+      <puff_port_force>37.5</puff_port_force>
       <puff_port_point>0.74 0.6974 0.01</puff_port_point>
       <puff_port_time_constant>0.15</puff_port_time_constant>
       <puff_lateral_gain>150</puff_lateral_gain>

@@ -1,6 +1,8 @@
 """ROS 2 planner for terrain-aware outbound and return routes."""
 
+import json
 from math import atan2, hypot
+import time
 
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid, Odometry, Path
@@ -57,6 +59,8 @@ class GlobalPlannerNode(Node):
         self._delivery_reported = False
         self._completion_reported = False
         self._scan_frame_warning_active = False
+        self._mission_event_history: list[dict[str, object]] = []
+        self._mission_event_sequence = 0
 
         inflation_radius = self._float_parameter("obstacle_inflation_radius_m")
         obstacle_max_range = self._float_parameter("obstacle_max_range_m")
@@ -106,7 +110,14 @@ class GlobalPlannerNode(Node):
         self._mission_event_publisher = self.create_publisher(
             String,
             "/mission_event",
-            10,
+            status_qos,
+        )
+        # A retained snapshot lets a dashboard opened after a transition
+        # recover the small, demo-facing mission timeline.
+        self._mission_event_history_publisher = self.create_publisher(
+            String,
+            "/mission_event_history",
+            status_qos,
         )
         self.create_timer(
             1.0 / return_refresh_rate,
@@ -200,11 +211,12 @@ class GlobalPlannerNode(Node):
         self._last_odometry_replan_position = (position.x, position.y)
 
     def _on_goal(self, message: PoseStamped) -> None:
-        if self._return_requested or self._mission_finished:
+        if self._return_requested or self._mission_finished or self._delivery_reported:
             self.get_logger().warning(
-                "Ignoring a new mission goal until the current mission is reset"
+                "Ignoring a delivery-goal update after delivery or return has begun"
             )
             return
+        is_retarget = self._goal is not None
         self._goal = message
         self._last_path_cells = None
         self._last_return_path_cells = None
@@ -213,7 +225,10 @@ class GlobalPlannerNode(Node):
         self._delivery_reported = False
         self._completion_reported = False
         self._remember_odometry_replan_position()
-        self._replan("new mission goal", force_publish=True)
+        self._replan(
+            "outbound goal update" if is_retarget else "new mission goal",
+            force_publish=True,
+        )
 
     def _on_terrain_state(self, _: TerrainState) -> None:
         # Route costs arrive on /terrain_costmap. Replanning from a telemetry-
@@ -599,6 +614,20 @@ class GlobalPlannerNode(Node):
             )
 
     def _publish_mission_event(self, event: str) -> None:
+        self._mission_event_sequence += 1
+        self._mission_event_history.append(
+            {
+                "sequence": self._mission_event_sequence,
+                "time": time.strftime("%H:%M:%S"),
+                "event": event,
+            }
+        )
+        self._mission_event_history = self._mission_event_history[-20:]
+
+        history = String()
+        history.data = json.dumps({"events": self._mission_event_history})
+        self._mission_event_history_publisher.publish(history)
+
         message = String()
         message.data = event
         self._mission_event_publisher.publish(message)

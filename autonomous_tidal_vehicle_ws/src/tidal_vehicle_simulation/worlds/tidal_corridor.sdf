@@ -42,38 +42,45 @@
     <!-- HOME: firm shore staging zone, shared with Safety's default map-frame pose. -->
     <!-- The vehicle (vehicle:=v2 tracked, or v1 wheeled) is spawned here by sim.launch.py. -->
     <!-- Mangroves follow the wet margins while leaving a broad route near y=0. -->
-    <include><uri>model://mangrove_03_10m</uri><name>mangrove_03</name><pose>18.824 -19 -1.525 0 0 2.30</pose></include>
-    <include><uri>model://mangrove_01_7m</uri><name>mangrove_11</name><pose>54.588 -16 -2.972 0 0 2.80</pose></include>
-    <include><uri>model://mangrove_02_8m</uri><name>mangrove_12</name><pose>57.941 17 -2.814 0 0 5.80</pose></include>
-    <include><uri>model://mangrove_05_13m</uri><name>mangrove_15</name><pose>72.471 -18 -2.126 0 0 0.90</pose></include>
-    <include><uri>model://mangrove_07_15m</uri><name>mangrove_17</name><pose>14.353 -13 -1.313 0 0 2.00</pose></include>
-    <include><uri>model://mangrove_08_12m</uri><name>mangrove_18</name><pose>81.412 13 -1.703 0 0 4.80</pose></include>
-    <include><uri>model://mangrove_09_11m</uri><name>mangrove_19</name><pose>87.000 -12 -1.439 0 0 1.60</pose></include>
-    <include><uri>model://mangrove_01_7m</uri><name>mangrove_20</name><pose>25.000 -12 -1.817 0 0 0.65</pose></include>
-    <include><uri>model://mangrove_02_8m</uri><name>mangrove_21</name><pose>32.000 14 -2.148 0 0 2.45</pose></include>
-    <include><uri>model://mangrove_01_7m</uri><name>mangrove_22</name><pose>48.000 -18 -2.905 0 0 4.35</pose></include>
-    <include><uri>model://mangrove_02_8m</uri><name>mangrove_23</name><pose>66.000 15 -2.432 0 0 5.55</pose></include>
-    <include><uri>model://mangrove_03_10m</uri><name>mangrove_24</name><pose>94.000 -14 -1.107 0 0 3.25</pose></include>
+    <include><uri>model://mangrove_03_10m</uri><name>mangrove_03</name><pose>18.824 -19 -1.675 0 0 2.30</pose></include>
+    <include><uri>model://mangrove_01_7m</uri><name>mangrove_11</name><pose>54.588 -16 -3.122 0 0 2.80</pose></include>
+    <include><uri>model://mangrove_02_8m</uri><name>mangrove_12</name><pose>57.941 17 -2.964 0 0 5.80</pose></include>
+    <include><uri>model://mangrove_05_13m</uri><name>mangrove_15</name><pose>72.471 -18 -2.276 0 0 0.90</pose></include>
+    <include><uri>model://mangrove_07_15m</uri><name>mangrove_17</name><pose>14.353 -13 -1.463 0 0 2.00</pose></include>
+    <include><uri>model://mangrove_08_12m</uri><name>mangrove_18</name><pose>81.412 13 -1.853 0 0 4.80</pose></include>
+    <include><uri>model://mangrove_09_11m</uri><name>mangrove_19</name><pose>87.000 -12 -1.589 0 0 1.60</pose></include>
+    <include><uri>model://mangrove_01_7m</uri><name>mangrove_20</name><pose>25.000 -12 -1.967 0 0 0.65</pose></include>
+    <include><uri>model://mangrove_02_8m</uri><name>mangrove_21</name><pose>32.000 14 -2.298 0 0 2.45</pose></include>
+    <include><uri>model://mangrove_01_7m</uri><name>mangrove_22</name><pose>48.000 -18 -3.055 0 0 4.35</pose></include>
+    <include><uri>model://mangrove_02_8m</uri><name>mangrove_23</name><pose>66.000 15 -2.582 0 0 5.55</pose></include>
+    <include><uri>model://mangrove_03_10m</uri><name>mangrove_24</name><pose>94.000 -14 -1.257 0 0 3.25</pose></include>
     <!-- Rocks form irregular bank and channel-edge clusters; the centre remains navigable. -->
-    <include><uri>model://rock_imported</uri><name>rock_01</name><pose>-0.176 -9 0.000 0 0 0.35</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_02</name><pose>18.824 10 -1.525 0 0 1.20</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_03</name><pose>33.353 -10 -2.212 0 0 2.10</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_04</name><pose>36.706 11 -2.371 0 0 2.75</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_05</name><pose>40.059 -7 -2.530 0 0 0.80</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_06</name><pose>43.412 9 -2.688 0 0 1.85</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_07</name><pose>46.765 -12 -2.847 0 0 4.00</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_08</name><pose>50.118 8 -3.000 0 0 5.20</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_09</name><pose>53.471 -10 -3.000 0 0 0.50</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_10</name><pose>57.941 12 -2.814 0 0 2.40</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_11</name><pose>64.647 -7 -2.496 0 0 3.60</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_12</name><pose>69.118 10 -2.285 0 0 5.80</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_01</name><pose>-0.176 -9 -0.150 0 0 0.35</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_02</name><pose>18.824 10 -1.675 0 0 1.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_03</name><pose>33.353 -10 -2.362 0 0 2.10</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_04</name><pose>36.706 11 -2.521 0 0 2.75</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_05</name><pose>40.059 -7 -2.680 0 0 0.80</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_06</name><pose>43.412 9 -2.838 0 0 1.85</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_07</name><pose>46.765 -12 -2.997 0 0 4.00</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_08</name><pose>50.118 8 -3.150 0 0 5.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_09</name><pose>53.471 -10 -3.150 0 0 0.50</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_10</name><pose>57.941 12 -2.964 0 0 2.40</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_11</name><pose>64.647 -7 -2.646 0 0 3.60</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_12</name><pose>69.118 10 -2.435 0 0 5.80</pose></include>
     <!-- Additional rocks blend the wet margins into both high grounds. -->
-    <include><uri>model://rock_imported</uri><name>rock_left_01</name><pose>72.471 -11 -2.126 0 0 0.40</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_left_02</name><pose>75.824 8 -1.967 0 0 1.50</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_left_03</name><pose>80.294 -9 -1.756 0 0 2.30</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_left_04</name><pose>85.882 11 -1.491 0 0 3.10</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_left_05</name><pose>94.824 8 -1.068 0 0 4.20</pose></include>
-    <include><uri>model://rock_imported</uri><name>rock_left_06</name><pose>106.000 -10 0.000 0 0 5.40</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_01</name><pose>72.471 -11 -2.276 0 0 0.40</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_02</name><pose>75.824 8 -2.117 0 0 1.50</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_03</name><pose>80.294 -9 -1.906 0 0 2.30</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_04</name><pose>85.882 11 -1.641 0 0 3.10</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_05</name><pose>94.824 8 -1.218 0 0 4.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_left_06</name><pose>106.000 -10 -0.150 0 0 5.40</pose></include>
+    <!-- Two physical barriers cross the direct y=0 route but leave wide detours. -->
+    <include><uri>model://rock_imported</uri><name>rock_route_a_01</name><pose>35.000 -2 -2.440 0 0 0.20</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_route_a_02</name><pose>35.000 0 -2.440 0 0 1.30</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_route_a_03</name><pose>35.000 2 -2.440 0 0 2.40</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_route_b_01</name><pose>68.000 -2 -2.488 0 0 3.50</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_route_b_02</name><pose>68.000 0 -2.488 0 0 4.60</pose></include>
+    <include><uri>model://rock_imported</uri><name>rock_route_b_03</name><pose>68.000 2 -2.488 0 0 5.70</pose></include>
     <!-- Visual-only delivery zone on the far high ground (goal: x=104, y=0). -->
     <model name="delivery_zone"><static>true</static><pose>104 0 0.02 0 0 0</pose>
       <link name="marker_link">

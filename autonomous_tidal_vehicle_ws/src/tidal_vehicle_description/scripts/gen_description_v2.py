@@ -50,6 +50,10 @@ TRACK_MAX_SPEED = 1.5           # m/s, TRACK mode
 TRACK_MAX_YAW = 1.0             # rad/s, TRACK mode
 RETRACT_SPEED = 0.2             # m/s, track retract / deploy
 RETRACT_EFFORT = 6000.0         # N, holds the vehicle's weight on one track with margin
+# Demo sensor profile (tuned for WSLg; Blender's sensor_table lists the full
+# 10 Hz, 16-channel hardware LiDAR)
+LIDAR_RATE_HZ = 5
+LIDAR_CHANNELS = 8
 
 
 def ln(name):
@@ -158,13 +162,17 @@ def sensors_xml(name, sensors, render_sensors):
             continue
         elif sname == "lidar_3d":
             out.append(f"""
+      <!-- 5 Hz / 360 x 8 is ample for the 0.5 m navigation grid and keeps
+           Gazebo responsive under WSLg. Foxglove still receives /scan and the
+           raw PointCloud2, so this reduces rendering load rather than demo
+           observability. -->
       <sensor name="{sname}" type="gpu_lidar">{pose}
-        <always_on>1</always_on><update_rate>{s['rate_hz']}</update_rate><visualize>1</visualize>
+        <always_on>1</always_on><update_rate>{LIDAR_RATE_HZ}</update_rate><visualize>0</visualize>
         <lidar>
           <scan>
-            <horizontal><samples>900</samples><resolution>1</resolution>
+            <horizontal><samples>360</samples><resolution>1</resolution>
               <min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal>
-            <vertical><samples>{s['channels']}</samples><resolution>1</resolution>
+            <vertical><samples>{LIDAR_CHANNELS}</samples><resolution>1</resolution>
               <min_angle>{math.radians(s['vfov_deg'][0]):.5f}</min_angle>
               <max_angle>{math.radians(s['vfov_deg'][1]):.5f}</max_angle></vertical>
           </scan>
@@ -174,16 +182,24 @@ def sensors_xml(name, sensors, render_sensors):
       </sensor>""")
         elif t == "camera":
             out.append(f"""
+      <!-- Operator-camera profile: sufficient for scene awareness while
+           avoiding a high-resolution render every simulation tick. -->
       <sensor name="{sname}" type="camera">{pose}
-        <always_on>1</always_on><update_rate>15</update_rate>
+        <always_on>1</always_on><update_rate>5</update_rate>
         <camera><horizontal_fov>1.40</horizontal_fov>
-          <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+          <image><width>320</width><height>240</height><format>R8G8B8</format></image>
           <clip><near>0.05</near><far>60</far></clip></camera>
       </sensor>""")
         elif sname.startswith("ranger_"):
-            out.append(f"""
+            note = """
+      <!-- Cushion clearance is calculated by AirCushion's physics raycasts.
+           These visual GPU rangers are therefore disabled in the demo profile:
+           keeping four render sensors at 50 Hz made WSLg simulation run far
+           below real time without providing a bridged ROS topic. -->""" \
+                if sname == "ranger_fl" else ""
+            out.append(f"""{note}
       <sensor name="{sname}" type="gpu_lidar">{pose}
-        <always_on>1</always_on><update_rate>50</update_rate>
+        <always_on>0</always_on><update_rate>10</update_rate>
         <!-- 5 rays over +/-3 deg (a narrow ToF beam). A single-sample gpu_lidar
              returns wrong ranges in gz-sensors 8, so don't use samples = 1. -->
         <lidar><scan><horizontal><samples>5</samples><resolution>1</resolution>
@@ -269,9 +285,13 @@ def plugins_xml(links, data):
       <vent_length>0.06</vent_length>
       <rudder_wash_coeff>0.55</rudder_wash_coeff>
       <!-- turning aids in HOVER: the yaw moment goes to the rudders first, then
-           the puff ports, then differential fan thrust (off on turn_aids = false) -->
+           the puff ports, then differential fan thrust (off on turn_aids = false).
+           Rudders fade in above 15 % of full thrust (both fans) and slew at most
+           1.5 rad/s, so they do not swing stop to stop at low speed. -->
       <rudder_control>true</rudder_control>
       <rudder_max_angle>{data['rudders']['max_angle_rad']}</rudder_max_angle>
+      <rudder_min_thrust>{0.15 * 2 * MAX_THRUST_N:.0f}</rudder_min_thrust>
+      <rudder_rate>1.5</rudder_rate>
       <!-- puff ports: bow/stern side vents of cushion air, 2*Cd*p*A each -->
       <puff_port_force>{puff['force_n']}</puff_port_force>
       <puff_port_point>{fmt(puff_pt)}</puff_port_point>
@@ -281,7 +301,7 @@ def plugins_xml(links, data):
       <puff_shutter_travel>{puff['shutter_travel']}</puff_shutter_travel>
       <heading_kp>600</heading_kp><heading_kd>400</heading_kd>
       <!-- hover-mode velocity control on /model/<name>/cmd_vel_hover (gz.msgs.Twist) -->
-      <speed_kp>480</speed_kp><speed_ki>120</speed_ki><yaw_rate_kp>800</yaw_rate_kp>
+      <speed_kp>480</speed_kp><speed_ki>120</speed_ki><yaw_rate_kp>400</yaw_rate_kp>
       <cmd_timeout>0.5</cmd_timeout>
       <use_raycast>true</use_raycast>
       <log_file>/tmp/hover_{{model}}.csv</log_file>

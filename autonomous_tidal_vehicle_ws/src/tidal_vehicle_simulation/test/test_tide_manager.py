@@ -1,12 +1,14 @@
 """Regression tests for tide event timing and the corridor terrain profile."""
 
 import importlib.util
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "tide_manager.py"
+WORLD = Path(__file__).parents[1] / "worlds" / "tidal_corridor.sdf"
 SPEC = importlib.util.spec_from_file_location("tide_manager", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
@@ -67,7 +69,26 @@ def test_terrain_profile_matches_banks_slopes_and_floor() -> None:
 
 def test_static_obstacle_footprints_match_world_count() -> None:
     manager, _ = _manager()
-    assert len(STATIC_OBSTACLES) == 30
+    assert len(STATIC_OBSTACLES) == 36
     assert manager._is_static_obstacle(25.0, -12.0)
     assert manager._is_static_obstacle(106.0, -10.0)
+    assert manager._is_static_obstacle(35.0, 0.0)
+    assert manager._is_static_obstacle(68.0, 0.0)
     assert not manager._is_static_obstacle(52.0, 0.0)
+
+
+def test_costmap_obstacles_match_world_sdf_positions() -> None:
+    root = ET.parse(WORLD).getroot()
+    world_positions = []
+    for include in root.findall("./world/include"):
+        name = include.findtext("name", "")
+        if not name.startswith(("mangrove_", "rock_")):
+            continue
+        pose = [float(value) for value in include.findtext("pose").split()]
+        world_positions.append((round(pose[0], 3), round(pose[1], 3)))
+
+    mapped_positions = [
+        (round(x, 3), round(y, 3)) for x, y, _ in STATIC_OBSTACLES
+    ]
+    assert len(world_positions) == 36
+    assert sorted(mapped_positions) == sorted(world_positions)

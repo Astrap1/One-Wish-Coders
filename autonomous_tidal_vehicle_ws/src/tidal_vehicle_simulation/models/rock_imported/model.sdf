@@ -4,14 +4,21 @@
     <pose>0 0 0 0 0 0</pose>
     <static>true</static>
     <link name="rock_visual_link">
-      <!-- Re-center the GLB node and rotate its Y-up asset into Gazebo Z-up. -->
-      <pose>-2.29 4.02 -0.15 1.5708 0 0</pose>
-      <visual name="rock_glb_visual">
-        <geometry><mesh><uri>meshes/Rock.glb</uri><scale>2.5 2.5 2.5</scale></mesh></geometry>
+      <!-- Lightweight visual proxy; instance yaw still gives the scattered
+           rocks varied orientations without rendering the 326k-triangle GLB. -->
+      <pose>0 0 0.75 0 0 0</pose>
+      <visual name="rock_ellipsoid_visual">
+        <geometry><ellipsoid><radii>1.2 0.9 0.7</radii></ellipsoid></geometry>
+        <material>
+          <ambient>0.20 0.18 0.14 1</ambient>
+          <diffuse>0.36 0.32 0.25 1</diffuse>
+          <specular>0.03 0.03 0.025 1</specular>
+          <pbr><metal><roughness>0.95</roughness><metalness>0.0</metalness></metal></pbr>
+        </material>
       </visual>
     </link>
     <link name="rock_collision_link">
-      <!-- Larger collision shape touches the mud and remains LiDAR-detectable. -->
+      <!-- Unchanged collision keeps physics and LiDAR behavior stable. -->
       <pose>0 0 0.75 0 0 0</pose>
       <collision name="rock_collision">
         <geometry><sphere><radius>1.0</radius></sphere></geometry>

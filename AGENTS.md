@@ -206,12 +206,12 @@ The HOME values must match Person 2's safety parameters. The changing map-frame 
 
   The Version 1 regression checks are unchanged.
 - **ROS 2 integration verified** (headless, integration world with `tide:=false`). An autonomous goal across water and mud produced `delivery_confirmed` then `mission_complete` in 82 s. Version 2 now starts in HOVER at HOME and remains there across ordinary shore, mud and water; it deploys tracks only for a sustained forward firm-land climb above 15°. Safety remains the sole `/cmd_vel` publisher. The Version 1 fallback completes the same mission.
-- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors and terrain zones. HOME is on the first z = 0 m bank of a 120 m corridor. The 96 m tidal valley occupies 80% of that footprint, mirrored 15° bank sections lead into long gentle lower slopes and a narrow z = -3 m centre, and the delivery marker is on the opposite bank at `(104, 0)`. Physical cushion support, the visible sheet and the ROS tide manager start at z = -2.80 m as a narrow central channel and rise 2.80 m over 20 simulated seconds until water reaches both bank crests. The corridor mission must still be verified end to end; `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
+- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors and terrain zones. HOME is on the first z = 0 m bank of a 120 m corridor. The 96 m tidal valley occupies 80% of that footprint, mirrored 15° bank sections lead into long gentle lower slopes and a narrow z = -3 m centre, and the delivery marker is on the opposite bank at `(104, 0)`. Physical cushion support, the visible sheet and the ROS tide manager start at z = -2.80 m as a narrow central channel and rise 2.80 m over 180 simulated seconds until water reaches both bank crests. Water stays traversable in HOVER mode; tide changes route cost and obstacle-clearance assumptions rather than becoming a generic closure. The corridor mission must still be verified end to end; `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
 
 Open integration items:
 
 1. **Valley mission validation.** Confirm that Version 2 transitions smoothly from HOME down the 15° slope, rides the `TerrainZones` water surface across the basin, climbs the opposite 15° slope and reaches the delivery marker at `(104, 0)` without contacting the basin floor.
-2. **Tide timing validation.** The synchronized rise is now 2.80 m over 20 simulated seconds, from z = -2.80 m to the z = 0 bank crests. Confirm on the demo laptop that a normal delivery can cross before Safety requests a fallback and that the rising-tide scenario still produces a visible risk response. For a longer normal-delivery recording, publish the existing `tide_hold` event before issuing the goal, then use `tide_resume` or `tide_rise` for the rising-tide demonstration.
+2. **Tide timing validation.** The synchronized rise is now 2.80 m over 180 simulated seconds, from z = -2.80 m to the z = 0 bank crests. Confirm on the demo laptop that a normal delivery crosses while fresh terrain costs and routes are published. Use `tide_hold` for a static baseline, then `tide_resume` or `tide_rise` to demonstrate changing-terrain replanning. A blocked route, energy limit or vehicle fault—not water alone—demonstrates Safety fallback.
 3. **Rendering load.** The mangrove and rock meshes are heavy for the LiDAR and camera. With software rendering in a CPU-only container, the full ROS corridor stack ran at a real-time factor of 0.001–0.6 (the integration world runs near real time), so the corridor mission could not be timed there. Check the real-time factor on the demo laptop's GPU.
 4. **Sensor transform.** Resolved: the Version 2 LiDAR is directly above `base_link`, so Autonomy's "LiDAR at odometry position" assumption is exact horizontally (*Open requests*, item 2).
 5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
@@ -241,7 +241,7 @@ They also confirm the three required scenarios:
 
 1. Normal delivery and return.
 2. Obstacle-induced reroute.
-3. Rising tide changes terrain risk, forcing a replan, hold or return.
+3. Rising tide changes terrain cost and obstacle clearance, forcing repeated route assessment and replanning while water remains traversable in HOVER mode.
 
 Work during this stage:
 
@@ -287,14 +287,14 @@ Work during this stage:
 - **Person 3:** adds final terrain materials, mangrove roots, debris, tide-risk zones and clearly visible delivery/return landmarks. Its tide manager must publish the updated terrain state and cost map.
 - **Person 4:** implements or tunes the transparent mobility model: terrain-dependent speed, limited turning/braking, battery consumption and vehicle-health inputs. Keep these assumptions documented rather than presenting them as validated physics.
 - **Person 1:** adds local obstacle avoidance and repeated route assessment against `/terrain_costmap` for the blocked-route and rising-tide scenarios.
-- **Person 2:** adds return-reserve and tide-risk handling. A rising tide must transition from `CRUISE` through `CAUTION` to a visible replan, `HOLD` or `RETURN` with a clear rationale.
+- **Person 2:** adds return-reserve and explicit-hazard handling. Rising tide must produce a visible replan without a generic water closure; a blocked route, energy limit or vehicle fault must produce `HOLD` or `RETURN` with a clear rationale.
 - **Person 5:** implements deterministic scenario triggers, result logging and the Foxglove mission layout. It also prepares a simple capability comparison graphic for wheeled rover, boat and air-cushion vehicle profiles.
 
 **Exit gate:** all three required scenarios run from the common launcher:
 
 1. normal delivery and return;
 2. obstacle detected, route replanned and mission completed; and
-3. rising tide updates the terrain cost map and causes a visible, safety-driven replan, hold or return.
+3. rising tide updates the terrain cost map and causes a visible replan while water remains traversable; a separate blocked-route, energy or vehicle-fault condition demonstrates safety-driven hold or return.
 
 ### Stage 4 — Demonstration hardening
 
@@ -326,7 +326,7 @@ A workstream change is complete only when it has a documented input/output contr
 The active environment is launched from `autonomous_tidal_vehicle_ws` with `tidal_vehicle_simulation`. The map currently contains:
 
 - A 120 m corridor spanning x = -12–108 m, with a 96 m tidal valley from x = 4–100 m (80%) and only 24 m of combined dry banks (20%). Mirrored 15° bank sections lead into long 2.7° lower slopes and a narrow z = -3 m centre. HOME remains `(0, 0)` and the delivery marker is `(104, 0)`.
-- A 96 m-long level water sheet spanning x = 4–100 m and the full 60 m map width. It starts at z = -2.80 m as a roughly 12.5 m-wide central channel (about 10% of the corridor area), then rises 2.80 m over 20 simulated seconds and expands to the full 80% tidal footprint only at bank height.
+- A 96 m-long level water sheet spanning x = 4–100 m and the full 60 m map width. It starts at z = -2.80 m as a roughly 12.5 m-wide central channel (about 10% of the corridor area), then rises 2.80 m over 180 simulated seconds and expands to the full 80% tidal footprint only at bank height. It remains traversable in HOVER mode.
 - Nineteen Mangrovetree GLB-derived mangroves, 7–15 m tall, arranged along the dry and wet margins. Their roots and trunks retain collision geometry for physics and LiDAR.
 - Eighteen Rock.glb instances arranged in irregular bank and channel-edge clusters, with primitive collision shapes and a broad navigable route around y = 0.
 - A visual-only green delivery pad on the far high ground.

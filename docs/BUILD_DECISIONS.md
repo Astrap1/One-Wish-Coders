@@ -9,7 +9,7 @@
 - **Primary language:** Python for autonomy, safety, evaluation and operator tooling; SDF/URDF and YAML for simulation assets.
 - **Physics scope:** A transparent mobility and terrain-risk abstraction, not validated computational fluid dynamics.
 - **Navigation scope:** A known semantic terrain map plus simulated LiDAR for local obstacle response. SLAM is a future extension, not a critical-path dependency.
-- **Headline unsafe scenario:** Rising tide. The simulated water level changes terrain traversability and route cost over time, requiring repeated route assessment and replanning.
+- **Headline dynamic-terrain scenario:** Rising tide. The simulated water level changes mud/water cost and obstacle clearance over time, requiring repeated route assessment and replanning. For the hovercraft, water itself remains traversable; Safety fallback is reserved for a separate explicit hazard such as insufficient return energy, a blocked route, or a vehicle fault.
 
 ## Remaining decisions
 

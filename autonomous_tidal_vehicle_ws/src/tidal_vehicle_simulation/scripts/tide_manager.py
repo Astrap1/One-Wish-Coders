@@ -17,8 +17,10 @@ class TideManager(Node):
         self.declare_parameter("scenario_duration_s", 20.0)
         self.declare_parameter("initial_water_level_m", -2.80)
         self.declare_parameter("water_rise_m", 2.80)
-        self.declare_parameter("risk_rate_per_minute", 1.50)
-        self.declare_parameter("corridor_unsafe_risk_threshold", 0.85)
+        # Tide is a changing terrain input for this air-cushion vehicle, not a
+        # generic closure condition.  Keep its descriptive risk below Safety's
+        # intervention thresholds unless a separate mission hazard is injected.
+        self.declare_parameter("tide_risk_max", 0.50)
         self.declare_parameter("publish_period_s", 0.5)
         self.declare_parameter("frame_id", "map")
         self.declare_parameter("map_resolution_m", 1.0)
@@ -41,10 +43,7 @@ class TideManager(Node):
         self.duration = float(self.get_parameter("scenario_duration_s").value)
         self.initial_level = float(self.get_parameter("initial_water_level_m").value)
         self.rise = float(self.get_parameter("water_rise_m").value)
-        self.risk_rate = float(self.get_parameter("risk_rate_per_minute").value)
-        self.unsafe_threshold = float(
-            self.get_parameter("corridor_unsafe_risk_threshold").value
-        )
+        self.tide_risk_max = float(self.get_parameter("tide_risk_max").value)
         self.frame_id = str(self.get_parameter("frame_id").value)
         self.resolution = float(self.get_parameter("map_resolution_m").value)
         self.width = int(self.get_parameter("map_width_cells").value)
@@ -104,16 +103,17 @@ class TideManager(Node):
     def _publish(self) -> None:
         fraction = self._fraction()
         self.last_level = self.initial_level + self.rise * fraction
-        elapsed_minutes = fraction * self.duration / 60.0
-        risk = min(1.0, self.risk_rate * elapsed_minutes + 0.35 * fraction)
+        # Rising water changes the cost map and prompts a fresh plan, but mud,
+        # shallow water and open water remain traversable in HOVER mode.
+        # A later explicit hazard (debris, current, failed lift, or energy
+        # margin) is what should cause Safety to hold or return.
+        risk = min(self.tide_risk_max, self.tide_risk_max * fraction)
         if fraction <= 0.01:
             tide_state = "low"
         elif fraction < 1.0:
             tide_state = "rising"
         else:
             tide_state = "high"
-        unsafe = max(0.0, (self.unsafe_threshold - risk) / max(self.risk_rate, 1e-6)) * 60.0
-
         state = TerrainState()
         state.header.stamp = self.get_clock().now().to_msg()
         state.header.frame_id = self.frame_id
@@ -121,8 +121,8 @@ class TideManager(Node):
         state.tide_risk = float(risk)
         state.water_level_m = float(self.last_level)
         state.tide_rate_m_per_minute = float(self.rise / max(self.duration / 60.0, 1e-6))
-        state.seconds_until_corridor_unsafe = float(unsafe if risk < self.unsafe_threshold else 0.0)
-        state.corridor_traversable = risk < self.unsafe_threshold
+        state.seconds_until_corridor_unsafe = -1.0
+        state.corridor_traversable = True
         self.state_pub.publish(state)
         self.costmap_pub.publish(self._make_costmap(fraction, risk))
 
@@ -146,12 +146,14 @@ class TideManager(Node):
                 # into a river that expands outward as the level rises.
                 # Obstacles remain a LiDAR planning overlay.
                 if self._contains(self.mudflat, x, y):
-                    value = min(89, self.mud_cost + int(20 * fraction))
+                    value = min(89, self.mud_cost + int(10 * fraction))
                 if (self._contains(self.channel, x, y)
                         and self.last_level >= self._terrain_height(x)):
-                    value = min(89, self.water_cost + int(35 * fraction))
-                    if risk >= self.unsafe_threshold:
-                        value = 100
+                    # Open water is easier to cross than viscous mud for an
+                    # air-cushion vehicle, although rising water adds a modest
+                    # navigation/obstacle-clearance cost.  It never becomes a
+                    # generic no-go cell solely because the tide is high.
+                    value = min(89, self.water_cost + int(10 * fraction))
                 values.append(value)
         grid.data = values
         return grid

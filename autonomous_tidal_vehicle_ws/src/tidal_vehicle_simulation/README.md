@@ -40,7 +40,9 @@ surfaces to form a 120 m corridor with 96 m of tidal valley (80%) and 24 m
 of combined dry banks (20%). Mirrored 15° bank sections lead into long gentle lower slopes and a narrow
 z = -3 m centre. HOME is `(0, 0)` and the delivery marker is `(104, 0)`. The matching
 visible and physical water surfaces start at z = -2.80 m as a roughly 12.5 m
-central channel and rise 2.80 m over 20 simulated seconds, expanding to the full 80% tidal
+central channel and rise 2.80 m over 180 simulated seconds, expanding to the full 80% tidal
 footprint only at high tide. This is
 a deliberate performance abstraction for repeatable DART/Bullet demonstrations,
-not a validated hydrodynamic model.
+not a validated hydrodynamic model. Water remains traversable in HOVER mode;
+the changing map represents route cost and obstacle-clearance changes rather
+than a generic tide closure.

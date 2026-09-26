@@ -35,7 +35,7 @@
     <plugin filename="tidal_vehicle_plugins" name="hover::TerrainZones">
       <ground_height>-3.0</ground_height>
       <zone><name>muddy_valley</name><type>MUD</type><min>4 -30</min><max>100 30</max></zone>
-      <zone><name>tidal_channel</name><type>WATER</type><min>4 -30</min><max>100 30</max><level>-2.80</level><rise>2.80</rise><rise_start>0</rise_start><rise_duration>20.0</rise_duration></zone>
+      <zone><name>tidal_channel</name><type>WATER</type><min>4 -30</min><max>100 30</max><level>-2.80</level><rise>2.80</rise><rise_start>0</rise_start><rise_duration>180.0</rise_duration></zone>
     </plugin>
     <!-- Water occupies 80 percent of the 120 m corridor; mirrored 15-degree slopes reach z=-3 m. -->
     <include><uri>model://terrain_demo</uri><name>demo_terrain</name><pose>0 0 0 0 0 0</pose></include>
@@ -89,7 +89,7 @@
     </model>
     <!-- The water spans the full valley and passes visually through trees and rocks. -->
     <!-- The visible water and the AirCushion's TerrainZones surface share the
-         same -2.80 m initial level and gradual 2.80 m / 20 s rise. -->
+         same -2.80 m initial level and gradual 2.80 m / 180 s rise. -->
     <model name="coastal_water">
       <pose>52 0 -2.80 0 0 0</pose>
       <static>false</static>
@@ -99,7 +99,7 @@
              support surface itself is supplied by TerrainZones/AirCushion. -->
         <visual name="rising_water_surface"><pose>0 0 -0.04 0 0 0</pose><geometry><box><size>96 60 0.08</size></box></geometry><material><ambient>0.04 0.12 0.11 1</ambient><diffuse>0.12 0.30 0.27 1</diffuse><specular>0.20 0.32 0.28 1</specular><pbr><metal><albedo_map>model://terrain/materials/tidal_water.png</albedo_map><roughness>0.18</roughness><metalness>0.0</metalness></metal></pbr></material></visual>
       </link>
-      <plugin filename="libtide_visual_system.so" name="tidal_vehicle_simulation::TideVisualSystem"><initial_level_m>-2.80</initial_level_m><rise_m>2.80</rise_m><duration_s>20.0</duration_s></plugin>
+      <plugin filename="libtide_visual_system.so" name="tidal_vehicle_simulation::TideVisualSystem"><initial_level_m>-2.80</initial_level_m><rise_m>2.80</rise_m><duration_s>180.0</duration_s></plugin>
     </model>
   </world>
 </sdf>

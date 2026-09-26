@@ -16,7 +16,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
 | `/operator_remote_enabled` | Operator dashboard | Safety | `std_msgs/Bool` | Explicit control-source toggle. `true` selects supervised remote input and suppresses autonomous proposals; `false` returns command authority to Autonomy. Published reliably with transient-local durability so Safety receives the active selection after a restart. |
 | `/operator_cmd_vel` | Operator dashboard | Safety | `geometry_msgs/Twist` | Hold-to-run remote driving request. Safety is the only `/cmd_vel` publisher and caps this input to 0.8 m/s linear and 0.6 rad/s angular. The dashboard publishes at 10 Hz while a direction is held and sends zero on release; stale input stops the vehicle. |
-| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb above 15° (capped at 1.5 m/s). Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
+| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb at or above 14° (capped at 1.5 m/s). The 14° guard band reliably prepares for the physical 15° embankment. Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Latest lifecycle event used by Safety for its internal mission phase. Reliable, transient-local QoS lets late-starting consumers recover the current lifecycle transition. |
 | `/mission_event_history` | Autonomy | Operator | `std_msgs/String` (JSON) | Reliable, transient-local snapshot of the most recent 20 lifecycle events. The browser dashboard uses it to restore its mission-event timeline after a restart. |
@@ -54,7 +54,7 @@ Safety:
 
 | Cost | Meaning | Mobility used by vehicle controller |
 | --- | --- | --- |
-| `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb exceeds 15° (Version 1: `WHEEL`) |
+| `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb is at or above 14° (a guard band for the 15° bank; Version 1: `WHEEL`) |
 | `20`--`29` | Open, surveyed water (no roots or debris): fast travel allowed | `HOVER` |
 | `30`--`59` | Mud, shallow water, root or debris zones | `HOVER` |
 | `60`--`89` | Elevated-risk mud or shallow water | Conservative `HOVER` |
@@ -63,7 +63,7 @@ Safety:
 
 Safety samples these bands along `/return_path` using the conservative HOVER
 energy/speed profile. A 2D cost map cannot know whether a firm segment has the
-rare >15° forward climb that deploys Version 2 tracks.
+rare ≥14° forward climb that deploys Version 2 tracks.
 
 The `20`--`29` / `30`--`59` split was added on 2026-09-26 for Version 3's
 zone speed limits. The limits are: firm shore 15 km/h; open surveyed water

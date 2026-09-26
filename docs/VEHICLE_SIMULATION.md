@@ -52,7 +52,7 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
 
 **Mode selection:**
 - Version 2 is hover-first across firm shore, mud and water: its tracks retract once the cushion is ready, and the fans hold the configured gap over the active support surface.
-- TRACK is selected only for a sustained (>1.5 s), forward climb above 15° on firm land. Side tilt, stopping, pivoting, descending, mud and water do not deploy it.
+- TRACK is selected only for a sustained (>1.5 s), forward climb at or above 14° on firm land. This 1° guard band deploys the tracks before the physical 15° bank can stall the hovercraft. Side tilt, stopping, pivoting, descending, mud and water do not deploy it.
 - In that exceptional TRACK mode, the cushion carries 60% of the load while the tracks provide climbing traction. It returns to HOVER when the climb no longer applies.
 
 **Tests:**

@@ -24,7 +24,7 @@ class ModeMachine:
       HOVER is the normal travel mode over firm shore, mud and water. The
       cushion remains enabled so the vehicle holds a controlled gap above the
       current support surface. TRACK is exceptional: on firm land only, deploy
-      it for a sustained forward climb steeper than track_deploy_slope_deg.
+      it for a sustained forward climb at or above track_deploy_slope_deg.
       It immediately returns to HOVER when that climb is no longer required.
     """
 
@@ -40,7 +40,7 @@ class ModeMachine:
         retract_position: float = FOLDED,
         gear_tolerance: float = 0.01,
         track_share_slope: float = 0.6,
-        track_deploy_slope_deg: float = 15.0,
+        track_deploy_slope_deg: float = 14.0,
         settle_gap_m: float = 0.03,
         settle_gap_tolerance_m: float = 0.008,
         slope_dwell_s: float = 1.5,
@@ -393,7 +393,7 @@ def main() -> None:
                     parameter("track_share_slope", 0.6).value
                 ),
                 track_deploy_slope_deg=float(
-                    parameter("track_deploy_slope_deg", 15.0).value
+                    parameter("track_deploy_slope_deg", 14.0).value
                 ),
                 slope_dwell_s=float(parameter("slope_dwell_s", 1.5).value),
                 settle_vz_mps=float(parameter("settle_vz_mps", 0.01).value),

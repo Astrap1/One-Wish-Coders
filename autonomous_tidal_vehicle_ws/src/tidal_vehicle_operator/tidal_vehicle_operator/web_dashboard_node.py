@@ -38,6 +38,7 @@ class BrowserDashboardNode(Node):
         self._planned_route_points = 0
         self._return_route_points = 0
         self._battery_percent = 0.0
+        self._fuel_percent = -1.0
         self._return_margin_percent = 0.0
         self._reason = "Awaiting telemetry."
         self._estimated_return_energy_percent = 0.0
@@ -269,6 +270,7 @@ class BrowserDashboardNode(Node):
 
     def _on_vehicle_health(self, message: VehicleHealth) -> None:
         self._battery_percent = float(message.battery_percent)
+        self._fuel_percent = float(message.fuel_percent)
         self._mobility_health_percent = float(message.mobility_health_percent)
         self._link_ok = bool(message.link_ok)
         self._payload_secured = bool(message.payload_secured)
@@ -365,6 +367,7 @@ class BrowserDashboardNode(Node):
             return_margin_percent=self._return_margin_percent,
             reason=self._reason,
             telemetry={
+                "fuel_percent": self._fuel_percent,
                 "estimated_return_energy_percent": self._estimated_return_energy_percent,
                 "estimated_return_time_s": self._estimated_return_time_s,
                 "mobility_health_percent": self._mobility_health_percent,

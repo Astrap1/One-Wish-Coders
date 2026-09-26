@@ -282,6 +282,7 @@ Open integration items:
 9. **Rudders and puff ports: verified and on (2026-09-26).** All 30 Version 2 checks pass. The rudders fade in above 15% thrust and slew at most 1.5 rad/s, which removed the low-speed chatter that led to them being switched off. Three clean autonomous missions completed. The demo sensor profile and the 400 yaw gain, previously hand-edited into `model.sdf`, now come from `gen_description_v2.py`. **Don't hand-edit generated `model.sdf` files; change the generator instead.**
 10. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
 11. **Version 3 corridor stability.** Keep V3's 30–50 km/h configuration confined to its isolated open-water test world. Build a conservative corridor-speed profile, validate that it stays within map bounds through the obstacle detour and 15° embankment, then reassess whether it is appropriate for a demo.
+12. **Done: Version 3 LiDAR self-filter (2026-09-26).** The closest false returns from the live corridor run, `(-1.56, -0.11, -0.42)` and `(-0.99, 1.27, -0.43)` in `lidar_link`, are rejected by an inclusive, tested 1.85 m circular footprint envelope around V3's centre mast. The test keeps a point at 1.86 m, proving genuine external obstacles are retained. Autonomy continues to receive all non-self returns and must not suppress external obstacles to compensate.
 
 ## Three-day build plan
 

@@ -70,8 +70,9 @@ lidar_scan:
     range_max_m: 30.0
     self_box_m: [-1.56, 1.56, -0.95, 0.95]   # inclusive hull/fan bounds in lidar_link
     # The 3.0 x 1.8 m footprint has a 1.75 m half-diagonal.  The extra 0.10 m
-    # covers moving appendages/model tolerances without hiding external objects.
-    self_radius_m: 1.85
+    # is required by measured V3 corner returns while retaining obstacles
+    # immediately outside the body envelope.
+    self_footprint_radius_m: 1.85
     # The corridor terrain is piecewise sloped, so a LiDAR-relative z cutoff
     # alone cannot distinguish an uphill surface from an obstacle.  Transform
     # returns with odometry and require a protrusion above the known surface.

@@ -6,16 +6,18 @@ autonomy workstream's near-field obstacle sensing (docs/INTERFACES.md).
 For every azimuth bin it keeps the closest return whose height lies in a band
 above the ground, so low roots and debris show up as well as trunks. Returns
 that land on the vehicle itself (the rear fan ducts and payload box are
-inside the LiDAR's lower beams) are removed with a vehicle-footprint box and,
-for vehicles whose corners extend beyond that box, an optional footprint
-radius.
+inside the LiDAR's lower beams) are removed with an inclusive vehicle-footprint
+box and, where configured, a circular envelope. The latter is used by Version
+3 so returns from its hull, skirt and outboard corners cannot create an
+obstacle immediately around itself.
 Output frame: lidar_link (axis-aligned with base_link).
 
 Parameters (config/vehicle_mobility.yaml, section lidar_scan):
   min_height_m / max_height_m  band relative to the LiDAR (default -0.62 .. 0.5:
                                from ~7 cm above ground in hover mode to 1.2 m)
-  self_box_m                   [xmin, xmax, ymin, ymax] vehicle box in lidar_link
-  self_radius_m                optional circular vehicle envelope (0 = disabled)
+  self_box_m                   [xmin, xmax, ymin, ymax] inclusive vehicle box
+  self_footprint_radius_m      optional circular self-return envelope (metres)
+  self_radius_m                legacy alias for self_footprint_radius_m
   corridor_ground_filter       remove returns on the known corridor terrain
   lidar_height_m               lidar_link height above base_link
   ground_clearance_m           required protrusion above the terrain surface
@@ -36,6 +38,7 @@ def cloud_to_ranges(
     rmax=30.0,
     self_box=(-1.10, 0.25, -0.52, 0.52),
     self_radius=0.0,
+    self_footprint_radius=None,
     height_above_ground=None,
     ground_clearance=0.0,
     ground_obstacle_height=None,
@@ -58,11 +61,15 @@ def cloud_to_ranges(
             keep &= height_above_ground <= ground_obstacle_height
     xb0, xb1, yb0, yb1 = self_box
     r = np.hypot(x, y)
-    # Boundaries are part of the body too.  The old strict comparison leaked
-    # returns exactly on the configured V3 hull edge.  A radius is optional so
-    # V1/V2 keep their existing rectangular filter while V3 can cover its
-    # complete 1.75 m half-diagonal plus a small modelling margin.
+    # Boundaries are part of the body too. V1/V2 retain their rectangular
+    # filter; V3 adds a circular corner envelope with model tolerance.
     in_self_box = (x >= xb0) & (x <= xb1) & (y >= yb0) & (y <= yb1)
+    if self_radius < 0.0:
+        raise ValueError("self_radius must be non-negative")
+    if self_footprint_radius is not None:
+        if self_footprint_radius < 0.0:
+            raise ValueError("self_footprint_radius must be non-negative")
+        self_radius = max(self_radius, self_footprint_radius)
     in_self_radius = (self_radius > 0.0) & (r <= self_radius)
     keep &= ~(in_self_box | in_self_radius)
     keep &= (r >= rmin) & (r <= rmax)
@@ -142,7 +149,10 @@ def main():
             self.rmin = p("range_min_m", 0.3).value
             self.rmax = p("range_max_m", 30.0).value
             self.box = tuple(p("self_box_m", [-1.10, 0.25, -0.52, 0.52]).value)
-            self.radius = float(p("self_radius_m", 0.0).value)
+            self.radius = max(
+                float(p("self_radius_m", 0.0).value),
+                float(p("self_footprint_radius_m", 0.0).value),
+            )
             self.ground_filter = bool(p("corridor_ground_filter", False).value)
             self.lidar_height = float(p("lidar_height_m", 0.0).value)
             self.ground_clearance = float(p("ground_clearance_m", 0.0).value)

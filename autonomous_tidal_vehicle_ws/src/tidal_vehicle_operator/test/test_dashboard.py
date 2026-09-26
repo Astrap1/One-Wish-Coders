@@ -123,3 +123,34 @@ def test_dashboard_has_one_unified_terrain_and_route_panel() -> None:
     assert page.count('id="map"') == 1
     assert 'id="cost-map"' not in page
     assert "BARRIER A" in page and "BARRIER B" in page
+
+
+def test_dashboard_places_the_map_above_only_camera_and_controls() -> None:
+    page = web_dashboard.DASHBOARD_PAGE
+
+    map_position = page.index('id="map"')
+    assert page.index('id="mission-events"') < map_position
+    assert map_position < page.index('id="camera"')
+    assert map_position < page.index('id="remote-toggle"')
+
+
+def test_dashboard_restores_energy_fuel_and_reserve_windows() -> None:
+    page = web_dashboard.DASHBOARD_PAGE
+
+    for label in (
+        "Battery reserve",
+        "Fuel reserve",
+        "Return reserve",
+        "Predicted return demand",
+        "Tide safety window",
+    ):
+        assert label in page
+    for element_id in (
+        "battery",
+        "fuel",
+        "reserve",
+        "return-energy",
+        "return-eta",
+        "tide-window",
+    ):
+        assert f'id="{element_id}"' in page

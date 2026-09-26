@@ -57,12 +57,12 @@ def test_vehicle_body_returns_are_rejected() -> None:
     assert ranges[forward_index] == 2.0
 
 
-def test_v3_body_boundaries_and_corners_are_rejected() -> None:
-    """V3 returns previously leaked at a box edge and at a hull corner."""
+def test_self_filter_includes_box_edges_and_v3_corner_envelope() -> None:
+    """V3 must not plan around its own skirt/track corner returns."""
     points = np.array([
-        [-1.56, -0.11, -0.42],  # exactly on the configured rear boundary
-        [-0.99, 1.27, -0.43],   # outside the box but inside the footprint radius
-        [-2.10, 0.00, -0.40],   # genuine obstacle beyond the vehicle envelope
+        [-1.56, -0.11, -0.42],  # old V3 box edge: now inclusive
+        [-0.99, 1.27, -0.43],   # V3 outboard corner: inside 1.85 m envelope
+        [1.86, 0.0, -0.42],     # 1 cm outside the verified V3 envelope
     ])
 
     ranges, angle_min, increment = cloud_to_ranges(
@@ -73,11 +73,11 @@ def test_v3_body_boundaries_and_corners_are_rejected() -> None:
         rmin=0.3,
         rmax=30.0,
         self_box=(-1.56, 1.56, -0.95, 0.95),
-        self_radius=1.85,
+        self_footprint_radius=1.85,
     )
 
-    rear_index = min(719, int((np.pi - angle_min) / increment))
-    assert ranges[rear_index] == 2.10
+    forward_index = int((0.0 - angle_min) / increment)
+    assert ranges[forward_index] == 1.86
     assert np.count_nonzero(np.isfinite(ranges)) == 1
 
 

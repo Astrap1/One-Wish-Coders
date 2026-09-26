@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "lidar_scan_node.py"
@@ -11,6 +12,7 @@ SPEC = importlib.util.spec_from_file_location("lidar_scan_node", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 cloud_to_ranges = MODULE.cloud_to_ranges
+height_above_corridor_ground = MODULE.height_above_corridor_ground
 
 
 def test_ground_returns_are_rejected_but_tall_obstacles_remain() -> None:
@@ -53,3 +55,104 @@ def test_vehicle_body_returns_are_rejected() -> None:
 
     forward_index = int((0.0 - angle_min) / increment)
     assert ranges[forward_index] == 2.0
+
+
+def test_v3_body_boundaries_and_corners_are_rejected() -> None:
+    """V3 returns previously leaked at a box edge and at a hull corner."""
+    points = np.array([
+        [-1.56, -0.11, -0.42],  # exactly on the configured rear boundary
+        [-0.99, 1.27, -0.43],   # outside the box but inside the footprint radius
+        [-2.10, 0.00, -0.40],   # genuine obstacle beyond the vehicle envelope
+    ])
+
+    ranges, angle_min, increment = cloud_to_ranges(
+        points,
+        bins=720,
+        min_h=-1.00,
+        max_h=0.50,
+        rmin=0.3,
+        rmax=30.0,
+        self_box=(-1.56, 1.56, -0.95, 0.95),
+        self_radius=1.85,
+    )
+
+    rear_index = min(719, int((np.pi - angle_min) / increment))
+    assert ranges[rear_index] == 2.10
+    assert np.count_nonzero(np.isfinite(ranges)) == 1
+
+
+def test_v3_filter_keeps_mapped_obstacles_and_rejects_terrain_returns() -> None:
+    """V3 keeps low collision geometry, not ground or overhead visual canopy."""
+    points = np.array([
+        [4.0, 0.0, -1.45],    # low rock/root collision geometry
+        [0.0, 6.0, -0.70],    # mangrove trunk collision proxy
+        [-8.0, 0.0, -0.20],   # terrain/slope return
+        [7.0, 0.0, 0.20],     # visual-only overhanging canopy
+    ])
+
+    ranges, _, _ = cloud_to_ranges(
+        points,
+        bins=720,
+        min_h=-1.70,
+        max_h=0.50,
+        rmin=0.3,
+        rmax=30.0,
+        self_box=(-1.56, 1.56, -0.95, 0.95),
+        self_radius=1.85,
+        height_above_ground=np.array([0.80, 1.10, 0.05, 1.90]),
+        ground_clearance=0.30,
+        ground_obstacle_height=1.30,
+    )
+
+    assert sorted(ranges[np.isfinite(ranges)]) == [4.0, 6.0]
+
+
+def test_corridor_ground_filter_handles_uphill_returns() -> None:
+    """World-aware filtering rejects slope points even when lidar-frame z is high."""
+    points = np.array([
+        [-2.4, 0.0, 0.45],  # raised terrain behind a vehicle descending the bank
+        [4.0, 0.0, 0.10],   # obstacle protruding above the surface ahead
+    ])
+    # A synthetic base pose chosen so the first transformed point lies on the
+    # corridor profile.  Feed explicit heights to isolate scan filtering.
+    above_ground = np.array([0.05, 0.80])
+
+    ranges, _, _ = cloud_to_ranges(
+        points,
+        bins=720,
+        min_h=-0.35,
+        max_h=0.50,
+        rmin=0.3,
+        rmax=30.0,
+        self_box=(-1.56, 1.56, -0.95, 0.95),
+        self_radius=1.85,
+        height_above_ground=above_ground,
+        ground_clearance=0.30,
+        ground_obstacle_height=1.30,
+    )
+
+    assert sorted(ranges[np.isfinite(ranges)]) == [4.0]
+
+
+def test_corridor_ground_height_transform_uses_vehicle_pose() -> None:
+    points = np.array([[0.0, 0.0, -1.82], [0.0, 0.0, -0.82]])
+    heights = height_above_corridor_ground(
+        points,
+        base_position=(52.0, 0.0, -2.75),
+        base_orientation=(0.0, 0.0, 0.0, 1.0),
+        lidar_height=1.82,
+    )
+
+    assert heights == pytest.approx([0.25, 1.25])
+
+
+def test_corridor_ground_height_transform_ignores_nonfinite_points() -> None:
+    heights = height_above_corridor_ground(
+        np.array([[0.0, 0.0, -0.82], [np.inf, 0.0, 0.0]]),
+        base_position=(52.0, 0.0, -2.75),
+        base_orientation=(0.0, 0.0, 0.0, 1.0),
+        lidar_height=1.82,
+    )
+
+    assert heights[0] == pytest.approx(1.25)
+    assert np.isinf(heights[1])

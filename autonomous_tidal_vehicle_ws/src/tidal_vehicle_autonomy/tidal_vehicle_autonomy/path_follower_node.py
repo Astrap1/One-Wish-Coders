@@ -18,10 +18,13 @@ from .path_follower_core import (
     Waypoint,
     compute_command,
     curvature_speed_limit,
+    damped_yaw_command,
     lateral_accel_yaw_rate_limit,
     normalise_angle,
     path_points_ahead,
     stopping_reach,
+    turn_braking_command,
+    upcoming_curve_speed_limit,
     zone_speed_limit,
 )
 
@@ -62,6 +65,12 @@ class PathFollowerNode(Node):
             self._zone_limits = []
         self._brake_decel = self._parameter("brake_decel_mps2")
         self._lateral_accel = self._parameter("lateral_accel_limit_mps2")
+        self._yaw_rate_damping = self._parameter("yaw_rate_damping")
+        self._corner_sample_distance = self._parameter(
+            "corner_preview_sample_distance_m"
+        )
+        self._turn_brake_angle = self._parameter("turn_brake_angle_rad")
+        self._turn_brake_speed = self._parameter("turn_brake_speed_mps")
         self._lookahead_time = self._parameter("lookahead_time_s")
         self._reaction_time = self._parameter("reaction_time_s")
         self._obstacle_detection_range = self._parameter(
@@ -71,6 +80,14 @@ class PathFollowerNode(Node):
         self._costmap: tuple | None = None
         if self._lookahead_time < 0.0 or self._reaction_time < 0.0:
             raise ValueError("lookahead_time_s and reaction_time_s must be non-negative")
+        if self._yaw_rate_damping < 0.0:
+            raise ValueError("yaw_rate_damping must be non-negative")
+        if self._corner_sample_distance < 0.0:
+            raise ValueError("corner_preview_sample_distance_m must be non-negative")
+        if self._turn_brake_angle < 0.0 or self._turn_brake_angle > 3.141592653589793:
+            raise ValueError("turn_brake_angle_rad must be in the range [0, pi]")
+        if self._turn_brake_speed < 0.0:
+            raise ValueError("turn_brake_speed_mps must be non-negative")
         if self._obstacle_detection_range < 0.0:
             raise ValueError("obstacle_detection_range_m must be non-negative")
         if self._obstacle_clearance < 0.0:
@@ -115,6 +132,17 @@ class PathFollowerNode(Node):
             "zone_speed_limits_mps": [0.0],
             "brake_decel_mps2": 1.0,
             "lateral_accel_limit_mps2": 0.0,
+            # Feedback from measured yaw rate.  Disabled by default so the
+            # Version 1/2 controller remains unchanged; V3 enables it to stop
+            # its larger body continuing through a requested turn.
+            "yaw_rate_damping": 0.0,
+            # Preview route curvature over the stopping horizon. Disabled for
+            # V1/V2; V3 uses it to slow before, not only during, a sharp turn.
+            "corner_preview_sample_distance_m": 0.0,
+            # V3 can use reversible thrust to arrest momentum before a large
+            # recovery turn. Both are zero by default, leaving V1/V2 unchanged.
+            "turn_brake_angle_rad": 0.0,
+            "turn_brake_speed_mps": 0.0,
             "lookahead_time_s": 0.0,
             "reaction_time_s": 1.0,
             "obstacle_detection_range_m": 0.0,
@@ -173,16 +201,34 @@ class PathFollowerNode(Node):
         )
         self._progress_index = command.progress_index
         linear_x = command.linear_x
-        if self._lateral_accel > 0.0 and command.target_index is not None:
-            tx, ty = self._path[command.target_index]
-            error = normalise_angle(atan2(ty - pose.y, tx - pose.x) - pose.yaw)
-            curve = curvature_speed_limit(error, config.lookahead_distance, self._lateral_accel)
+        measured = self._odometry.twist.twist.linear
+        measured_speed = hypot(measured.x, measured.y)
+        heading_error = 0.0
+        if self._lateral_accel > 0.0 and command.target is not None:
+            tx, ty = command.target
+            heading_error = normalise_angle(
+                atan2(ty - pose.y, tx - pose.x) - pose.yaw
+            )
+            curve = curvature_speed_limit(
+                heading_error, config.lookahead_distance, self._lateral_accel
+            )
             if curve is not None:
                 linear_x = min(linear_x, curve)
-        angular_z = command.angular_z
-        if self._lateral_accel > 0.0 and linear_x > 0.0:
-            measured = self._odometry.twist.twist.linear
-            reference_speed = max(linear_x, hypot(measured.x, measured.y))
+        linear_x = turn_braking_command(
+            linear_x,
+            heading_error,
+            measured_speed,
+            self._turn_brake_angle,
+            self._turn_brake_speed,
+        )
+        angular_z = damped_yaw_command(
+            command.angular_z,
+            self._odometry.twist.twist.angular.z,
+            self._yaw_rate_damping,
+            config.max_angular_speed,
+        )
+        if self._lateral_accel > 0.0 and measured_speed > 0.0:
+            reference_speed = max(abs(linear_x), measured_speed)
             yaw_limit = lateral_accel_yaw_rate_limit(
                 reference_speed, self._lateral_accel
             )
@@ -238,6 +284,29 @@ class PathFollowerNode(Node):
             zone = zone_speed_limit(costs, self._zone_limits)
             if zone is not None:
                 max_speed = max(0.05, min(max_speed, zone))
+        if self._corner_sample_distance > 0.0 and self._lateral_accel > 0.0:
+            step_m = 0.5
+            reach = stopping_reach(
+                speed, self._brake_decel, reaction_s=self._reaction_time
+            )
+            preview = path_points_ahead(
+                pose,
+                self._path,
+                self._progress_index,
+                reach + self._corner_sample_distance,
+                step_m=step_m,
+            )
+            curve = upcoming_curve_speed_limit(
+                preview,
+                step_m=step_m,
+                sample_distance_m=self._corner_sample_distance,
+                lateral_accel_mps2=self._lateral_accel,
+                brake_decel_mps2=self._brake_decel,
+                current_speed_mps=speed,
+                reaction_time_s=self._reaction_time,
+            )
+            if curve is not None:
+                max_speed = max(0.05, min(max_speed, curve))
         if max_speed < self._config.max_linear_speed:
             changes["max_linear_speed"] = max_speed
         return replace(self._config, **changes) if changes else self._config

@@ -232,6 +232,50 @@ def test_lidar_obstacle_causes_detour_and_clear_scan_restores_route() -> None:
         rclpy.shutdown()
 
 
+def test_lidar_hit_on_a_mapped_obstacle_does_not_add_a_second_overlay() -> None:
+    rclpy.init()
+    planner, publisher, capture, executor = _planner_test_nodes()
+
+    try:
+        costmap_publisher = publisher.create_publisher(
+            OccupancyGrid, "/terrain_costmap", 10
+        )
+        odom_publisher = publisher.create_publisher(Odometry, "/odom", 10)
+        goal_publisher = publisher.create_publisher(
+            PoseStamped, "/mission_goal", 10
+        )
+        scan_publisher = publisher.create_publisher(LaserScan, "/scan", 10)
+        _spin_for(executor, 0.1)
+
+        # The static map's middle cell is already no-go.  The planner's
+        # private clearance map covers its collision footprint before A*.
+        costs = [0] * 63
+        costs[3 * 9 + 4] = 100
+        costmap_publisher.publish(_costmap(costs, width=9, height=7))
+        odom_publisher.publish(_odometry(x_m=0.5, y_m=3.5))
+        goal_publisher.publish(_goal(x_m=8.5, y_m=3.5))
+        _spin_for(executor)
+
+        static_detour = capture.paths[-1]
+        assert all(
+            (pose.pose.position.x, pose.pose.position.y) != (4.5, 3.5)
+            for pose in static_detour.poses
+        )
+
+        # Two scans would normally confirm a new dynamic hit. They must not
+        # produce an overlay when the endpoint is already statically covered.
+        scan_publisher.publish(_scan(4.0))
+        _spin_for(executor)
+        scan_publisher.publish(_scan(4.0))
+        _spin_for(executor)
+
+        assert planner._dynamic_obstacles == frozenset()
+        assert capture.paths[-1] is static_detour
+    finally:
+        _destroy_test_nodes(planner, publisher, capture, executor)
+        rclpy.shutdown()
+
+
 def test_safety_request_switches_to_fresh_latched_return_route() -> None:
     rclpy.init()
     planner, publisher, capture, executor = _planner_test_nodes()

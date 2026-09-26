@@ -18,7 +18,7 @@ Terrain cost-map encoding is fixed as follows:
 
 If replanning makes a previously published route unsafe, the planner publishes an empty path to invalidate it.
 
-The Simulation-owned /terrain_costmap is never modified. Before A*, its static no-go and unknown cells are inflated in a private planning copy by the selected vehicle's clearance radius. LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Raw hit cells must be detected in two consecutive scans before they are inflated by the same radius and added as a temporary overlay; five misses clear a hit. New cells replan only when they intersect the active outbound/return route. Unrelated removals retain the current safe detour, while a cleared overlay or blocked mission triggers route recovery.
+The Simulation-owned /terrain_costmap is never modified. Before A*, its static no-go and unknown cells are inflated in a private planning copy by the selected vehicle's clearance radius. LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. A scan return already inside that static exclusion area is not added again: mapped rocks and trunks remain visible, but are not double-inflated. Unmapped raw hit cells must be detected in two consecutive scans before they are inflated by the same radius and added as a temporary overlay; five misses clear a hit. New cells replan only when they intersect the active outbound/return route. Unrelated removals retain the current safe detour, while a cleared overlay or blocked mission triggers route recovery.
 
 The active route remains geometrically stable while the vehicle follows it. Odometry movement updates Safety's prospective return path without rebuilding the follower's active path, and repeated cost maps with unchanged geometry and costs refresh route timestamps without rerunning A*. An actual terrain-cost change, a relevant confirmed obstacle, a new goal or a Safety return request still produces a fresh active route.
 
@@ -64,7 +64,8 @@ The path follower listens to /planned_path and /odom, then publishes forward and
 
 The controller:
 
-- selects a lookahead point in front of the vehicle;
+- projects the vehicle onto the safe route corridor and interpolates a target
+  ahead along it, using a speed-scaled lookahead on Version 3;
 - turns toward that point;
 - stops forward motion while the heading error is large;
 - slows near the final goal;
@@ -82,27 +83,29 @@ Path-follower parameters:
 | --- | ---: | --- |
 | control_rate_hz | 10.0 | Proposed-command publication rate. |
 | max_linear_speed | 0.8 m/s | Maximum forward proposal. |
-| max_angular_speed | 1.0 rad/s | Maximum turning proposal. |
+| max_angular_speed | 0.45 rad/s | Maximum turning proposal. |
 | lookahead_distance | 0.75 m | Distance used to select the tracking point. |
 | goal_tolerance | 0.25 m | Distance at which the goal counts as reached. |
-| heading_gain | 1.5 | Proportional turning gain. |
+| heading_gain | 0.9 | Proportional turning gain. |
 | slow_down_distance | 1.0 m | Distance over which forward speed reduces near the goal. |
-| rotate_in_place_angle | 0.7 rad | Heading error that stops forward motion while turning. |
+| rotate_in_place_angle | 1.05 rad | Heading error that stops forward motion while turning. |
 | odom_timeout | 0.5 s | Maximum age of odometry before proposing a stop. |
 | zone_speed_limits_mps | [0.0] | Four terrain-band limits; disabled by default. |
 | brake_decel_mps2 | 1.0 m/s² | Shared zone/sensor stopping assumption. |
 | lateral_accel_limit_mps2 | 0.0 | Curve and moving-yaw limit; disabled by default. |
+| yaw_rate_damping | 0.0 | Measured-yaw feedback used to settle turns; disabled by default. |
+| corner_preview_sample_distance_m | 0.0 m | Route-curvature preview used to brake before turns; disabled by default. |
 | lookahead_time_s | 0.0 s | Speed-scaled preview; disabled by default. |
 | reaction_time_s | 1.0 s | Reaction time included in stopping reach. |
 | obstacle_detection_range_m | 0.0 m | Sensor-based speed ceiling; disabled by default. |
 | obstacle_clearance_m | 0.0 m | Clearance subtracted from usable detection range. |
 
-V3 overrides these with a 1.5 s preview, 1.0 m/s² lateral limit, 0.62 rad/s yaw ceiling, 8 m final slowdown, 30 m detection and 2 m clearance. While moving, yaw is additionally capped so `speed × |yaw_rate|` stays within the lateral-acceleration limit.
+V3 overrides these with a 3.0 m minimum lookahead and 1.8 s speed-scaled preview, 3.0 m route-curvature samples over the current stopping-distance horizon, a 0.7 m/s² lateral limit, 0.45 rad/s yaw ceiling, 0.6 measured-yaw damping, 8 m final slowdown, 30 m detection and 2 m clearance. It brakes before upcoming sharp turns and, at a 0.45 rad route-heading error while still moving, proposes up to 0.8 m/s reverse thrust to arrest momentum before the recovery turn. It continues enforcing the curve limit while turning, and stops forward motion for heading errors of 0.70 rad or more. Safety remains the only `/cmd_vel` publisher and may clamp that proposal.
 
 ## Remaining milestones
 
-1. Re-run the V3 corridor mission after Person 3 expands the cost-100 footprints to match the actual mangrove-root and rock collision/LiDAR extents.
-2. Verify the final 0.3 m delivery/HOME event tolerance in that corrected corridor; the static V3 integration mission already completes.
+1. Re-run the V3 corridor mission with the inclusive/radial self filter and the conservative steering profile, recording path error, yaw overshoot and collisions.
+2. Verify the final 0.3 m delivery/HOME event tolerance in the corrected corridor; the static V3 integration mission already completes.
 3. Keep the sensor-safe speed and braking assumptions aligned if Person 4 changes LiDAR range, footprint or braking performance.
 
 ## Safety-return integration

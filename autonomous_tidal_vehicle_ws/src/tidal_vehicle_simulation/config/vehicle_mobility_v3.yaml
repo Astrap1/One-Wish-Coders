@@ -62,13 +62,25 @@ lidar_scan:
   ros__parameters:
     use_sim_time: true
     bins: 720                      # 0.5 deg
-    # The LiDAR mast is 1.82 m above base_link; -1.00 m keeps Version 2's rule of
-    # ignoring returns in the lowest ~0.82 m (ground and terrain texture).
-    min_height_m: -1.00
+    # The terrain-relative filter below rejects the slope, so retain the low
+    # beams needed to see rocks and roots as well as trunk collision proxies.
+    min_height_m: -1.70
     max_height_m: 0.50
     range_min_m: 0.3
     range_max_m: 30.0
-    self_box_m: [-1.56, 1.56, -0.95, 0.95]   # whole vehicle in lidar_link
+    self_box_m: [-1.56, 1.56, -0.95, 0.95]   # inclusive hull/fan bounds in lidar_link
+    # The 3.0 x 1.8 m footprint has a 1.75 m half-diagonal.  The extra 0.10 m
+    # covers moving appendages/model tolerances without hiding external objects.
+    self_radius_m: 1.85
+    # The corridor terrain is piecewise sloped, so a LiDAR-relative z cutoff
+    # alone cannot distinguish an uphill surface from an obstacle.  Transform
+    # returns with odometry and require a protrusion above the known surface.
+    corridor_ground_filter: true
+    lidar_height_m: 1.82
+    ground_clearance_m: 0.30
+    # Keep the 2D navigation slice within the hull/rock/trunk collision zone.
+    # This rejects visual-only mangrove canopy above the vehicle.
+    ground_obstacle_height_m: 1.30
 
 terrain_costmap:
   ros__parameters:

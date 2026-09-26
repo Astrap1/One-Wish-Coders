@@ -322,6 +322,19 @@ class GlobalPlannerNode(Node):
             self.get_logger().error(f"Ignoring invalid LiDAR scan: {error}")
             return
 
+        # Simulation's terrain map already contains every surveyed collision
+        # proxy, expanded by the vehicle clearance before A*. A scan hit in
+        # that static exclusion area confirms it is visible, but adding a
+        # second temporary inflation would grow the same obstacle again and
+        # can incorrectly close an otherwise valid detour. Keep the overlay
+        # for genuinely unmapped/new obstacles only.
+        if self._static_clearance_costmap is not None:
+            obstacles = frozenset(
+                cell
+                for cell in obstacles
+                if self._static_clearance_costmap.traversable(cell)
+            )
+
         stable_hits = self._obstacle_filter.update(obstacles)
         stable_obstacles = inflate_obstacle_cells(
             self._base_costmap,

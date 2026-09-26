@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import atan2, cos, hypot, pi, sin
+from math import atan2, cos, hypot, pi, sin, sqrt
 from typing import Sequence
 
 from .motion_limits import stopping_distance
@@ -52,6 +52,7 @@ class MotionCommand:
     target_index: int | None
     progress_index: int
     goal_reached: bool
+    target: Waypoint | None = None
 
 
 def compute_command(
@@ -62,25 +63,24 @@ def compute_command(
 ) -> MotionCommand:
     """Return a bounded forward and turning proposal for the current path."""
     if not waypoints:
-        return MotionCommand(0.0, 0.0, None, 0, False)
+        return MotionCommand(0.0, 0.0, None, 0, False, None)
 
     last_index = len(waypoints) - 1
     start_index = min(max(progress_index, 0), last_index)
     goal_distance = _distance(pose, waypoints[last_index])
     if goal_distance <= config.goal_tolerance:
-        return MotionCommand(0.0, 0.0, last_index, last_index, True)
+        return MotionCommand(
+            0.0, 0.0, last_index, last_index, True, waypoints[last_index]
+        )
 
-    nearest_index = min(
-        range(start_index, len(waypoints)),
-        key=lambda index: _distance(pose, waypoints[index]),
+    target, target_index, route_index = _target_along_path(
+        pose,
+        waypoints,
+        start_index,
+        config.lookahead_distance,
     )
-    target_index = last_index
-    for index in range(nearest_index, len(waypoints)):
-        if _distance(pose, waypoints[index]) >= config.lookahead_distance:
-            target_index = index
-            break
 
-    target_x, target_y = waypoints[target_index]
+    target_x, target_y = target
     target_heading = atan2(target_y - pose.y, target_x - pose.x)
     heading_error = normalise_angle(target_heading - pose.yaw)
     angular_z = _clamp(
@@ -96,7 +96,9 @@ def compute_command(
         heading_scale = max(0.0, cos(heading_error))
         linear_x = config.max_linear_speed * distance_scale * heading_scale
 
-    return MotionCommand(linear_x, angular_z, target_index, nearest_index, False)
+    return MotionCommand(
+        linear_x, angular_z, target_index, route_index, False, target
+    )
 
 
 def normalise_angle(angle: float) -> float:
@@ -106,6 +108,65 @@ def normalise_angle(angle: float) -> float:
 
 def _distance(pose: Pose2D, waypoint: Waypoint) -> float:
     return hypot(waypoint[0] - pose.x, waypoint[1] - pose.y)
+
+
+def _target_along_path(
+    pose: Pose2D,
+    waypoints: Sequence[Waypoint],
+    start_index: int,
+    lookahead_distance: float,
+) -> tuple[Waypoint, int, int]:
+    """Project onto the route, then interpolate a target along its arc length.
+
+    The route is a safe corridor centreline, not a list of points the vehicle
+    must touch.  Interpolation avoids snapping steering from one grid-cell
+    centre to the next, while the caller's speed-scaled lookahead determines
+    how far ahead the local trajectory should aim.
+    """
+    last_index = len(waypoints) - 1
+    if last_index == 0 or start_index >= last_index:
+        return waypoints[last_index], last_index, last_index
+
+    first_segment = min(max(start_index, 0), last_index - 1)
+    projection = waypoints[first_segment]
+    projection_segment = first_segment
+    best_distance = float("inf")
+    for segment_index in range(first_segment, last_index):
+        start = waypoints[segment_index]
+        end = waypoints[segment_index + 1]
+        dx = end[0] - start[0]
+        dy = end[1] - start[1]
+        length_squared = dx * dx + dy * dy
+        if length_squared <= 1.0e-12:
+            candidate = start
+        else:
+            fraction = (
+                (pose.x - start[0]) * dx + (pose.y - start[1]) * dy
+            ) / length_squared
+            fraction = _clamp(fraction, 0.0, 1.0)
+            candidate = (start[0] + fraction * dx, start[1] + fraction * dy)
+        distance = hypot(candidate[0] - pose.x, candidate[1] - pose.y)
+        if distance < best_distance:
+            best_distance = distance
+            projection = candidate
+            projection_segment = segment_index
+
+    remaining = lookahead_distance
+    current = projection
+    for target_index in range(projection_segment + 1, len(waypoints)):
+        endpoint = waypoints[target_index]
+        segment_length = hypot(endpoint[0] - current[0], endpoint[1] - current[1])
+        if segment_length >= remaining and segment_length > 1.0e-12:
+            fraction = remaining / segment_length
+            target = (
+                current[0] + fraction * (endpoint[0] - current[0]),
+                current[1] + fraction * (endpoint[1] - current[1]),
+            )
+            return target, target_index, projection_segment
+        remaining -= segment_length
+        current = endpoint
+
+    return waypoints[last_index], last_index, projection_segment
 
 
 def _clamp(value: float, lower: float, upper: float) -> float:
@@ -176,6 +237,64 @@ def curvature_speed_limit(heading_error: float, lookahead_m: float,
     return (lateral_accel / curvature) ** 0.5
 
 
+def upcoming_curve_speed_limit(
+    points: Sequence[Waypoint],
+    step_m: float,
+    sample_distance_m: float,
+    lateral_accel_mps2: float,
+    brake_decel_mps2: float,
+    current_speed_mps: float,
+    reaction_time_s: float,
+) -> float | None:
+    """Return a speed ceiling that begins braking before route curvature.
+
+    Curvature is estimated from three route samples separated by
+    ``sample_distance_m``. For each upcoming curve, the ceiling is the speed
+    from which the vehicle can decelerate to that curve's lateral-acceleration
+    limit over the available distance after reaction travel.
+    """
+    if (
+        len(points) < 3
+        or step_m <= 0.0
+        or sample_distance_m <= 0.0
+        or lateral_accel_mps2 <= 0.0
+        or brake_decel_mps2 <= 0.0
+    ):
+        return None
+
+    stride = max(1, int(round(sample_distance_m / step_m)))
+    if len(points) <= 2 * stride:
+        return None
+
+    best = None
+    reaction_distance = max(0.0, current_speed_mps) * max(0.0, reaction_time_s)
+    for centre in range(stride, len(points) - stride):
+        first = points[centre - stride]
+        middle = points[centre]
+        last = points[centre + stride]
+        a = hypot(middle[0] - first[0], middle[1] - first[1])
+        b = hypot(last[0] - middle[0], last[1] - middle[1])
+        c = hypot(last[0] - first[0], last[1] - first[1])
+        denominator = a * b * c
+        if denominator <= 1.0e-9:
+            continue
+        cross = abs(
+            (middle[0] - first[0]) * (last[1] - first[1])
+            - (middle[1] - first[1]) * (last[0] - first[0])
+        )
+        curvature = 2.0 * cross / denominator
+        if curvature <= 1.0e-6:
+            continue
+        curve_speed = sqrt(lateral_accel_mps2 / curvature)
+        distance_to_curve = centre * step_m
+        available = max(0.0, distance_to_curve - reaction_distance)
+        approach_speed = sqrt(
+            curve_speed * curve_speed + 2.0 * brake_decel_mps2 * available
+        )
+        best = approach_speed if best is None else min(best, approach_speed)
+    return best
+
+
 def lateral_accel_yaw_rate_limit(
     speed_mps: float, lateral_accel_mps2: float
 ) -> float | None:
@@ -184,3 +303,45 @@ def lateral_accel_yaw_rate_limit(
     if speed < 1.0e-6 or lateral_accel_mps2 <= 0.0:
         return None
     return lateral_accel_mps2 / speed
+
+
+def damped_yaw_command(
+    requested_yaw_rate: float,
+    measured_yaw_rate: float,
+    damping_gain: float,
+    maximum_yaw_rate: float,
+) -> float:
+    """Damp measured rotation so a high-inertia craft does not over-turn.
+
+    A zero gain preserves the original controller.  A positive gain can ask
+    for counter-yaw when the vehicle is still rotating after its heading error
+    has fallen, which is the behaviour needed to settle a hovercraft turn.
+    """
+    if damping_gain < 0.0:
+        raise ValueError("damping_gain must not be negative")
+    if maximum_yaw_rate <= 0.0:
+        raise ValueError("maximum_yaw_rate must be positive")
+    return _clamp(
+        requested_yaw_rate - damping_gain * measured_yaw_rate,
+        -maximum_yaw_rate,
+        maximum_yaw_rate,
+    )
+
+
+def turn_braking_command(
+    requested_linear_speed: float,
+    heading_error: float,
+    measured_speed: float,
+    turn_angle: float,
+    brake_speed: float,
+) -> float:
+    """Request bounded reverse thrust before a moving craft turns too far.
+
+    Disabled when either V3-only tuning value is zero.  This is a proposed
+    command only: the Safety supervisor still owns the final command limit.
+    """
+    if turn_angle <= 0.0 or brake_speed <= 0.0 or measured_speed <= 0.0:
+        return requested_linear_speed
+    if abs(heading_error) < turn_angle:
+        return requested_linear_speed
+    return -min(brake_speed, measured_speed)

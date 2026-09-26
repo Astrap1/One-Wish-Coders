@@ -15,6 +15,7 @@ from tidal_vehicle_autonomy.path_follower_core import (
     path_points_ahead,
     Pose2D,
     stopping_reach,
+    upcoming_curve_speed_limit,
     zone_speed_limit,
 )
 
@@ -72,3 +73,35 @@ def test_lateral_acceleration_caps_yaw_rate_while_moving() -> None:
     assert abs(lateral_accel_yaw_rate_limit(2.8, 1.0) - (1.0 / 2.8)) < 1e-9
     assert lateral_accel_yaw_rate_limit(0.0, 1.0) is None
     assert lateral_accel_yaw_rate_limit(2.8, 0.0) is None
+
+
+def test_upcoming_curve_preview_does_not_limit_a_straight_route() -> None:
+    points = [(float(x), 0.0) for x in range(10)]
+
+    assert upcoming_curve_speed_limit(
+        points, 1.0, 2.0, 0.7, 1.0, 4.0, 1.0
+    ) is None
+
+
+def test_upcoming_curve_preview_slows_before_a_sharp_turn() -> None:
+    near_corner = [
+        (0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (3.0, 0.0),
+        (3.0, 1.0), (3.0, 2.0), (3.0, 3.0),
+    ]
+    far_corner = [
+        (0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (3.0, 0.0),
+        (4.0, 0.0), (5.0, 0.0), (6.0, 0.0), (7.0, 0.0),
+        (8.0, 0.0), (8.0, 1.0), (8.0, 2.0), (8.0, 3.0),
+    ]
+
+    near_limit = upcoming_curve_speed_limit(
+        near_corner, 1.0, 2.0, 0.7, 1.0, 4.0, 1.0
+    )
+    far_limit = upcoming_curve_speed_limit(
+        far_corner, 1.0, 2.0, 0.7, 1.0, 4.0, 1.0
+    )
+
+    assert near_limit is not None
+    assert far_limit is not None
+    assert near_limit < far_limit
+    assert near_limit < 2.0

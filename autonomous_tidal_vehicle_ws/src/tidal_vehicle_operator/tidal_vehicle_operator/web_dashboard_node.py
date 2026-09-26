@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import io
+from queue import Empty, Queue
 import threading
 import time
 
@@ -13,12 +14,18 @@ from sensor_msgs.msg import Image, LaserScan
 from PIL import Image as PILImage
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from std_msgs.msg import Bool, String
 
 from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState, VehicleHealth
 
 from .operator_dashboard import build_dashboard_payload
-from .web_dashboard import update_camera_frame, update_dashboard_state, serve_dashboard
+from .web_dashboard import (
+    set_remote_request_handler,
+    update_camera_frame,
+    update_dashboard_state,
+    serve_dashboard,
+)
 
 
 class BrowserDashboardNode(Node):
@@ -51,6 +58,11 @@ class BrowserDashboardNode(Node):
         self._vehicle_y = 0.0
         self._planned_path: list[dict[str, float]] = []
         self._return_path: list[dict[str, float]] = []
+        self._remote_enabled = False
+        self._remote_action = "stop"
+        self._remote_action_at = 0.0
+        self._remote_requests: Queue[dict[str, object]] = Queue()
+        self._remote_timeout_s = 0.35
 
         self.create_subscription(String, "/mission_event", self._on_mission_event, 10)
         self.create_subscription(SafetyStatus, "/safety_status", self._on_safety_status, 10)
@@ -63,7 +75,93 @@ class BrowserDashboardNode(Node):
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd_vel, 10)
         self.create_subscription(Odometry, "/odom", self._on_odom, 10)
         self.create_subscription(Image, "/camera/image_raw", self._on_camera, 10)
+        mode_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self._remote_mode_pub = self.create_publisher(Bool, "/operator_remote_enabled", mode_qos)
+        self._remote_command_pub = self.create_publisher(Twist, "/operator_cmd_vel", 10)
+        self._scenario_event_pub = self.create_publisher(String, "/scenario_event", 10)
+        self._mission_goal_pub = self.create_publisher(PoseStamped, "/mission_goal", 10)
+        set_remote_request_handler(self._queue_remote_request)
         self.create_timer(1.0, self._publish_state)
+        self.create_timer(0.1, self._remote_control_timer)
+
+    def _queue_remote_request(self, request: dict[str, object]) -> bool:
+        """Validate browser input in the HTTP thread, then handle it in ROS."""
+        kind = request.get("kind")
+        if kind == "mode" and isinstance(request.get("enabled"), bool):
+            self._remote_requests.put(request)
+            return True
+        if kind == "motion" and request.get("action") in {
+            "forward", "reverse", "left", "right", "stop",
+        }:
+            self._remote_requests.put(request)
+            return True
+        if kind == "abort":
+            self._remote_requests.put(request)
+            return True
+        if (
+            kind == "goal"
+            and isinstance(request.get("x"), (int, float))
+            and isinstance(request.get("y"), (int, float))
+            and math.isfinite(float(request["x"]))
+            and math.isfinite(float(request["y"]))
+        ):
+            self._remote_requests.put(request)
+            return True
+        return False
+
+    def _remote_control_timer(self) -> None:
+        while True:
+            try:
+                request = self._remote_requests.get_nowait()
+            except Empty:
+                break
+            kind = request["kind"]
+            if kind == "mode":
+                self._remote_enabled = bool(request["enabled"])
+                self._remote_action = "stop"
+                self._remote_action_at = time.monotonic()
+                self._remote_mode_pub.publish(Bool(data=self._remote_enabled))
+                self._remote_command_pub.publish(Twist())
+            elif kind == "motion" and self._remote_enabled:
+                self._remote_action = str(request["action"])
+                self._remote_action_at = time.monotonic()
+                if self._remote_action == "stop":
+                    self._remote_command_pub.publish(Twist())
+            elif kind == "abort":
+                self._remote_enabled = False
+                self._remote_action = "stop"
+                self._remote_mode_pub.publish(Bool(data=False))
+                self._remote_command_pub.publish(Twist())
+                self._scenario_event_pub.publish(String(data="operator_abort"))
+            elif kind == "goal":
+                goal = PoseStamped()
+                goal.header.stamp = self.get_clock().now().to_msg()
+                goal.header.frame_id = "map"
+                goal.pose.position.x = float(request["x"])
+                goal.pose.position.y = float(request["y"])
+                goal.pose.orientation.w = 1.0
+                self._mission_goal_pub.publish(goal)
+
+        if not self._remote_enabled or self._remote_action == "stop":
+            return
+        if time.monotonic() - self._remote_action_at > self._remote_timeout_s:
+            self._remote_action = "stop"
+            self._remote_command_pub.publish(Twist())
+            return
+        command = Twist()
+        if self._remote_action == "forward":
+            command.linear.x = 0.8
+        elif self._remote_action == "reverse":
+            command.linear.x = -0.5
+        elif self._remote_action == "left":
+            command.angular.z = 0.6
+        elif self._remote_action == "right":
+            command.angular.z = -0.6
+        self._remote_command_pub.publish(command)
 
     def _on_mission_event(self, message: String) -> None:
         event = message.data.strip()
@@ -191,6 +289,7 @@ class BrowserDashboardNode(Node):
                 "return_path": self._return_path,
             },
         )
+        payload["remote_enabled"] = self._remote_enabled
         update_dashboard_state(**payload)
 
 
@@ -204,6 +303,7 @@ def main(args: list[str] | None = None) -> None:
     except KeyboardInterrupt:
         pass
     finally:
+        set_remote_request_handler(None)
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()

@@ -10,10 +10,12 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/terrain_state` | Simulation | Autonomy, Safety | `tidal_vehicle_interfaces/TerrainState` | Tide and traversability estimate in `map`. In the default tidal-corridor launch, `tide_manager.py` is the sole publisher. The vehicle's 10 Hz low-tide placeholder is enabled only with `tide:=false` for static test worlds. |
 | `/terrain_costmap` | Simulation | Autonomy, Safety, Operator | `nav_msgs/OccupancyGrid` | Current map-frame terrain-risk map. In the default tidal-corridor launch, `tide_manager.py` publishes it from the same channel/mud rectangles as Gazebo `TerrainZones`; `tide:=false` selects the static test-world map. |
 | `/vehicle_health` | Simulation (`vehicle_mobility_node`) | Safety, Operator | `tidal_vehicle_interfaces/VehicleHealth` | Raw battery, mobility, link and payload health at 10 Hz. Battery uses a stated power model per vehicle (`config/vehicle_mobility_v2.yaml` for Version 2, `vehicle_mobility.yaml` for Version 1); mobility, link, payload and fault remain runtime fault-injection parameters. |
-| `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. |
+| `/mission_goal` | Operator | Autonomy, Safety | `geometry_msgs/PoseStamped` | Requested delivery point. The browser dashboard's **Dispatch demo delivery** control publishes the fixed demo goal `(14 m, 0 m)` in the `map` frame. |
 | `/planned_path` | Autonomy | Path follower, Operator, Safety | `nav_msgs/Path` | Active proposed route: outbound normally, HOME route while return is latched. |
 | `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Prospective route from the current pose to HOME during outbound travel; freshly republished and activated when return is required. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
+| `/operator_remote_enabled` | Operator dashboard | Safety | `std_msgs/Bool` | Explicit control-source toggle. `true` selects supervised remote input and suppresses autonomous proposals; `false` returns command authority to Autonomy. Published reliably with transient-local durability so Safety receives the active selection after a restart. |
+| `/operator_cmd_vel` | Operator dashboard | Safety | `geometry_msgs/Twist` | Hold-to-run remote driving request. Safety is the only `/cmd_vel` publisher and caps this input to 0.8 m/s linear and 0.6 rad/s angular. The dashboard publishes at 10 Hz while a direction is held and sends zero on release; stale input stops the vehicle. |
 | `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb above 15° (capped at 1.5 m/s). Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
@@ -94,6 +96,20 @@ cells. While returning, Autonomy refreshes `/return_path` without republishing
 `/planned_path`, preventing callback ordering from resetting freshness or path
 follower progress. A later false `return_required` value does not clear the latched return;
 the existing `reset` scenario event clears it.
+
+## Control-source selection
+
+Autonomous mode is the default: Safety evaluates and gates
+`/cmd_vel_proposed`. When `/operator_remote_enabled` is true, Safety ignores
+Autonomy's proposed motion and instead gates `/operator_cmd_vel`. Remote mode
+intentionally makes automatic route, tide, return-margin and `RETURN`/`HOLD`
+policy decisions advisory to the operator; it does not allow a direct vehicle
+command path. Stale vehicle telemetry, a non-empty vehicle-controller fault,
+or a stale hold-to-run remote command still publish zero `/cmd_vel`.
+
+The dashboard's explicit **Abort mission and return home** action publishes
+`operator_abort`, disables remote mode and restores the normal autonomous
+return policy.
 
 Safety evaluates telemetry, command and route freshness using ROS time, which is Gazebo simulation time in the common launch.
 

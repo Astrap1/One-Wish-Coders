@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any
 
 DASHBOARD_PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -27,7 +29,7 @@ DASHBOARD_PAGE = """<!doctype html>
 const E=id=>document.getElementById(id),C=x=>Number.isFinite(Number(x))?Number(x):0,T=[];
 function drawTide(){const c=E('tide-chart'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.scale(d,d);const w=r.width,h=r.height;x.clearRect(0,0,w,h);if(!T.length)return;const values=T.map(q=>q.level),lo=Math.min(...values),hi=Math.max(...values),span=Math.max(.2,hi-lo),left=34,right=12,top=16,bottom=28;x.strokeStyle='#405171';x.lineWidth=1;x.beginPath();x.moveTo(left,top);x.lineTo(left,h-bottom);x.lineTo(w-right,h-bottom);x.stroke();for(let i=1;i<T.length;i++){const a=T[i-1],b=T[i],xa=left+(i-1)/Math.max(1,T.length-1)*(w-left-right),xb=left+i/Math.max(1,T.length-1)*(w-left-right),ya=top+(hi-a.level)/span*(h-top-bottom),yb=top+(hi-b.level)/span*(h-top-bottom);x.strokeStyle=b.rising?'#42a5ff':'#ff5d67';x.lineWidth=3;x.beginPath();x.moveTo(xa,ya);x.lineTo(xb,yb);x.stroke()}x.fillStyle='#aeb9d3';x.font='11px Arial';x.fillText(hi.toFixed(2)+' m',left+6,top+8);x.fillText(lo.toFixed(2)+' m',left+6,h-bottom-6);x.fillText('Time',w/2-12,h-8)}
 function drawMap(t){const c=E('map'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.scale(d,d);const w=r.width,h=r.height;x.clearRect(0,0,w,h);x.fillStyle='#101a30';x.fillRect(0,0,w,h);const paths=[{p:t.planned_path||[],color:'#42a5ff'},{p:t.return_path||[],color:'#ffc857'}].filter(a=>a.p.length);const all=paths.flatMap(a=>a.p).concat([{x:C(t.vehicle_x),y:C(t.vehicle_y)}]);if(!all.length)return;const xs=all.map(p=>p.x),ys=all.map(p=>p.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),sx=Math.max(maxX-minX,.01),sy=Math.max(maxY-minY,.01),scale=Math.min((w-48)/sx,(h-48)/sy),tx=p=>24+(p.x-minX)*scale,ty=p=>h-24-(p.y-minY)*scale;paths.forEach(a=>{x.strokeStyle=a.color;x.lineWidth=3;x.beginPath();a.p.forEach((p,i)=>i?x.lineTo(tx(p),ty(p)):x.moveTo(tx(p),ty(p)));x.stroke()});x.fillStyle='#fff';x.beginPath();x.arc(tx({x:C(t.vehicle_x),y:C(t.vehicle_y)}),6,0,Math.PI*2);x.fill()}
-async function refresh(){try{const d=await(await fetch('/api/state')).json(),t=d.telemetry||{},fuel=t.fuel_percent,battery=C(d.battery_percent),reserve=C(d.return_margin_percent),speed=C(t.speed_mps),level=C(t.water_level_m),rate=C(t.tide_rate_m_per_minute),setRing=(id,value)=>{const el=E(id);if(el)el.style.strokeDashoffset=(339.3*(1-value/100)).toFixed(1)};E('fuel').textContent=fuel==null?'N/A':C(fuel).toFixed(1)+'%';E('energy').textContent=battery.toFixed(1)+'%';E('reserve').textContent=reserve.toFixed(1)+'%';setRing('fuel-ring',fuel==null?0:C(fuel));setRing('energy-ring',battery);setRing('reserve-ring',reserve);E('speed').textContent=speed.toFixed(2)+' m/s';E('coordinates').textContent=C(t.vehicle_x).toFixed(2)+', '+C(t.vehicle_y).toFixed(2);E('safety').textContent=d.return_required?'RETURN':(d.mission_state||'HOLD');E('reason').textContent=d.reason||'—';E('tide-level').textContent=level.toFixed(2)+' m';E('tide-state').textContent=(t.tide_state||'UNKNOWN')+' · risk '+C(t.tide_risk).toFixed(1)+'%';E('connection').textContent='Live telemetry';E('camera-status').textContent='Live camera stream';T.push({level,rising:rate>=0});if(T.length>72)T.shift();drawTide();drawMap(t)}catch(e){E('connection').textContent='Telemetry unavailable'}}setInterval(refresh,1000);setInterval(()=>{const camera=E('camera');if(camera)camera.src='/api/camera.jpg?ts='+Date.now()},1000);refresh();
+async function refresh(){try{const d=await(await fetch('/api/state')).json(),t=d.telemetry||{},fuel=t.fuel_percent,battery=C(d.battery_percent),reserve=C(d.return_margin_percent),speed=C(t.speed_mps),level=C(t.water_level_m),rate=C(t.tide_rate_m_per_minute),setRing=(id,value)=>{const el=E(id);if(el)el.style.strokeDashoffset=(339.3*(1-value/100)).toFixed(1)};setRemoteMode(!!d.remote_enabled);E('fuel').textContent=fuel==null?'N/A':C(fuel).toFixed(1)+'%';E('energy').textContent=battery.toFixed(1)+'%';E('reserve').textContent=reserve.toFixed(1)+'%';setRing('fuel-ring',fuel==null?0:C(fuel));setRing('energy-ring',battery);setRing('reserve-ring',reserve);E('speed').textContent=speed.toFixed(2)+' m/s';E('coordinates').textContent=C(t.vehicle_x).toFixed(2)+', '+C(t.vehicle_y).toFixed(2);E('safety').textContent=d.return_required?'RETURN':(d.mission_state||'HOLD');E('reason').textContent=d.reason||'—';E('tide-level').textContent=level.toFixed(2)+' m';E('tide-state').textContent=(t.tide_state||'UNKNOWN')+' · risk '+C(t.tide_risk).toFixed(1)+'%';E('connection').textContent='Live telemetry';E('camera-status').textContent='Live camera stream';T.push({level,rising:rate>=0});if(T.length>72)T.shift();drawTide();drawMap(t)}catch(e){E('connection').textContent='Telemetry unavailable'}}setInterval(refresh,1000);setInterval(()=>{const camera=E('camera');if(camera)camera.src='/api/camera.jpg?ts='+Date.now()},1000);refresh();
 </script></body></html>"""
 
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
@@ -40,7 +42,7 @@ DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
 )
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     "</style>",
-    ".remote-card{grid-column:1 / -1}.remote-pad{width:190px;height:190px;margin:14px auto;position:relative;border:1px solid #2d5370;border-radius:50%;background:radial-gradient(circle,#152941 0 31%,transparent 32%),linear-gradient(45deg,transparent 49%,#2d5370 50%,transparent 51%),linear-gradient(-45deg,transparent 49%,#2d5370 50%,transparent 51%);box-shadow:0 0 24px rgba(65,213,255,.1)}.remote-btn{position:absolute;width:42px;height:42px;border-radius:50%;border:1px solid #48d8ff;background:#10243a;color:#8ceaff;font-size:22px;cursor:pointer;box-shadow:0 0 10px rgba(72,216,255,.18)}.remote-btn:hover{background:#1d4c68;box-shadow:0 0 16px rgba(72,216,255,.45)}.remote-btn:active{transform:scale(.94)}.remote-up{top:8px;left:74px}.remote-down{bottom:8px;left:74px}.remote-left{left:8px;top:74px}.remote-right{right:8px;top:74px}.remote-stop{top:74px;left:74px;width:42px;height:42px;color:#ff8790;border-color:#bd5360;background:#351e2a;font-size:15px}.remote-status{text-align:center;color:#8da7c2;font-size:12px}.remote-note{text-align:center;color:#62809e;font-size:11px;margin-top:6px}</style>",
+    ".remote-card{grid-column:1 / -1}.remote-toggle,.remote-abort{display:block;margin:12px auto;padding:9px 16px;border-radius:6px;border:1px solid #48d8ff;background:#10243a;color:#8ceaff;font-weight:700;cursor:pointer}.remote-toggle.active{background:#1e5c71;color:#fff}.remote-abort{border-color:#bd5360;background:#351e2a;color:#ff9ba4}.remote-pad{width:190px;height:190px;margin:14px auto;position:relative;border:1px solid #2d5370;border-radius:50%;background:radial-gradient(circle,#152941 0 31%,transparent 32%),linear-gradient(45deg,transparent 49%,#2d5370 50%,transparent 51%),linear-gradient(-45deg,transparent 49%,#2d5370 50%,transparent 51%);box-shadow:0 0 24px rgba(65,213,255,.1)}.remote-pad.disabled{opacity:.35;pointer-events:none}.remote-btn{position:absolute;width:42px;height:42px;border-radius:50%;border:1px solid #48d8ff;background:#10243a;color:#8ceaff;font-size:22px;cursor:pointer;box-shadow:0 0 10px rgba(72,216,255,.18)}.remote-btn:hover{background:#1d4c68;box-shadow:0 0 16px rgba(72,216,255,.45)}.remote-btn:active{transform:scale(.94)}.remote-up{top:8px;left:74px}.remote-down{bottom:8px;left:74px}.remote-left{left:8px;top:74px}.remote-right{right:8px;top:74px}.remote-stop{top:74px;left:74px;width:42px;height:42px;color:#ff8790;border-color:#bd5360;background:#351e2a;font-size:15px}.remote-status{text-align:center;color:#8da7c2;font-size:12px}.remote-note{text-align:center;color:#62809e;font-size:11px;margin-top:6px}</style>",
 )
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     "grid-template-columns:repeat(3,1fr)",
@@ -62,11 +64,11 @@ order.forEach((card,index)=>{card.style.gridColumn=index===0?'1 / -1':(index===7
 )
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     "</section></main><script>",
-    """<article class="card remote-card"><div class="label">Fallback remote control</div><div class="remote-pad"><button class="remote-btn remote-up" data-remote="forward" aria-label="Forward">▲</button><button class="remote-btn remote-left" data-remote="left" aria-label="Left">◀</button><button class="remote-btn remote-stop" data-remote="stop" aria-label="Stop">■</button><button class="remote-btn remote-right" data-remote="right" aria-label="Right">▶</button><button class="remote-btn remote-down" data-remote="reverse" aria-label="Reverse">▼</button></div><div class="remote-status" id="remote-status">Safety-gated fallback · no direct vehicle command</div><div class="remote-note">Directional requests must be routed through Safety before actuation.</div></article></section></main><script>""",
+    """<article class="card remote-card"><div class="label">Control mode</div><button class="remote-toggle" id="remote-toggle">Switch to remote control</button><button class="remote-toggle" id="dispatch-goal">Dispatch demo delivery</button><div class="remote-pad disabled" id="remote-pad"><button class="remote-btn remote-up" data-remote="forward" aria-label="Forward">▲</button><button class="remote-btn remote-left" data-remote="left" aria-label="Left">◀</button><button class="remote-btn remote-stop" data-remote="stop" aria-label="Stop">■</button><button class="remote-btn remote-right" data-remote="right" aria-label="Right">▶</button><button class="remote-btn remote-down" data-remote="reverse" aria-label="Reverse">▼</button></div><div class="remote-status" id="remote-status">Autonomous control active</div><div class="remote-note">Hold a direction to drive. Remote commands remain safety-capped.</div><button class="remote-abort" id="remote-abort">Abort mission and return home</button></article></section></main><script>""",
 )
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     "const E=id=>document.getElementById(id),C=x=>Number.isFinite(Number(x))?Number(x):0,T=[];",
-    "document.querySelectorAll('[data-remote]').forEach(button=>button.addEventListener('click',()=>{const status=document.getElementById('remote-status');if(status)status.textContent=(button.dataset.remote==='stop'?'STOP requested':'Directional request: '+button.dataset.remote)+' · awaiting Safety approval'}));const E=id=>document.getElementById(id),C=x=>Number.isFinite(Number(x))?Number(x):0,T=[];",
+    """let remoteMode=false;const postRemote=payload=>fetch('/api/remote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>{if(!r.ok)throw new Error('request rejected')});const setRemoteMode=enabled=>{remoteMode=!!enabled;const toggle=E('remote-toggle'),pad=E('remote-pad'),status=E('remote-status');toggle.textContent=remoteMode?'Switch to autonomous control':'Switch to remote control';toggle.classList.toggle('active',remoteMode);pad.classList.toggle('disabled',!remoteMode);status.textContent=remoteMode?'Remote control active · hold a direction to drive':'Autonomous control active'};E('remote-toggle').addEventListener('click',()=>postRemote({kind:'mode',enabled:!remoteMode}).catch(()=>E('remote-status').textContent='Control-mode request failed'));E('dispatch-goal').addEventListener('click',()=>postRemote({kind:'goal',x:14.0,y:0.0}).then(()=>E('remote-status').textContent='Demo delivery goal dispatched').catch(()=>E('remote-status').textContent='Goal request failed'));const stopRemote=()=>postRemote({kind:'motion',action:'stop'}).catch(()=>{});document.querySelectorAll('[data-remote]').forEach(button=>{const action=button.dataset.remote;button.addEventListener('pointerdown',event=>{event.preventDefault();if(!remoteMode)return;if(action==='stop'){stopRemote();return}postRemote({kind:'motion',action}).catch(()=>E('remote-status').textContent='Remote command failed')});['pointerup','pointerleave','pointercancel'].forEach(event=>button.addEventListener(event,stopRemote))});window.addEventListener('blur',stopRemote);E('remote-abort').addEventListener('click',()=>postRemote({kind:'abort'}).then(()=>setRemoteMode(false)).catch(()=>E('remote-status').textContent='Abort request failed'));window.addEventListener('keydown',event=>{if(event.repeat||!remoteMode)return;const action={ArrowUp:'forward',ArrowDown:'reverse',ArrowLeft:'left',ArrowRight:'right'}[event.key];if(action){event.preventDefault();postRemote({kind:'motion',action})}});window.addEventListener('keyup',event=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))stopRemote()});""",
 )
 
 
@@ -74,6 +76,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
     server_version = "TidalVehicleDashboard/1.0"
     _state = {"mission_state":"HOLD","effective_state":"HOLD","return_required":False,"battery_percent":0.0,"return_margin_percent":0.0,"reason":"Awaiting telemetry.","telemetry":{}}
     _camera_jpeg: bytes | None = None
+    _remote_request_handler: Callable[[dict[str, Any]], bool] | None = None
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path.split("?", 1)[0] == "/api/camera.jpg":
@@ -98,6 +101,26 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(DASHBOARD_PAGE.encode("utf-8"))
 
+    def do_POST(self) -> None:  # noqa: N802
+        if self.path != "/api/remote":
+            self.send_error(404)
+            return
+        length = int(self.headers.get("Content-Length", "0"))
+        if length <= 0 or length > 512:
+            self.send_error(400, "Invalid request length")
+            return
+        try:
+            request = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            self.send_error(400, "Request must be JSON")
+            return
+        handler = self._remote_request_handler
+        accepted = bool(handler(request)) if handler and isinstance(request, dict) else False
+        self.send_response(202 if accepted else 400)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"accepted": accepted}).encode("utf-8"))
+
     def log_message(self, format: str, *args: object) -> None:
         return
 
@@ -106,6 +129,11 @@ def update_dashboard_state(**kwargs: object) -> None:
 
 def update_camera_frame(frame: bytes) -> None:
     DashboardHandler._camera_jpeg = frame
+
+
+def set_remote_request_handler(handler: Callable[[dict[str, Any]], bool] | None) -> None:
+    """Install the ROS-node callback used by the local dashboard HTTP endpoint."""
+    DashboardHandler._remote_request_handler = handler
 
 def serve_dashboard(host: str = "0.0.0.0", port: int = 8000) -> None:
     server = ThreadingHTTPServer((host, port), DashboardHandler)

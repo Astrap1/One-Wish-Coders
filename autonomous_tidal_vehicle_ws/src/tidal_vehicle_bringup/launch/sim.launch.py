@@ -4,6 +4,7 @@
     ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version 1 fallback
     ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
     ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true
+    ros2 launch tidal_vehicle_bringup sim.launch.py dashboard:=true
 
 Starts:
   * Gazebo Harmonic with `world` (path relative to tidal_vehicle_simulation/worlds, no .sdf)
@@ -20,6 +21,7 @@ Starts:
     (or terrain_costmap_node for explicit non-tidal integration worlds)
   * global_planner + path_follower + safety_supervisor
   * foxglove_bridge on ws://0.0.0.0:8765 (Foxglove Desktop on Windows: ws://localhost:8765)
+  * browser dashboard on http://localhost:8000 when dashboard:=true
   * RViz (optional)
 
 Only the safety supervisor publishes /cmd_vel. Autonomy publishes proposals on
@@ -127,6 +129,9 @@ def _setup(context):
         Node(package="foxglove_bridge", executable="foxglove_bridge", output="screen",
              parameters=[{"port": 8765, "address": "0.0.0.0", "use_sim_time": True}],
              condition=IfCondition(LaunchConfiguration("foxglove"))),
+        Node(package="tidal_vehicle_operator", executable="browser_dashboard", output="screen",
+             parameters=[{"use_sim_time": True}],
+             condition=IfCondition(LaunchConfiguration("dashboard"))),
         Node(package="rviz2", executable="rviz2", output="screen",
              arguments=["-d", str(desc_share / "rviz" / "hovercraft.rviz")],
              parameters=[{"use_sim_time": True}],
@@ -147,6 +152,8 @@ def generate_launch_description():
                                           "(v1 hover_only, v2 terrain_auto)"),
         DeclareLaunchArgument("headless", default_value="false"),
         DeclareLaunchArgument("foxglove", default_value="true"),
+        DeclareLaunchArgument("dashboard", default_value="false",
+                              description="start the browser operator dashboard on port 8000"),
         DeclareLaunchArgument("rviz", default_value="false"),
         OpaqueFunction(function=_setup),
     ])

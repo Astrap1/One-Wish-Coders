@@ -17,5 +17,6 @@
   <exec_depend>tidal_vehicle_simulation</exec_depend>
   <exec_depend>tidal_vehicle_autonomy</exec_depend>
   <exec_depend>tidal_vehicle_safety</exec_depend>
+  <exec_depend>tidal_vehicle_operator</exec_depend>
   <export><build_type>ament_cmake</build_type></export>
 </package>

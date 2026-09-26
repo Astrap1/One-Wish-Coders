@@ -20,6 +20,19 @@ then enabled:
 ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
 ```
 
+Start the browser operator dashboard alongside the normal shared launch:
+
+```bash
+ros2 launch tidal_vehicle_bringup sim.launch.py dashboard:=true
+```
+
+Open `http://localhost:8000`. The **Remote control** toggle selects supervised
+manual driving. The dashboard publishes only `/operator_cmd_vel`; the safety
+supervisor remains the sole publisher of `/cmd_vel`. Switching back to
+Autonomous control immediately releases manual authority.
+The **Dispatch demo delivery** button publishes the documented `(14 m, 0 m)`
+map-frame mission goal for the tidal-corridor demonstration.
+
 The default integration world has no scripted vehicle commands. The complete command chain is `/cmd_vel_proposed` from Autonomy, approval on `/cmd_vel` from Safety, then internal track, wheel or fan commands from the mobility node. Safety must remain the only `/cmd_vel` publisher.
 
 `config/ros_gz_bridge_v2.yaml` (Version 2) and `config/ros_gz_bridge.yaml` (Version 1) are the complete Gazebo ⇄ ROS topic maps. Keep them in step with `docs/INTERFACES.md`. Keep full-system launch logic here rather than duplicating it across workstreams.

@@ -12,6 +12,8 @@ from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import OccupancyGrid, Path
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from std_msgs.msg import Bool
 
 from tidal_vehicle_interfaces.msg import TerrainState, VehicleHealth
 from tidal_vehicle_safety.safety_supervisor import SafetySupervisor
@@ -111,6 +113,59 @@ def test_supervisor_forwards_healthy_command_and_holds_critical_fault():
         assert capture.commands
         assert capture.commands[-1].linear.x == 0.0
         assert capture.commands[-1].angular.z == 0.0
+    finally:
+        for node in (capture, publisher, supervisor):
+            executor.remove_node(node)
+            node.destroy_node()
+        rclpy.shutdown()
+
+
+def test_remote_mode_uses_remote_command_despite_automatic_return_policy():
+    rclpy.init()
+    supervisor = SafetySupervisor()
+    publisher = Node("remote_control_mock_publishers")
+    capture = CommandCapture()
+    executor = SingleThreadedExecutor()
+    for node in (supervisor, publisher, capture):
+        executor.add_node(node)
+
+    try:
+        health_pub = publisher.create_publisher(VehicleHealth, "/vehicle_health", 10)
+        terrain_pub = publisher.create_publisher(TerrainState, "/terrain_state", 10)
+        remote_mode_pub = publisher.create_publisher(
+            Bool,
+            "/operator_remote_enabled",
+            QoSProfile(
+                depth=1,
+                reliability=ReliabilityPolicy.RELIABLE,
+                durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            ),
+        )
+        remote_cmd_pub = publisher.create_publisher(Twist, "/operator_cmd_vel", 10)
+        autonomy_cmd_pub = publisher.create_publisher(Twist, "/cmd_vel_proposed", 10)
+
+        terrain = _terrain()
+        terrain.tide_risk = 0.95  # would normally request an automatic return/hold
+        health_pub.publish(_health(100.0))
+        terrain_pub.publish(terrain)
+        remote_mode_pub.publish(Bool(data=True))
+        _spin_for(executor)
+
+        remote = Twist()
+        remote.linear.x = 2.0  # remote safety cap is 0.8 m/s
+        remote.angular.z = 1.0
+        remote_cmd_pub.publish(remote)
+        _spin_for(executor)
+        assert capture.commands
+        assert capture.commands[-1].linear.x == 0.8
+        assert capture.commands[-1].angular.z == 0.6
+
+        capture.commands.clear()
+        autonomous = Twist()
+        autonomous.linear.x = 0.5
+        autonomy_cmd_pub.publish(autonomous)
+        _spin_for(executor)
+        assert not capture.commands
     finally:
         for node in (capture, publisher, supervisor):
             executor.remove_node(node)

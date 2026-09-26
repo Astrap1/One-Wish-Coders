@@ -9,7 +9,7 @@ from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import OccupancyGrid, Path
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
-from std_msgs.msg import String
+from std_msgs.msg import Bool, String
 
 from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState, VehicleHealth
 
@@ -42,7 +42,9 @@ class SafetySupervisor(Node):
         self._return_requested_at: Optional[float] = None
         self._last_health_at: Optional[float] = None
         self._last_terrain_at: Optional[float] = None
-        self._last_command_at: Optional[float] = None
+        self._last_autonomous_command_at: Optional[float] = None
+        self._last_remote_command_at: Optional[float] = None
+        self._remote_enabled = False
         self._return_path_points: list[tuple[float, float]] = []
         self._last_costmap_signature: Optional[tuple[object, ...]] = None
         self._estimate = ReturnEstimate(False, "Awaiting a return route and terrain cost map.")
@@ -55,6 +57,14 @@ class SafetySupervisor(Node):
         self._cmd_pub = self.create_publisher(Twist, "/cmd_vel", 10)
         self._status_pub = self.create_publisher(SafetyStatus, "/safety_status", status_qos)
         self.create_subscription(Twist, "/cmd_vel_proposed", self._on_proposed_command, 10)
+        remote_mode_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self.create_subscription(Bool, "/operator_remote_enabled", self._on_remote_mode,
+                                 remote_mode_qos)
+        self.create_subscription(Twist, "/operator_cmd_vel", self._on_remote_command, 10)
         self.create_subscription(VehicleHealth, "/vehicle_health", self._on_health, 10)
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain, 10)
         self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
@@ -84,6 +94,8 @@ class SafetySupervisor(Node):
             "cruise_linear_speed_limit_mps": 2.0,
             "caution_linear_speed_limit_mps": 0.8,
             "return_linear_speed_limit_mps": 1.0,
+            "remote_linear_speed_limit_mps": 0.8,
+            "remote_angular_speed_limit_radps": 0.6,
             "home_x_m": 0.0,
             "home_y_m": 0.0,
             "home_yaw_rad": 0.0,
@@ -144,7 +156,7 @@ class SafetySupervisor(Node):
         if self._phase is MissionPhase.PRELAUNCH:
             self._phase = MissionPhase.OUTBOUND
             self._planned_path_received_at = None
-            self._last_command_at = None
+            self._last_autonomous_command_at = None
             self._reason = "Mission goal accepted; validating operating margin."
 
     def _on_planned_path(self, _message: Path) -> None:
@@ -167,25 +179,77 @@ class SafetySupervisor(Node):
 
     def _on_scenario_event(self, message: String) -> None:
         event = message.data.strip().lower()
-        if event == "operator_abort" and self._phase is not MissionPhase.PRELAUNCH:
-            self._request_return("Operator requested a controlled return.")
+        if event == "operator_abort":
+            self._remote_enabled = False
+            self._last_remote_command_at = None
+            if self._phase is not MissionPhase.PRELAUNCH:
+                self._request_return("Operator requested a controlled return.")
+            else:
+                self._state = HOLD
+                self._reason = "Operator abort received before mission start."
+                self._publish_stop()
+                self._publish_status(False)
         elif event == "reset":
             self._reset("Scenario reset; awaiting a new goal.")
 
     def _on_proposed_command(self, command: Twist) -> None:
-        self._last_command_at = self._now_s()
-        decision = self._evaluate()
+        self._last_autonomous_command_at = self._now_s()
+        if not self._remote_enabled:
+            self._apply_active_command(command)
+
+    def _on_remote_mode(self, message: Bool) -> None:
+        enabled = bool(message.data)
+        if enabled == self._remote_enabled:
+            return
+        self._remote_enabled = enabled
+        self._last_remote_command_at = None
+        self._last_autonomous_command_at = None
+        self._publish_stop()
+        self._state = HOLD
+        self._reason = (
+            "Remote control enabled; awaiting a hold-to-run operator command."
+            if enabled else "Autonomous control enabled; awaiting a fresh autonomy command."
+        )
+        self._publish_status(False)
+
+    def _on_remote_command(self, command: Twist) -> None:
+        self._last_remote_command_at = self._now_s()
+        if self._remote_enabled:
+            self._apply_active_command(command)
+
+    def _on_timer(self) -> None:
+        decision = self._active_decision()
+        self._apply_decision(decision)
+        if decision.state == HOLD:
+            self._publish_stop()
+
+    def _apply_active_command(self, command: Twist) -> None:
+        decision = self._active_decision()
         self._apply_decision(decision)
         if decision.state == HOLD:
             self._publish_stop()
             return
-        self._cmd_pub.publish(self._limited_command(command, decision.state))
+        self._cmd_pub.publish(self._limited_command(command, decision.state,
+                                                    remote=self._remote_enabled))
 
-    def _on_timer(self) -> None:
-        decision = self._evaluate()
-        self._apply_decision(decision)
-        if decision.state == HOLD:
-            self._publish_stop()
+    def _active_decision(self) -> Decision:
+        """Keep manual control independent from mission-policy return decisions.
+
+        Remote mode intentionally lets the operator take responsibility for
+        route, tide and return-margin choices. Telemetry loss, a controller
+        fault and a stale dead-man command remain non-bypassable stops.
+        """
+        if not self._remote_enabled:
+            return self._evaluate()
+        health = self._health
+        terrain = self._terrain
+        if health is None or terrain is None or not self._telemetry_fresh():
+            return Decision(HOLD, "Remote control blocked: vehicle telemetry is stale.")
+        if health.fault.strip():
+            return Decision(HOLD, f"Remote control blocked: {health.fault.strip()}.")
+        if not self._command_fresh():
+            return Decision(HOLD, "Remote control waiting for a fresh hold-to-run command.")
+        return Decision(CRUISE, "Remote control active; autonomy return and hold decisions are advisory.")
 
     def _evaluate(self) -> Decision:
         self._refresh_return_estimate()
@@ -317,9 +381,13 @@ class SafetySupervisor(Node):
         )
 
     def _command_fresh(self) -> bool:
+        timestamp = (
+            self._last_remote_command_at
+            if self._remote_enabled else self._last_autonomous_command_at
+        )
         return (
-            self._last_command_at is not None
-            and self._now_s() - self._last_command_at
+            timestamp is not None
+            and self._now_s() - timestamp
             <= self._parameter("command_timeout_s")
         )
 
@@ -345,7 +413,9 @@ class SafetySupervisor(Node):
         self._planned_path_received_at = None
         self._return_path_received_at = None
         self._return_requested_at = None
-        self._last_command_at = None
+        self._last_autonomous_command_at = None
+        self._last_remote_command_at = None
+        self._remote_enabled = False
         self._return_path_points = []
         self._estimate = ReturnEstimate(False, "Awaiting a return route and terrain cost map.")
         self._state = HOLD
@@ -353,7 +423,14 @@ class SafetySupervisor(Node):
         self._publish_stop()
         self._publish_status(False)
 
-    def _limited_command(self, command: Twist, state: str) -> Twist:
+    def _limited_command(self, command: Twist, state: str, *, remote: bool = False) -> Twist:
+        if remote:
+            linear_limit = self._parameter("remote_linear_speed_limit_mps")
+            angular_limit = self._parameter("remote_angular_speed_limit_radps")
+            approved = Twist()
+            approved.linear.x = max(-linear_limit, min(linear_limit, command.linear.x))
+            approved.angular.z = max(-angular_limit, min(angular_limit, command.angular.z))
+            return approved
         limit_name = {
             CRUISE: "cruise_linear_speed_limit_mps",
             CAUTION: "caution_linear_speed_limit_mps",

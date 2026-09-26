@@ -17,6 +17,11 @@ safety_supervisor:
     cruise_linear_speed_limit_mps: 2.0
     caution_linear_speed_limit_mps: 0.8
     return_linear_speed_limit_mps: 1.0
+    # Supervised fallback remote-control limits. Remote mode bypasses automatic
+    # route/return decisions, but never a controller fault, stale telemetry or
+    # the hold-to-run command watchdog.
+    remote_linear_speed_limit_mps: 0.8
+    remote_angular_speed_limit_radps: 0.6
     home_x_m: 0.0
     home_y_m: 0.0
     home_yaw_rad: 0.0

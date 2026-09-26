@@ -162,6 +162,7 @@ def test_outbound_goal_update_requires_a_fresh_replanned_path():
         assert capture.commands[-1].linear.x == 0.0
 
         planned_pub.publish(_path([(1.0, 1.0), (1.0, 2.0)]))
+        _spin_for(executor, 0.05)
         proposed_pub.publish(proposed)
         _spin_for(executor)
         assert capture.commands[-1].linear.x == 0.5

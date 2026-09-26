@@ -55,7 +55,8 @@ Safety:
 | Cost | Meaning | Mobility used by vehicle controller |
 | --- | --- | --- |
 | `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb exceeds 15° (Version 1: `WHEEL`) |
-| `20`--`59` | Mud or shallow water | `HOVER` |
+| `20`--`29` | Open, surveyed water (no roots or debris): fast travel allowed | `HOVER` |
+| `30`--`59` | Mud, shallow water, root or debris zones | `HOVER` |
 | `60`--`89` | Elevated-risk mud or shallow water | Conservative `HOVER` |
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
@@ -63,6 +64,14 @@ Safety:
 Safety samples these bands along `/return_path` using the conservative HOVER
 energy/speed profile. A 2D cost map cannot know whether a firm segment has the
 rare >15° forward climb that deploys Version 2 tracks.
+
+The `20`--`29` / `30`--`59` split was added on 2026-09-26 for Version 3's
+zone speed limits. The limits are: firm shore 15 km/h; open surveyed water
+cruise 30 km/h, max 50 km/h; mud, shallow water, roots and debris 10 km/h;
+elevated risk 10 km/h (see `AGENTS.md`, *Shared terrain-cost semantics*). Band
+checks at `19`, `60` and `90` are unchanged, so existing consumers keep working.
+Water is published at `30` until the environment workstream marks surveyed
+open water `20`--`29`.
 
 ## Vehicle-fault semantics
 
@@ -126,8 +135,11 @@ return energy, return margin and return ETA from `/return_path`,
 values in `/safety_status`.
 
 `/scenario_event` is reserved for deterministic evaluation controls. The
-initial supported values are `operator_abort` (request a controlled return) and
-`reset` (stop and reset the safety supervisor). Simulation-specific fault
+The supported mission values are `operator_abort` (request a controlled return) and
+`reset` (stop and reset the safety supervisor and tide). Simulation also accepts
+`tide_rise`, `tide_hold`, `tide_resume`, and `tide_reset`; these synchronously
+control the rendered water, physics-side water level, `/terrain_state`, and
+`/terrain_costmap`. Simulation-specific fault
 injection remains owned by Evaluation and Simulation and should be reflected in
 `/vehicle_health` or `/terrain_state`.
 
@@ -147,7 +159,7 @@ Until the common TF tree is integrated, `/terrain_costmap`, `/odom`, `/mission_g
 
 ## LiDAR obstacle update rule
 
-Autonomy treats `/terrain_costmap` as the Simulation-owned base map. It must not republish or modify that source map. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the configured safety radius and overlaid as temporary no-go cells for route planning.
+Autonomy treats `/terrain_costmap` as the Simulation-owned base map. Known static tree and rock collision footprints are published there as cost `100` no-go cells. Autonomy must not republish or modify that source map. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the configured safety radius and overlaid as temporary no-go cells for route planning.
 
 Each accepted scan replaces the previous temporary obstacle set. A changed set causes immediate route reassessment; a clear scan removes prior LiDAR cells. If the overlay blocks every route, the global planner publishes an empty `/planned_path` to stop the path follower's previous proposal.
 

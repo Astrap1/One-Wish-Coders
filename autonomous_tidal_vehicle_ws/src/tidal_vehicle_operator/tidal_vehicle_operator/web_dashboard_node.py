@@ -50,6 +50,7 @@ class BrowserDashboardNode(Node):
         self._tide_risk = 0.0
         self._water_level_m = 0.0
         self._tide_rate_m_per_minute = 0.0
+        self._terrain_received = False
         self._seconds_until_corridor_unsafe = 0.0
         self._corridor_traversable = False
         self._nearest_obstacle_m = 0.0
@@ -61,7 +62,10 @@ class BrowserDashboardNode(Node):
         self._planned_path: list[dict[str, float]] = []
         self._return_path: list[dict[str, float]] = []
         self._mission_events: list[dict[str, str]] = []
+        self._retained_mission_event_keys: set[tuple[object, str]] = set()
         self._cost_map: dict[str, object] = {"width": 0, "height": 0, "resolution": 1.0, "origin_x": 0.0, "origin_y": 0.0, "data": []}
+        self._travelled_path: list[dict[str, float]] = []
+        self._last_event_text = ""
         self._remote_enabled = False
         self._remote_action = "stop"
         self._remote_action_at = 0.0
@@ -181,8 +185,19 @@ class BrowserDashboardNode(Node):
             command.angular.z = -0.6
         self._remote_command_pub.publish(command)
 
+    def _append_event(self, text: str, timestamp: str | None = None) -> None:
+        text = text.strip()
+        if not text or text == self._last_event_text:
+            return
+        self._last_event_text = text
+        self._mission_events.append(
+            {"time": timestamp or time.strftime("%H:%M:%S"), "event": text}
+        )
+        self._mission_events = self._mission_events[-20:]
+
     def _on_mission_event(self, message: String) -> None:
         event = message.data.strip()
+        self._append_event(f"mission: {event or '(empty event)'}")
         self._apply_mission_event(event)
         self._reason = f"Mission event: {event}"
         self._publish_state()
@@ -200,7 +215,7 @@ class BrowserDashboardNode(Node):
             self.get_logger().warning("Ignoring non-list /mission_event_history payload")
             return
 
-        history: list[dict[str, str]] = []
+        latest_event = ""
         for item in raw_events[-20:]:
             if not isinstance(item, dict):
                 continue
@@ -208,17 +223,19 @@ class BrowserDashboardNode(Node):
             if not isinstance(event, str):
                 continue
             timestamp = item.get("time")
-            history.append(
-                {
-                    "time": timestamp if isinstance(timestamp, str) else "--:--:--",
-                    "event": event or "(empty event)",
-                }
-            )
+            sequence = item.get("sequence")
+            key = (sequence, event)
+            if key not in self._retained_mission_event_keys:
+                self._retained_mission_event_keys.add(key)
+                self._append_event(
+                    f"mission: {event or '(empty event)'}",
+                    timestamp if isinstance(timestamp, str) else "--:--:--",
+                )
+            latest_event = event
 
-        self._mission_events = history
-        if history:
-            self._apply_mission_event(history[-1]["event"])
-            self._reason = f"Mission event: {history[-1]['event']}"
+        if latest_event:
+            self._apply_mission_event(latest_event)
+            self._reason = f"Mission event: {latest_event}"
         self._publish_state()
 
     def _apply_mission_event(self, event: str) -> None:
@@ -234,6 +251,7 @@ class BrowserDashboardNode(Node):
         self._estimated_return_energy_percent = float(message.estimated_return_energy_percent)
         self._estimated_return_time_s = float(message.estimated_return_time_s)
         self._reason = message.reason
+        self._append_event(f"safety: {message.state} — {message.reason}")
         if message.state == "HOLD" and self._hold_started_s is None:
             self._hold_started_s = time.monotonic()
         elif message.state != "HOLD":
@@ -258,12 +276,14 @@ class BrowserDashboardNode(Node):
         self._publish_state()
 
     def _on_terrain_state(self, message: TerrainState) -> None:
+        self._terrain_received = True
         self._tide_state = message.tide_state
         self._tide_risk = float(message.tide_risk)
         self._water_level_m = float(message.water_level_m)
         self._tide_rate_m_per_minute = float(message.tide_rate_m_per_minute)
         self._seconds_until_corridor_unsafe = float(message.seconds_until_corridor_unsafe)
         self._corridor_traversable = bool(message.corridor_traversable)
+        self._append_event(f"tide: {message.tide_state} · {message.water_level_m:.2f} m")
         self._publish_state()
 
     def _on_costmap(self, message: OccupancyGrid) -> None:
@@ -286,11 +306,13 @@ class BrowserDashboardNode(Node):
     def _on_planned_path(self, message: Path) -> None:
         self._planned_route_points = len(message.poses)
         self._planned_path = [{"x": pose.pose.position.x, "y": pose.pose.position.y} for pose in message.poses]
+        self._append_event(f"planned route: {self._planned_route_points} points")
         self._publish_state()
 
     def _on_return_path(self, message: Path) -> None:
         self._return_route_points = len(message.poses)
         self._return_path = [{"x": pose.pose.position.x, "y": pose.pose.position.y} for pose in message.poses]
+        self._append_event(f"return route: {self._return_route_points} points")
         self._publish_state()
 
     def _on_odom(self, message: Odometry) -> None:
@@ -298,6 +320,12 @@ class BrowserDashboardNode(Node):
         self._speed_mps = math.hypot(float(velocity.x), float(velocity.y))
         self._vehicle_x = float(message.pose.pose.position.x)
         self._vehicle_y = float(message.pose.pose.position.y)
+        if not self._travelled_path or math.hypot(
+            self._vehicle_x - self._travelled_path[-1]["x"],
+            self._vehicle_y - self._travelled_path[-1]["y"],
+        ) >= 0.10:
+            self._travelled_path.append({"x": self._vehicle_x, "y": self._vehicle_y})
+            self._travelled_path = self._travelled_path[-2000:]
         self._publish_state()
 
     def _on_camera(self, message: Image) -> None:
@@ -319,6 +347,7 @@ class BrowserDashboardNode(Node):
         update_camera_frame(output.getvalue())
 
     def _on_mission_goal(self, _: PoseStamped) -> None:
+        self._append_event("mission goal received")
         self._reason = "Mission goal received; monitoring route progress."
         self._publish_state()
 
@@ -346,6 +375,7 @@ class BrowserDashboardNode(Node):
                 "tide_risk": self._tide_risk,
                 "water_level_m": self._water_level_m,
                 "tide_rate_m_per_minute": self._tide_rate_m_per_minute,
+                "terrain_received": self._terrain_received,
                 "seconds_until_corridor_unsafe": self._seconds_until_corridor_unsafe,
                 "corridor_traversable": self._corridor_traversable,
                 "nearest_obstacle_m": self._nearest_obstacle_m,
@@ -359,6 +389,7 @@ class BrowserDashboardNode(Node):
                 "vehicle_y": self._vehicle_y,
                 "planned_path": self._planned_path,
                 "return_path": self._return_path,
+                "travelled_path": self._travelled_path,
                 "mission_events": self._mission_events,
                 "cost_map": self._cost_map,
             },

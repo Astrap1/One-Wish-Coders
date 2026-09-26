@@ -46,7 +46,7 @@ Global-planner return parameters:
 | home_x_m | 0.0 m | HOME x coordinate. Must match Safety. |
 | home_y_m | 0.0 m | HOME y coordinate. Must match Safety. |
 | home_frame | map | Frame containing HOME. |
-| goal_event_tolerance_m | 0.3 m | Endpoint distance that triggers a mission event. |
+| goal_event_tolerance_m | 2.0 m | Delivery/HOME zone radius that triggers a mission event. |
 | return_path_refresh_rate_hz | 2.0 Hz | Return-only refresh rate for Safety's freshness check. |
 
 ### path_follower

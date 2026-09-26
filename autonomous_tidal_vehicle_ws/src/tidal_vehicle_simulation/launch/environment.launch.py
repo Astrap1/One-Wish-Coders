@@ -20,6 +20,16 @@ def generate_launch_description():
             launch_arguments={"gz_args": [world_path, " -r"]}.items(),
         ),
         Node(
+            package="ros_gz_bridge",
+            executable="parameter_bridge",
+            name="scenario_event_bridge",
+            output="screen",
+            arguments=[
+                "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+                "/scenario_event@std_msgs/msg/String]gz.msgs.StringMsg",
+            ],
+        ),
+        Node(
             package="tidal_vehicle_simulation",
             executable="tide_manager.py",
             name="tide_manager",

@@ -15,7 +15,7 @@ See `docs/ARCHITECTURE.md` and `docs/INTERFACES.md` for the current system bound
 
 ## Vehicle configuration and mobility modes
 
-The current demonstration vehicle is **Version 1**: a hovercraft-dominant amphibious vehicle with a retractable wheeled undercarriage. It is the vehicle model in Gazebo today. **Version 2** is the planned tracked, air-cushion-load-sharing vehicle described below; do not claim track behaviour in the live demo until its model and controller are integrated. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, wheel, track or hovercraft physics.
+The demonstration vehicle is **Version 2**: a hovercraft-dominant amphibious vehicle with a complete retractable tracked undercarriage and controlled air-cushion load sharing (see *Vehicle Version 2* below). It is the default vehicle of the common launch. **Version 1**, the earlier 1.2 m vehicle with a retractable wheeled undercarriage, remains available as the fallback with `vehicle:=v1`. The mobility model must demonstrate understandable control behaviour without claiming validated propeller, skirt, wheel, track or hovercraft physics.
 
 The vehicle controller uses three internal mobility modes:
 
@@ -74,9 +74,10 @@ Agreed Version 2 design decisions:
 - **Tracks.** Two inboard tracks under the hull, inside the skirt footprint, retracting vertically into hull wells. The overall width stays 1.5 m.
 - **Propulsion.** Two rear reversible ducted fans with rudders.
 - **LiDAR.** On a mast at the vehicle's centre, directly above `base_link`, so its horizontal position matches the odometry position that Autonomy's obstacle projection assumes. The lift fan is offset forward.
-- **Style.** The same as Version 1: olive hull, black skirt, orange payload box.
+- **Style.** The same as Version 1: olive hull, black skirt, orange payload box. The hull topsides flare out over the skirt and sit on a bolted skirt-attachment flange, so the hull and skirt read as one craft. The skirt is a neoprene bag with 96 overlapping, curved fingers.
+- **Retraction.** In HOVER mode both tracks slide 0.25 m straight up into the hull wells, leaving their lowest point 0.22 m above the skirt bottom, so the cushion alone carries the vehicle. `renders/retract_comparison.png` shows both states, and the Gazebo check measures the retracted joint position (0.250 m) before propulsion starts.
 
-Simulation risk retired: Gazebo Harmonic's `TrackController`/`TrackedVehicle` work with DART and the Bullet collision detector, which the air-cushion ray casts need. They also work with the corridor's heightmap. The tracks drive at the commanded speed, pivot in place without drift and climb a 15° ramp. The `hover::AirCushion` plugin gained a `lift_share` input for TRACK-mode load sharing, reversible thrust and a yaw reserve. Version 1 is unchanged by these additions.
+Simulation risk retired: Gazebo Harmonic's `TrackController`/`TrackedVehicle` work with DART and the Bullet collision detector, which the air-cushion ray casts need. They also work on the corridor's inclined `demo_terrain` collision surface. The tracks drive at the commanded speed, pivot in place without drift and climb a 15° ramp. The `hover::AirCushion` plugin gained a `lift_share` input for TRACK-mode load sharing, reversible thrust and a yaw reserve. Version 1 is unchanged by these additions.
 
 ## Team roles
 
@@ -169,7 +170,7 @@ The HOME values must match Person 2's safety parameters. The changing map-frame 
 
 ## Role 4: Vehicle simulation and integration status
 
-- **Version 2 delivered on `main` and is the launch default.** It includes the Blender model, SDF/URDF, the mobility controller (`gear: tracks`), a bridge configuration and the test worlds described in `docs/VEHICLE_SIMULATION.md`. Launch with `ros2 launch tidal_vehicle_bringup sim.launch.py`, or add `vehicle:=v1` for the fallback.
+- **Version 2 delivered on `main` and is the launch default.** It includes the Blender model (visually polished to Version 1's standard, with the hull blended into the skirt), SDF/URDF, the mobility controller (`gear: tracks`), a bridge configuration and the test worlds described in `docs/VEHICLE_SIMULATION.md`. Launch with `ros2 launch tidal_vehicle_bringup sim.launch.py`, or add `vehicle:=v1` for the fallback.
 - **Gazebo physics verified:** all 19 Version 2 checks pass (`tools/vehicle_tests/analyze.py`):
   - hover gap 5.05 cm held with the tracks retracted;
   - 2.0 m/s and 0.46 rad/s command tracking in HOVER;
@@ -179,8 +180,8 @@ The HOME values must match Person 2's safety parameters. The changing map-frame 
   - the full water → mud → bank sequence: hover, stop, deploy the tracks, lower the lift to 40%, then climb a 12° bank on the tracks.
 
   The Version 1 regression checks are unchanged.
-- **ROS 2 integration verified** (headless, integration world with `tide:=false`). An autonomous goal across water and mud produced `delivery_confirmed` then `mission_complete`. Version 2 started on its tracks at HOME, switched to HOVER 2.5 m before the water, and returned to TRACK at HOME. Safety remained the sole `/cmd_vel` publisher. The Version 1 fallback completes the same mission.
-- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors, buoyancy (Version 1 only) and terrain zones. The launch spawns the vehicle at map-frame HOME, and the tide manager is the sole dynamic `/terrain_state` and `/terrain_costmap` publisher. Version 2 parks on its tracks, crosses the channel in HOVER and reaches delivery; open issues are listed below. `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
+- **ROS 2 integration verified** (headless, integration world with `tide:=false`). An autonomous goal across water and mud produced `delivery_confirmed` then `mission_complete` in 82 s. Version 2 started on its tracks at HOME, switched to HOVER 2.5 m before the water, and returned to TRACK at HOME. Safety remained the sole `/cmd_vel` publisher. The Version 1 fallback completes the same mission.
+- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors, buoyancy (Version 1 only) and terrain zones. The launch spawns the vehicle at map-frame HOME, and the tide manager is the sole dynamic `/terrain_state` and `/terrain_costmap` publisher. On the earlier heightmap collision Version 2 reached the delivery point. On the current `demo_terrain` surface it drives from HOME on its tracks but stalls at the channel edge (item 1 below), so the corridor mission is not yet verified end to end. `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
 
 Open integration items:
 
@@ -190,7 +191,8 @@ Open integration items:
 4. **Sensor transform.** Autonomy should use the Version 2 LiDAR transform (centre mast, 1.44 m) once the shared TF work lands. Until then its "LiDAR at odometry position" assumption holds for Version 2.
 5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
 6. Tune the corridor map rectangles, HOME/delivery coordinates and obstacle inflation so that the generated path matches the visibly safe route through the world.
-7. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
+7. **Obstacle inflation (Person 1).** `obstacle_inflation_radius_m` is 0.75 m, tuned for Version 1's 1.2 × 0.7 m body. Version 2 (2.5 × 1.5 m, half-diagonal ≈ 1.46 m) needs about 1.7 m, or the planner may route it too close to roots and debris.
+8. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
 
 ## Three-day build plan
 

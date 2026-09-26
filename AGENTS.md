@@ -293,3 +293,34 @@ Work during this stage:
 A workstream change is complete only when it has a documented input/output contract, can run from the shared launch flow, and contributes to at least one of the three demo scenarios. The demonstrated claim remains:
 
 > The team demonstrates autonomous route planning, obstacle response and safety-driven fallback under explicitly defined simulated terrain, tide and vehicle-health conditions.
+
+## Current tidal map setup
+
+The active environment is launched from `autonomous_tidal_vehicle_ws` with `tidal_vehicle_simulation`. The map currently contains:
+
+- An approximately 80 m x 80 m inclined terrain heightmap with mudflat materials.
+- A visual-only water surface that rises in parallel with the terrain. It extends beyond the terrain edges so its perimeter is not visible and has no collision geometry. The configured rise is 2.4 m over 30 seconds, leaving higher land visible at high tide.
+- Nineteen Mangrovetree GLB-derived mangroves, 7-15 m tall, placed in a dense irregular layout. Their trunks, roots and branches have collision meshes for physics and LiDAR; foliage is represented by the visual GLB.
+- Eighteen Rock.glb instances placed as scattered obstacles. The rock visuals are enlarged and each has a larger primitive collision shape for stable physics and LiDAR detection.
+- The former red reference box has been removed.
+
+Water remains visual-only, so it can overlap the tree and rock collision objects without colliding with them. Do not remove collision elements from tree or rock models: Gazebo ray sensors detect collision shapes, not visual meshes.
+
+### Run the current map
+
+```bash
+cd /home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws
+source /opt/ros/jazzy/setup.bash
+pkill -f '^gz sim server$' || true
+colcon build --symlink-install --packages-select tidal_vehicle_simulation
+source install/setup.bash
+ros2 launch tidal_vehicle_simulation environment.launch.py
+```
+
+For a quick headless validation, replace the final command with:
+
+```bash
+timeout 12s ros2 launch tidal_vehicle_simulation environment.launch.py
+```
+
+The authoritative world is `src/tidal_vehicle_simulation/worlds/tidal_corridor.sdf`. Environment assets are under `src/tidal_vehicle_simulation/models/`, including `mangrove_imported/` and `rock_imported/`.

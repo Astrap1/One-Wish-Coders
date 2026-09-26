@@ -185,6 +185,12 @@ def test_lidar_obstacle_causes_detour_and_clear_scan_restores_route() -> None:
         direct_path = capture.paths[-1]
         assert all(pose.pose.position.y == 3.5 for pose in direct_path.poses)
 
+        # One scan is insufficient to divert the route. Confirmation keeps a
+        # single noisy return from producing a visible steering correction.
+        scan_publisher.publish(_scan(4.0))
+        _spin_for(executor)
+        assert capture.paths[-1] is direct_path
+
         scan_publisher.publish(_scan(4.0))
         _spin_for(executor)
 
@@ -195,6 +201,13 @@ def test_lidar_obstacle_causes_detour_and_clear_scan_restores_route() -> None:
         }
         assert (4.5, 3.5) not in detour_points
         assert any(y_m != 3.5 for _, y_m in detour_points)
+
+        # A brief dropout must not restore the direct route. Five consecutive
+        # clear scans confirm that the obstacle is gone.
+        for _ in range(4):
+            scan_publisher.publish(_scan(inf))
+            _spin_for(executor, 0.05)
+        assert capture.paths[-1] is detour_path
 
         scan_publisher.publish(_scan(inf))
         _spin_for(executor)
@@ -330,7 +343,57 @@ def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
         rclpy.shutdown()
 
 
-def test_odometry_replans_only_after_meaningful_travel(monkeypatch) -> None:
+def test_unchanged_costmap_refreshes_without_running_astar(monkeypatch) -> None:
+    calls = 0
+    real_plan_path = planner_module.plan_path
+
+    def counted_plan_path(costmap, start, goal):
+        nonlocal calls
+        calls += 1
+        return real_plan_path(costmap, start, goal)
+
+    monkeypatch.setattr(planner_module, "plan_path", counted_plan_path)
+    rclpy.init()
+    planner, publisher, capture, executor = _planner_test_nodes()
+
+    try:
+        costmap_publisher = publisher.create_publisher(
+            OccupancyGrid, "/terrain_costmap", 10
+        )
+        odom_publisher = publisher.create_publisher(Odometry, "/odom", 10)
+        goal_publisher = publisher.create_publisher(
+            PoseStamped, "/mission_goal", 10
+        )
+        _spin_for(executor, 0.1)
+
+        open_map = _costmap([0] * 9, width=9, height=1)
+        costmap_publisher.publish(open_map)
+        odom_publisher.publish(_odometry())
+        goal_publisher.publish(_goal(x_m=8.5))
+        _spin_for(executor)
+
+        calls_after_goal = calls
+        path_count = len(capture.paths)
+        original_geometry = [
+            (pose.pose.position.x, pose.pose.position.y)
+            for pose in capture.paths[-1].poses
+        ]
+
+        costmap_publisher.publish(open_map)
+        _spin_for(executor)
+
+        assert calls == calls_after_goal
+        assert len(capture.paths) == path_count + 1
+        assert [
+            (pose.pose.position.x, pose.pose.position.y)
+            for pose in capture.paths[-1].poses
+        ] == original_geometry
+    finally:
+        _destroy_test_nodes(planner, publisher, capture, executor)
+        rclpy.shutdown()
+
+
+def test_odometry_updates_return_without_replacing_active_path(monkeypatch) -> None:
     calls: list[tuple[tuple[int, int], tuple[int, int]]] = []
     real_plan_path = planner_module.plan_path
 
@@ -359,6 +422,8 @@ def test_odometry_replans_only_after_meaningful_travel(monkeypatch) -> None:
 
         calls_after_goal = len(calls)
         assert calls_after_goal > 0
+        active_paths_after_goal = len(capture.paths)
+        return_paths_after_goal = len(capture.return_paths)
 
         # Crossing a grid boundary by a few centimetres must not let odometry
         # noise repeatedly reset an otherwise unchanged route.
@@ -369,6 +434,8 @@ def test_odometry_replans_only_after_meaningful_travel(monkeypatch) -> None:
         odom_publisher.publish(_odometry(x_m=1.6, y_m=0.5))
         _spin_for(executor, 0.1)
         assert len(calls) > calls_after_goal
+        assert len(capture.paths) == active_paths_after_goal
+        assert len(capture.return_paths) > return_paths_after_goal
     finally:
         _destroy_test_nodes(planner, publisher, capture, executor)
         rclpy.shutdown()

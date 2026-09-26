@@ -1,6 +1,7 @@
 from math import inf, nan, pi
 
 from tidal_vehicle_autonomy.lidar_obstacle_core import (
+    ObstaclePersistenceFilter,
     obstacle_cells_from_scan,
     overlay_obstacles,
 )
@@ -98,3 +99,31 @@ def test_planner_detours_around_lidar_obstacle() -> None:
     assert path is not None
     assert (2, 1) not in path
     assert any(y != 1 for _, y in path)
+
+
+def test_obstacle_filter_requires_consecutive_detections() -> None:
+    obstacle_filter = ObstaclePersistenceFilter(
+        confirmation_scans=2,
+        clear_scans=3,
+    )
+
+    assert obstacle_filter.update({(2, 1)}) == frozenset()
+    assert obstacle_filter.update(set()) == frozenset()
+    assert obstacle_filter.update({(2, 1)}) == frozenset()
+    assert obstacle_filter.update({(2, 1)}) == {(2, 1)}
+
+
+def test_obstacle_filter_retains_confirmed_cell_through_brief_dropouts() -> None:
+    obstacle_filter = ObstaclePersistenceFilter(
+        confirmation_scans=2,
+        clear_scans=3,
+    )
+
+    obstacle_filter.update({(2, 1)})
+    assert obstacle_filter.update({(2, 1)}) == {(2, 1)}
+    assert obstacle_filter.update(set()) == {(2, 1)}
+    assert obstacle_filter.update(set()) == {(2, 1)}
+    assert obstacle_filter.update({(2, 1)}) == {(2, 1)}
+    assert obstacle_filter.update(set()) == {(2, 1)}
+    assert obstacle_filter.update(set()) == {(2, 1)}
+    assert obstacle_filter.update(set()) == frozenset()

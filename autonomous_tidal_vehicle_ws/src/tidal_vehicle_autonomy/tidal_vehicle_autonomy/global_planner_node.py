@@ -14,7 +14,11 @@ from std_msgs.msg import String
 
 from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState
 
-from .lidar_obstacle_core import obstacle_cells_from_scan, overlay_obstacles
+from .lidar_obstacle_core import (
+    ObstaclePersistenceFilter,
+    obstacle_cells_from_scan,
+    overlay_obstacles,
+)
 from .planner_core import GridCell, GridCostMap, plan_path
 
 
@@ -28,6 +32,8 @@ class GlobalPlannerNode(Node):
         # overrides this with the Version 2 footprint-specific value.
         self.declare_parameter("obstacle_inflation_radius_m", 0.75)
         self.declare_parameter("obstacle_max_range_m", 8.0)
+        self.declare_parameter("obstacle_confirmation_scans", 2)
+        self.declare_parameter("obstacle_clear_scans", 5)
         self.declare_parameter("home_x_m", 0.0)
         self.declare_parameter("home_y_m", 0.0)
         self.declare_parameter("home_frame", "map")
@@ -40,8 +46,6 @@ class GlobalPlannerNode(Node):
         self._pose: Odometry | None = None
         self._goal: PoseStamped | None = None
         self._dynamic_obstacles: frozenset[GridCell] = frozenset()
-        self._last_scan: LaserScan | None = None
-        self._last_scan_pose: tuple[float, float, float] | None = None
         self._last_odometry_replan_position: tuple[float, float] | None = None
         self._last_path_cells: tuple[GridCell, ...] | None = None
         self._last_return_path_cells: tuple[GridCell, ...] | None = None
@@ -56,6 +60,10 @@ class GlobalPlannerNode(Node):
 
         inflation_radius = self._float_parameter("obstacle_inflation_radius_m")
         obstacle_max_range = self._float_parameter("obstacle_max_range_m")
+        confirmation_scans = self._positive_int_parameter(
+            "obstacle_confirmation_scans"
+        )
+        clear_scans = self._positive_int_parameter("obstacle_clear_scans")
         event_tolerance = self._float_parameter("goal_event_tolerance_m")
         return_refresh_rate = self._float_parameter("return_path_refresh_rate_hz")
         if inflation_radius < 0.0 or obstacle_max_range <= 0.0:
@@ -68,6 +76,10 @@ class GlobalPlannerNode(Node):
             )
         if not self._string_parameter("home_frame"):
             raise ValueError("home_frame must not be empty")
+        self._obstacle_filter = ObstaclePersistenceFilter(
+            confirmation_scans=confirmation_scans,
+            clear_scans=clear_scans,
+        )
 
         status_qos = QoSProfile(
             depth=1,
@@ -111,7 +123,15 @@ class GlobalPlannerNode(Node):
     def _string_parameter(self, name: str) -> str:
         return str(self.get_parameter(name).value)
 
+    def _positive_int_parameter(self, name: str) -> int:
+        value = self.get_parameter(name).value
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer")
+        return value
+
     def _on_costmap(self, message: OccupancyGrid) -> None:
+        previous_costmap = self._base_costmap
+        previous_geometry = self._costmap_geometry(previous_costmap)
         try:
             self._base_costmap = GridCostMap(
                 width=message.info.width,
@@ -127,20 +147,22 @@ class GlobalPlannerNode(Node):
             return
 
         self._costmap_msg = message
-        if self._last_scan is not None and self._last_scan_pose is not None:
-            try:
-                self._dynamic_obstacles = self._project_scan(
-                    self._last_scan,
-                    self._last_scan_pose,
-                )
-            except ValueError as error:
-                self.get_logger().error(
-                    f"Ignoring stored LiDAR scan after costmap update: {error}"
-                )
-                self._dynamic_obstacles = frozenset()
+        current_geometry = self._costmap_geometry(self._base_costmap)
+        if previous_geometry is not None and previous_geometry != current_geometry:
+            self._obstacle_filter.reset()
+            self._dynamic_obstacles = frozenset()
+            self.get_logger().warning(
+                "Terrain costmap geometry changed; cleared the LiDAR obstacle history"
+            )
         self._rebuild_planning_costmap()
+        if (
+            previous_costmap is not None
+            and self._costmaps_equal(previous_costmap, self._base_costmap)
+        ):
+            self._republish_routes_for_unchanged_costmap()
+            return
         # Safety requires a route received after every terrain-map update,
-        # even when A* selects the same cells.
+        # while an actual cost change requires a fresh A* assessment.
         self._replan("terrain costmap update", force_publish=True)
 
     def _on_odometry(self, message: Odometry) -> None:
@@ -158,7 +180,17 @@ class GlobalPlannerNode(Node):
             if distance < self._costmap.resolution * 0.5:
                 return
         self._last_odometry_replan_position = position
-        self._replan("odometry update")
+        # Keep active path geometry stable while the follower advances through
+        # it. Rebuilding A* from every new grid cell can select an equally good
+        # path on the opposite side of a discrete tie and reset the follower.
+        # Safety's prospective return path still follows the live position.
+        if not self._return_requested:
+            start = self._costmap.grid_from_world(*position)
+            self._update_prospective_return_path(
+                start,
+                "odometry update",
+                force_publish=False,
+            )
 
     def _remember_odometry_replan_position(self) -> None:
         if self._pose is None:
@@ -184,7 +216,10 @@ class GlobalPlannerNode(Node):
         self._replan("new mission goal", force_publish=True)
 
     def _on_terrain_state(self, _: TerrainState) -> None:
-        self._replan("terrain state update")
+        # Route costs arrive on /terrain_costmap. Replanning from a telemetry-
+        # only tide update duplicates that work and destabilises an otherwise
+        # unchanged route.
+        return
 
     def _on_safety_status(self, message: SafetyStatus) -> None:
         if (
@@ -243,17 +278,22 @@ class GlobalPlannerNode(Node):
             self.get_logger().error(f"Ignoring invalid LiDAR scan: {error}")
             return
 
-        self._last_scan = message
-        self._last_scan_pose = scan_pose
-        if obstacles == self._dynamic_obstacles:
+        previous_obstacles = self._dynamic_obstacles
+        stable_obstacles = self._obstacle_filter.update(obstacles)
+        if stable_obstacles == previous_obstacles:
             return
 
-        self._dynamic_obstacles = obstacles
+        self._dynamic_obstacles = stable_obstacles
         self._rebuild_planning_costmap()
         self.get_logger().info(
-            f"LiDAR obstacle overlay now contains {len(obstacles)} blocked cells"
+            "LiDAR obstacle overlay now contains "
+            f"{len(stable_obstacles)} confirmed blocked cells"
         )
-        self._replan("LiDAR obstacle update")
+        if self._obstacle_change_requires_replan(
+            previous_obstacles,
+            stable_obstacles,
+        ):
+            self._replan("confirmed LiDAR obstacle update")
 
     def _project_scan(
         self,
@@ -285,6 +325,79 @@ class GlobalPlannerNode(Node):
             self._base_costmap,
             self._dynamic_obstacles,
         )
+
+    def _obstacle_change_requires_replan(
+        self,
+        previous: frozenset[GridCell],
+        current: frozenset[GridCell],
+    ) -> bool:
+        removed = previous - current
+        if removed:
+            # A confirmed removal may restore a shorter route that the
+            # previous obstacle forced us to avoid.
+            return True
+
+        added = current - previous
+        if not added:
+            return False
+        if not self._path_available or self._last_path_cells is None:
+            return True
+        if added.intersection(self._last_path_cells):
+            return True
+        return (
+            self._last_return_path_cells is not None
+            and bool(added.intersection(self._last_return_path_cells))
+        )
+
+    @staticmethod
+    def _costmap_geometry(
+        costmap: GridCostMap | None,
+    ) -> tuple[int, int, float, float, float] | None:
+        if costmap is None:
+            return None
+        return (
+            costmap.width,
+            costmap.height,
+            costmap.resolution,
+            costmap.origin_x,
+            costmap.origin_y,
+        )
+
+    @staticmethod
+    def _costmaps_equal(first: GridCostMap, second: GridCostMap) -> bool:
+        return (
+            GlobalPlannerNode._costmap_geometry(first)
+            == GlobalPlannerNode._costmap_geometry(second)
+            and first.blocked_cost == second.blocked_cost
+            and tuple(first.costs) == tuple(second.costs)
+        )
+
+    def _republish_routes_for_unchanged_costmap(self) -> None:
+        """Refresh route stamps without changing path-follower geometry."""
+        if self._mission_finished or self._active_target() is None:
+            return
+
+        if self._path_available and self._last_path_cells is not None:
+            active_path = self._path_message(list(self._last_path_cells))
+            self._path_publisher.publish(active_path)
+            if self._return_requested:
+                self._return_path_publisher.publish(active_path)
+        else:
+            self._path_publisher.publish(self._empty_path_message())
+            if self._return_requested:
+                self._publish_empty_return_path()
+
+        if self._return_requested:
+            return
+        if (
+            self._return_path_available
+            and self._last_return_path_cells is not None
+        ):
+            self._return_path_publisher.publish(
+                self._path_message(list(self._last_return_path_cells))
+            )
+        else:
+            self._publish_empty_return_path()
 
     def _replan(self, reason: str, force_publish: bool = False) -> None:
         target = self._active_target()

@@ -8,6 +8,58 @@ from typing import Iterable, Sequence
 from .planner_core import GridCell, GridCostMap
 
 
+class ObstaclePersistenceFilter:
+    """Confirm detections and retain obstacles through brief scan dropouts."""
+
+    def __init__(self, confirmation_scans: int, clear_scans: int) -> None:
+        if confirmation_scans <= 0 or clear_scans <= 0:
+            raise ValueError("Obstacle persistence scan counts must be positive")
+        self.confirmation_scans = confirmation_scans
+        self.clear_scans = clear_scans
+        self._active: set[GridCell] = set()
+        self._detection_counts: dict[GridCell, int] = {}
+        self._miss_counts: dict[GridCell, int] = {}
+
+    @property
+    def active(self) -> frozenset[GridCell]:
+        return frozenset(self._active)
+
+    def update(self, observed: Iterable[GridCell]) -> frozenset[GridCell]:
+        """Return stable cells after applying consecutive hit/miss thresholds."""
+        observed_cells = set(observed)
+
+        # Unconfirmed detections must be consecutive. A one-scan return is
+        # discarded rather than being allowed to accumulate over time.
+        for cell in set(self._detection_counts) - observed_cells:
+            self._detection_counts.pop(cell, None)
+
+        for cell in observed_cells:
+            self._miss_counts.pop(cell, None)
+            if cell in self._active:
+                continue
+            count = self._detection_counts.get(cell, 0) + 1
+            if count >= self.confirmation_scans:
+                self._active.add(cell)
+                self._detection_counts.pop(cell, None)
+            else:
+                self._detection_counts[cell] = count
+
+        for cell in self._active - observed_cells:
+            misses = self._miss_counts.get(cell, 0) + 1
+            if misses >= self.clear_scans:
+                self._active.remove(cell)
+                self._miss_counts.pop(cell, None)
+            else:
+                self._miss_counts[cell] = misses
+
+        return self.active
+
+    def reset(self) -> None:
+        self._active.clear()
+        self._detection_counts.clear()
+        self._miss_counts.clear()
+
+
 def obstacle_cells_from_scan(
     costmap: GridCostMap,
     robot_x: float,

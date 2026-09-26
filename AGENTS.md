@@ -117,11 +117,11 @@ The dashboard may expose a circular fallback remote-control panel for operator d
 - Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state`, `/scan`, `/safety_status` and reset scenario events. It publishes the active `/planned_path`, Safety's `/return_path` and lifecycle `/mission_event` messages.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
 - Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-ground (TRACK) terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
-- The planner replans after cost-map, goal or terrain-state updates and after the vehicle travels at least half a map cell. It still checks mission completion on every odometry update, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe. The distance trigger prevents millimetre-scale odometry noise at grid boundaries from repeatedly running A*.
-- Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay, and a changed scan triggers route reassessment without modifying Simulation's terrain map.
+- The planner rebuilds the active route after a new goal, an actual terrain-cost change, a relevant confirmed obstacle or a Safety return request. It preserves active-path geometry across odometry movement, unchanged cost-map refreshes and duplicate terrain-state telemetry so the follower is not repeatedly reset onto equally good A* variants. Odometry movement of at least half a map cell still refreshes Safety's prospective return path, and mission completion is checked on every odometry update.
+- Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay. Two consecutive detections confirm a cell, five consecutive misses clear it, and newly confirmed cells only trigger route reassessment when they affect the active outbound or return route. This prevents scan flicker from repeatedly switching paths without modifying Simulation's terrain map.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
 - The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames. A timestamp-only refresh of identical path geometry preserves follower progress instead of resetting it to the first waypoint.
-- Added seventeen ROS-independent planner, follower and LiDAR tests and six ROS topic integration tests (23 Autonomy tests total).
+- Added nineteen ROS-independent planner, follower and LiDAR tests and seven ROS topic integration tests (26 Autonomy tests total).
 - The shared launcher now selects LiDAR inflation by vehicle: `0.75 m` for Version 1 and `1.7 m` for Version 2. The standalone planner default remains the Version 1 value.
 - Hardened the `global_planner` and `path_follower` entry points against ROS shutdown races; both processes now exit cleanly when the shared launch is interrupted.
 - Restored the autonomy package's `ament_python` build-tool declaration and verified the full eight-package workspace build.
@@ -162,7 +162,7 @@ The follower is independent of `TRACK` (Version 1: `WHEEL`), `TRANSITION` and `H
 
 The global planner keeps Simulation's `/terrain_costmap` unchanged as its base map. Each `/scan` update is converted from polar range measurements into world coordinates using the vehicle pose from `/odom`, then into terrain-grid cells. Invalid, infinite, too-near and over-range measurements are ignored. Detected cells are expanded by the configured safety radius and marked no-go only in an internal copy used by A*.
 
-Each accepted scan replaces the previous dynamic obstacle set. When that set changes, the planner immediately rechecks the route. It publishes a detour when one exists and publishes an empty `/planned_path` if the obstacle removes every safe route. A later clear scan removes the temporary cells and allows the direct terrain route to return.
+Dynamic cells use temporal hysteresis instead of allowing each scan to replace the previous obstacle set. A cell must appear in two consecutive scans before it is added, while five consecutive misses are required before a confirmed cell is removed. Brief LiDAR dropouts therefore retain the existing detour. A newly confirmed cell runs A* immediately only if it intersects the active path or prospective return path; unrelated detections are retained in the overlay and considered during the next normal replan. A confirmed removal runs A* so the direct route can return. If an obstacle removes every safe route, the planner publishes an empty `/planned_path`.
 
 Default LiDAR parameters are:
 
@@ -170,6 +170,8 @@ Default LiDAR parameters are:
 | --- | ---: | --- |
 | `obstacle_inflation_radius_m` | `0.75 m` | Standalone and Version 1 default. The shared Version 2 launch overrides this with `1.7 m`. |
 | `obstacle_max_range_m` | `8.0 m` | Ignore detections beyond the useful local planning distance. |
+| `obstacle_confirmation_scans` | `2` | Consecutive detections required before a cell becomes blocked. |
+| `obstacle_clear_scans` | `5` | Consecutive misses required before a blocked cell is removed. |
 
 For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 0.75 m circular inflation is based on Version 1's approximately 1.2 m by 0.7 m footprint plus a small clearance. The shared launcher uses 1.7 m for Version 2's approximately 1.46 m half-diagonal plus clearance. Person 4's final sensor-frame transform must replace the remaining odometry-position assumption.
 
@@ -177,7 +179,7 @@ For the first integration slice, the LiDAR is assumed to be located at the odome
 
 During outbound travel, the planner publishes a prospective route from the current pose to HOME on `/return_path` so Safety can calculate return energy and time before allowing departure. A `return_required=true` message on `/safety_status` then latches return mode. The planner immediately invalidates the outbound route, publishes a fresh HOME route on `/return_path`, and publishes the same route on `/planned_path` for the path follower.
 
-Every terrain cost-map update forces a newly stamped route publication, even when A* selects the same cells. A return-only 2 Hz refresh prevents callback ordering from making Safety treat that route as old, without resetting the path follower. Later `return_required=false` messages do not cancel the latch. The existing `reset` scenario event clears the mission and routes, then Autonomy publishes `mission_reset`.
+Every terrain cost-map update forces a newly stamped route publication. If the map contents are unchanged, the planner republishes the existing cells without running A* or resetting follower progress; an actual cost change rebuilds the route. A return-only 2 Hz refresh prevents callback ordering from making Safety treat that route as old. Later `return_required=false` messages do not cancel the latch. The existing `reset` scenario event clears the mission and routes, then Autonomy publishes `mission_reset`.
 
 Autonomy publishes `delivery_confirmed` when odometry reaches the outbound path endpoint and `mission_complete` when it reaches the HOME path endpoint. Empty active and return paths are published at completion so the path follower proposes a stop while Safety resets to `PRELAUNCH`.
 

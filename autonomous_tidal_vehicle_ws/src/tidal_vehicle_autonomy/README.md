@@ -18,7 +18,9 @@ Terrain cost-map encoding is fixed as follows:
 
 If replanning makes a previously published route unsafe, the planner publishes an empty path to invalidate it.
 
-LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Valid detections are inflated and added to an internal planning copy of the terrain map. A changed obstacle set triggers replanning; an obstacle-free scan removes the prior temporary cells. The Simulation-owned /terrain_costmap is never modified.
+LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Valid detections are inflated and added to an internal planning copy of the terrain map. A cell must be detected in two consecutive scans before it becomes blocked and must be absent for five consecutive scans before it is cleared. Newly confirmed cells trigger replanning only when they intersect the active outbound/return route; confirmed removals allow the planner to recover a shorter route. The Simulation-owned /terrain_costmap is never modified.
+
+The active route remains geometrically stable while the vehicle follows it. Odometry movement updates Safety's prospective return path without rebuilding the follower's active path, and repeated cost maps with unchanged geometry and costs refresh route timestamps without rerunning A*. An actual terrain-cost change, a relevant confirmed obstacle, a new goal or a Safety return request still produces a fresh active route.
 
 For the initial integration, the vehicle footprint is estimated as 2.5 m long by 1.5 m wide, and the LiDAR is assumed to be at the odometry position and aligned with the vehicle's forward axis. Use Person 4's final collision geometry and sensor transform when they are ready.
 
@@ -28,12 +30,14 @@ Global-planner LiDAR parameters:
 | --- | ---: | --- |
 | obstacle_inflation_radius_m | 0.75 m | Standalone/Version 1 default. The shared launcher uses 1.7 m for Version 2's larger footprint. |
 | obstacle_max_range_m | 8.0 m | Farthest scan return used by local planning. |
+| obstacle_confirmation_scans | 2 | Consecutive detections required before a cell becomes blocked. |
+| obstacle_clear_scans | 5 | Consecutive misses required before a blocked cell is removed. |
 
 Return behavior:
 
 - `return_required=true` latches return mode and replaces the outbound route with a fresh route to HOME;
 - the return route is published on both /return_path for Safety and /planned_path for the follower;
-- every terrain cost-map update republishes a newly stamped route, including when the selected cells are unchanged;
+- every terrain cost-map update republishes a newly stamped route; an unchanged map preserves the selected cells while a changed map reruns A*;
 - /return_path is refreshed at 2 Hz while returning so Safety cannot see a stale route because of callback ordering;
 - reaching the delivery endpoint publishes `delivery_confirmed`;
 - reaching HOME publishes `mission_complete` and empty routes;

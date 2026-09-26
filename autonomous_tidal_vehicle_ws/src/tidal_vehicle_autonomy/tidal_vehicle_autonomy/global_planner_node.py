@@ -18,6 +18,7 @@ from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState
 
 from .lidar_obstacle_core import (
     ObstaclePersistenceFilter,
+    inflate_no_go_cells,
     inflate_obstacle_cells,
     obstacle_cells_from_scan,
     obstacle_change_requires_replan,
@@ -49,6 +50,7 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("return_path_refresh_rate_hz", 2.0)
 
         self._base_costmap: GridCostMap | None = None
+        self._static_clearance_costmap: GridCostMap | None = None
         self._costmap_msg: OccupancyGrid | None = None
         self._costmap: GridCostMap | None = None
         self._pose: Odometry | None = None
@@ -178,6 +180,11 @@ class GlobalPlannerNode(Node):
         except ValueError as error:
             self.get_logger().error(f"Ignoring invalid terrain costmap: {error}")
             return
+
+        self._static_clearance_costmap = inflate_no_go_cells(
+            self._base_costmap,
+            self._obstacle_inflation_radius,
+        )
 
         self._costmap_msg = message
         current_geometry = self._costmap_geometry(self._base_costmap)
@@ -372,11 +379,11 @@ class GlobalPlannerNode(Node):
         )
 
     def _rebuild_planning_costmap(self) -> None:
-        if self._base_costmap is None:
+        if self._static_clearance_costmap is None:
             self._costmap = None
             return
         self._costmap = overlay_obstacles(
-            self._base_costmap,
+            self._static_clearance_costmap,
             self._dynamic_obstacles,
         )
 

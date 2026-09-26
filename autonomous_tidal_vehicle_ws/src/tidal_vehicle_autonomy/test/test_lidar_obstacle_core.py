@@ -1,7 +1,10 @@
 from math import inf, nan, pi
 
+import pytest
+
 from tidal_vehicle_autonomy.lidar_obstacle_core import (
     ObstaclePersistenceFilter,
+    inflate_no_go_cells,
     inflate_obstacle_cells,
     obstacle_cells_from_scan,
     obstacle_change_requires_replan,
@@ -90,6 +93,25 @@ def test_overlay_does_not_modify_base_costmap() -> None:
     assert list(base.costs) == [0, 20, 0]
     assert overlay.cost_at((1, 0)) == 90
     assert not overlay.traversable((1, 0))
+
+
+def test_static_no_go_inflation_accounts_for_the_whole_blocked_cell() -> None:
+    costs = [0] * 35
+    costs[2 * 7 + 3] = 100
+    base = GridCostMap(width=7, height=5, costs=costs, resolution=1.0)
+
+    inflated = inflate_no_go_cells(base, clearance_radius=1.0)
+
+    assert base.traversable((3, 2)) is False
+    assert inflated.traversable((2, 1)) is False
+    assert inflated.traversable((4, 3)) is False
+    assert inflated.traversable((1, 2)) is True
+    assert list(base.costs).count(100) == 1
+
+
+def test_static_no_go_inflation_rejects_invalid_clearance() -> None:
+    with pytest.raises(ValueError):
+        inflate_no_go_cells(_safe_map(), clearance_radius=nan)
 
 
 def test_planner_detours_around_lidar_obstacle() -> None:

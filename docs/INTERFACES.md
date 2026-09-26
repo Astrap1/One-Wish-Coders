@@ -168,7 +168,7 @@ Until the common TF tree is integrated, `/terrain_costmap`, `/odom`, `/mission_g
 
 ## LiDAR obstacle update rule
 
-Autonomy treats `/terrain_costmap` as the Simulation-owned base map. Known static tree and rock collision footprints are published there as cost `100` no-go cells. Autonomy must not republish or modify that source map. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the configured safety radius and overlaid as temporary no-go cells for route planning.
+Autonomy treats `/terrain_costmap` as the Simulation-owned base map. Known static tree and rock collision footprints are published there as cost `100` no-go cells; the corridor publisher marks every grid cell intersected by a collision proxy, not only cells whose centres fall inside it. Autonomy must not republish or modify that source map. In its private planning copy it inflates all static no-go and unknown cells by the selected vehicle-clearance radius. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the same radius and overlaid as temporary no-go cells for route planning.
 
 Raw hit cells are confirmed before inflation: two consecutive detections add a hit and five misses remove it. A new confirmed footprint causes immediate reassessment only when it intersects the active outbound or prospective return route. Unrelated removals retain an existing safe detour; a fully cleared overlay or removals while no route exists trigger route recovery. If the overlay blocks every route, the global planner publishes an empty `/planned_path` to stop the path follower's previous proposal.
 

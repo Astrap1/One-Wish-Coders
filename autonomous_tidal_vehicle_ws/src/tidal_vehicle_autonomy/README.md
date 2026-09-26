@@ -18,7 +18,7 @@ Terrain cost-map encoding is fixed as follows:
 
 If replanning makes a previously published route unsafe, the planner publishes an empty path to invalidate it.
 
-LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Raw hit cells must be detected in two consecutive scans before they are footprint-inflated and added to an internal planning copy; five misses clear a hit. New cells replan only when they intersect the active outbound/return route. Unrelated removals retain the current safe detour, while a cleared overlay or blocked mission triggers route recovery. The Simulation-owned /terrain_costmap is never modified.
+The Simulation-owned /terrain_costmap is never modified. Before A*, its static no-go and unknown cells are inflated in a private planning copy by the selected vehicle's clearance radius. LiDAR measurements are projected into the terrain grid using the vehicle pose from /odom. Raw hit cells must be detected in two consecutive scans before they are inflated by the same radius and added as a temporary overlay; five misses clear a hit. New cells replan only when they intersect the active outbound/return route. Unrelated removals retain the current safe detour, while a cleared overlay or blocked mission triggers route recovery.
 
 The active route remains geometrically stable while the vehicle follows it. Odometry movement updates Safety's prospective return path without rebuilding the follower's active path, and repeated cost maps with unchanged geometry and costs refresh route timestamps without rerunning A*. An actual terrain-cost change, a relevant confirmed obstacle, a new goal or a Safety return request still produces a fresh active route.
 
@@ -28,7 +28,7 @@ Global-planner LiDAR parameters:
 
 | Parameter | Default | Meaning |
 | --- | ---: | --- |
-| obstacle_inflation_radius_m | 0.75 m | Standalone/V1 default; shared launch uses 1.7 m for V2 and 2.0 m for V3. |
+| obstacle_inflation_radius_m | 0.75 m | Static and LiDAR no-go clearance; shared launch uses 1.7 m for V2 and 2.0 m for V3. |
 | obstacle_min_range_m | 8.0 m | Minimum useful local look-ahead. |
 | obstacle_max_range_m | 8.0 m | Farthest scan return used by local planning. |
 | obstacle_brake_decel_mps2 | 1.0 m/s² | Deceleration used to grow scan range with stopping distance. |

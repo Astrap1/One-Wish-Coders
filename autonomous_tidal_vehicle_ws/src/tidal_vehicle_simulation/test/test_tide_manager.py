@@ -14,6 +14,7 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 TideManager = MODULE.TideManager
 STATIC_OBSTACLES = MODULE.STATIC_OBSTACLES
+cell_intersects_circle = MODULE.cell_intersects_circle
 
 
 def _manager() -> tuple[TideManager, list[float]]:
@@ -27,6 +28,7 @@ def _manager() -> tuple[TideManager, list[float]]:
     manager.hold = False
     manager.held_fraction = 0.0
     manager.last_level = -2.8
+    manager.resolution = 1.0
     return manager, now
 
 
@@ -75,6 +77,13 @@ def test_static_obstacle_footprints_match_world_count() -> None:
     assert manager._is_static_obstacle(35.0, 0.0)
     assert manager._is_static_obstacle(68.0, 0.0)
     assert not manager._is_static_obstacle(52.0, 0.0)
+
+
+def test_static_obstacle_rasterization_marks_every_intersected_cell() -> None:
+    # This cell centre is outside the 1 m rock at (18.824, 10), but the
+    # physical circle overlaps the cell's upper-right corner.
+    assert cell_intersects_circle(17.5, 9.5, 1.0, 18.824, 10.0, 1.0)
+    assert not cell_intersects_circle(16.5, 9.5, 1.0, 18.824, 10.0, 1.0)
 
 
 def test_costmap_obstacles_match_world_sdf_positions() -> None:

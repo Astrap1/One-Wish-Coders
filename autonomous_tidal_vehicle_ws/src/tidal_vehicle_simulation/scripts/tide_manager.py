@@ -37,6 +37,21 @@ STATIC_OBSTACLES = (
 )
 
 
+def cell_intersects_circle(
+    cell_x: float,
+    cell_y: float,
+    cell_size: float,
+    circle_x: float,
+    circle_y: float,
+    circle_radius: float,
+) -> bool:
+    """Return whether a square grid cell overlaps a circular obstacle."""
+    half_cell = cell_size * 0.5
+    nearest_dx = max(abs(cell_x - circle_x) - half_cell, 0.0)
+    nearest_dy = max(abs(cell_y - circle_y) - half_cell, 0.0)
+    return nearest_dx * nearest_dx + nearest_dy * nearest_dy <= circle_radius ** 2
+
+
 class TideManager(Node):
     def __init__(self) -> None:
         super().__init__("tide_manager")
@@ -214,10 +229,16 @@ class TideManager(Node):
             for axis in ("min_x", "max_x", "min_y", "max_y")
         )
 
-    @staticmethod
-    def _is_static_obstacle(x: float, y: float) -> bool:
+    def _is_static_obstacle(self, x: float, y: float) -> bool:
         return any(
-            (x - obstacle_x) ** 2 + (y - obstacle_y) ** 2 <= radius ** 2
+            cell_intersects_circle(
+                x,
+                y,
+                self.resolution,
+                obstacle_x,
+                obstacle_y,
+                radius,
+            )
             for obstacle_x, obstacle_y, radius in STATIC_OBSTACLES
         )
 

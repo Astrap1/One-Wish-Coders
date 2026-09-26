@@ -182,6 +182,47 @@ def overlay_obstacles(
     )
 
 
+def inflate_no_go_cells(
+    base_costmap: GridCostMap,
+    clearance_radius: float,
+) -> GridCostMap:
+    """Inflate static no-go cells by vehicle-centre clearance for A*."""
+    if not isfinite(clearance_radius) or clearance_radius < 0.0:
+        raise ValueError("No-go clearance radius must be finite and non-negative")
+    if clearance_radius == 0.0:
+        return base_costmap
+
+    blocked_cells = {
+        (x, y)
+        for y in range(base_costmap.height)
+        for x in range(base_costmap.width)
+        if not base_costmap.traversable((x, y))
+    }
+    inflated: set[GridCell] = set()
+    search_cells = ceil(
+        clearance_radius / base_costmap.resolution + 0.5
+    )
+    half_cell = base_costmap.resolution * 0.5
+    for centre_x, centre_y in blocked_cells:
+        for offset_y in range(-search_cells, search_cells + 1):
+            for offset_x in range(-search_cells, search_cells + 1):
+                nearest_dx = max(
+                    abs(offset_x) * base_costmap.resolution - half_cell,
+                    0.0,
+                )
+                nearest_dy = max(
+                    abs(offset_y) * base_costmap.resolution - half_cell,
+                    0.0,
+                )
+                if hypot(nearest_dx, nearest_dy) > clearance_radius:
+                    continue
+                cell = (centre_x + offset_x, centre_y + offset_y)
+                if base_costmap.in_bounds(cell):
+                    inflated.add(cell)
+
+    return overlay_obstacles(base_costmap, inflated)
+
+
 def _inflated_cells(
     costmap: GridCostMap,
     centre: GridCell,

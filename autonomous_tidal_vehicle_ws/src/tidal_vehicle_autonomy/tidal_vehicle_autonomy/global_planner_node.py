@@ -31,7 +31,7 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("home_x_m", 0.0)
         self.declare_parameter("home_y_m", 0.0)
         self.declare_parameter("home_frame", "map")
-        self.declare_parameter("goal_event_tolerance_m", 0.3)
+        self.declare_parameter("goal_event_tolerance_m", 2.0)
         self.declare_parameter("return_path_refresh_rate_hz", 2.0)
 
         self._base_costmap: GridCostMap | None = None
@@ -452,7 +452,19 @@ class GlobalPlannerNode(Node):
             position.x - self._active_path_end[0],
             position.y - self._active_path_end[1],
         )
-        if distance > self._float_parameter("goal_event_tolerance_m"):
+        # A grid planner can only navigate to a cell, not an exact point
+        # inside that cell. Treat entry into the target cell as arrival so a
+        # vehicle with momentum cannot cross the cell, replan behind itself,
+        # and circle forever after missing a sub-cell tolerance.
+        in_target_cell = (
+            self._costmap is not None
+            and self._costmap.grid_from_world(position.x, position.y)
+            == self._costmap.grid_from_world(*self._active_path_end)
+        )
+        if (
+            not in_target_cell
+            and distance > self._float_parameter("goal_event_tolerance_m")
+        ):
             return
 
         if self._return_requested:

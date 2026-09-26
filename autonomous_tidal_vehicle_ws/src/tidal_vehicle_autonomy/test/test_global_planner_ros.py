@@ -275,6 +275,7 @@ def test_safety_request_switches_to_fresh_latched_return_route() -> None:
 def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
     rclpy.init()
     planner, publisher, capture, executor = _planner_test_nodes()
+    assert planner.get_parameter("goal_event_tolerance_m").value == 2.0
 
     try:
         costmap_publisher = publisher.create_publisher(
@@ -301,7 +302,9 @@ def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
         goal_publisher.publish(_goal())
         _spin_for(executor)
 
-        odom_publisher.publish(_odometry(x_m=2.5, y_m=0.5))
+        # A pose near the edge of the two-metre delivery zone must still
+        # trigger the delivery lifecycle transition.
+        odom_publisher.publish(_odometry(x_m=2.01, y_m=0.01))
         _spin_for(executor)
         assert capture.mission_events.count("delivery_confirmed") == 1
 
@@ -311,7 +314,7 @@ def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
         _spin_for(executor)
         assert capture.return_paths[-1].poses[-1].pose.position.x == 0.5
 
-        odom_publisher.publish(_odometry(x_m=0.5, y_m=0.5))
+        odom_publisher.publish(_odometry(x_m=0.01, y_m=0.01))
         _spin_for(executor)
         assert capture.mission_events.count("mission_complete") == 1
         assert capture.paths[-1].poses == []

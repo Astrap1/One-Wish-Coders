@@ -188,7 +188,7 @@ Default return parameters are:
 | `home_x_m` | `0.0 m` | HOME position in the configured frame. |
 | `home_y_m` | `0.0 m` | HOME position in the configured frame. |
 | `home_frame` | `map` | Frame containing HOME. |
-| `goal_event_tolerance_m` | `0.3 m` | Distance from a path endpoint that triggers a mission event. |
+| `goal_event_tolerance_m` | `2.0 m` | Delivery/HOME zone radius that triggers a mission event. |
 | `return_path_refresh_rate_hz` | `2.0 Hz` | Keep Safety's validated return route fresh without resetting the follower. |
 
 The HOME values must match Person 2's safety parameters. The changing map-frame tide map is integrated through the shared launcher; Person 1 and Person 4 should tune the final sensor transform and route geometry against the corridor before the demo. Autonomy does not publish `/cmd_vel`.

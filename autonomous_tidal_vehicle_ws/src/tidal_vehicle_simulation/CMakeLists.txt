@@ -28,8 +28,9 @@ find_package(gz-msgs10 REQUIRED)
 option(TIDAL_BUILD_TIDE_VISUAL "Build Person 3's tide visual system" ON)
 if(TIDAL_BUILD_TIDE_VISUAL)
   add_library(tide_visual_system SHARED plugins/tide_visual_system.cpp)
+  target_include_directories(tide_visual_system PRIVATE plugins/include)
   target_link_libraries(tide_visual_system PRIVATE
-    gz-sim8::gz-sim8 gz-plugin2::register)
+    gz-sim8::gz-sim8 gz-plugin2::register gz-transport13::gz-transport13 gz-msgs10::gz-msgs10)
   install(TARGETS tide_visual_system LIBRARY DESTINATION lib)
 endif()
 
@@ -61,6 +62,7 @@ if(ament_cmake_FOUND)
     find_package(ament_cmake_pytest REQUIRED)
     ament_add_pytest_test(vehicle_mobility_test test/test_vehicle_mobility.py)
     ament_add_pytest_test(lidar_scan_test test/test_lidar_scan.py)
+    ament_add_pytest_test(tide_manager_test test/test_tide_manager.py)
   endif()
 
   ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")

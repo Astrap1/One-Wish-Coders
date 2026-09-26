@@ -11,10 +11,33 @@ from std_msgs.msg import String
 from tidal_vehicle_interfaces.msg import TerrainState
 
 
+# Known static collision footprints from tidal_corridor.sdf: (x, y, radius_m).
+# Dynamic or unmodelled detections remain Autonomy-owned LiDAR overlays.
+STATIC_OBSTACLES = (
+    # Mangroves
+    (18.824, -19.0, 0.95), (54.588, -16.0, 0.75),
+    (57.941, 17.0, 0.85), (72.471, -18.0, 1.10),
+    (14.353, -13.0, 1.30), (81.412, 13.0, 1.05),
+    (87.000, -12.0, 1.00), (25.000, -12.0, 0.75),
+    (32.000, 14.0, 0.85), (48.000, -18.0, 0.75),
+    (66.000, 15.0, 0.85), (94.000, -14.0, 0.95),
+    # Rocks
+    (-0.176, -9.0, 1.0), (18.824, 10.0, 1.0),
+    (33.353, -10.0, 1.0), (36.706, 11.0, 1.0),
+    (40.059, -7.0, 1.0), (43.412, 9.0, 1.0),
+    (46.765, -12.0, 1.0), (50.118, 8.0, 1.0),
+    (53.471, -10.0, 1.0), (57.941, 12.0, 1.0),
+    (64.647, -7.0, 1.0), (69.118, 10.0, 1.0),
+    (72.471, -11.0, 1.0), (75.824, 8.0, 1.0),
+    (80.294, -9.0, 1.0), (85.882, 11.0, 1.0),
+    (94.824, 8.0, 1.0), (106.000, -10.0, 1.0),
+)
+
+
 class TideManager(Node):
     def __init__(self) -> None:
         super().__init__("tide_manager")
-        self.declare_parameter("scenario_duration_s", 20.0)
+        self.declare_parameter("scenario_duration_s", 180.0)
         self.declare_parameter("initial_water_level_m", -2.80)
         self.declare_parameter("water_rise_m", 2.80)
         # Tide is a changing terrain input for this air-cushion vehicle, not a
@@ -35,8 +58,8 @@ class TideManager(Node):
         self.declare_parameter("channel_max_x_m", 100.0)
         self.declare_parameter("channel_min_y_m", -30.0)
         self.declare_parameter("channel_max_y_m", 30.0)
-        self.declare_parameter("mud_min_x_m", 4.0)
-        self.declare_parameter("mud_max_x_m", 100.0)
+        self.declare_parameter("mud_min_x_m", 7.7320508)
+        self.declare_parameter("mud_max_x_m", 96.2679492)
         self.declare_parameter("mud_min_y_m", -30.0)
         self.declare_parameter("mud_max_y_m", 30.0)
 
@@ -59,6 +82,7 @@ class TideManager(Node):
         # can still reset, hold, resume, or restart the progression.
         self.started_at: Optional[float] = self._now()
         self.hold = False
+        self.held_fraction = 0.0
         self.last_level = self.initial_level
 
         state_qos = QoSProfile(depth=10, durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -83,17 +107,23 @@ class TideManager(Node):
         if event in {"tide_rise", "rise", "start_tide"}:
             self.started_at = self._now()
             self.hold = False
+            self.held_fraction = 0.0
         elif event in {"tide_reset", "reset"}:
             self.started_at = None
             self.hold = False
+            self.held_fraction = 0.0
         elif event in {"tide_hold", "hold"}:
+            if not self.hold and self.started_at is not None:
+                self.held_fraction = self._fraction()
             self.hold = True
         elif event in {"tide_resume", "resume"}:
+            if self.hold and self.started_at is not None:
+                self.started_at = self._now() - self.held_fraction * self.duration
             self.hold = False
 
     def _fraction(self) -> float:
         if self.started_at is None or self.hold:
-            return 0.0 if self.started_at is None else self.last_level_fraction
+            return 0.0 if self.started_at is None else self.held_fraction
         return min(1.0, max(0.0, (self._now() - self.started_at) / self.duration))
 
     @property
@@ -120,7 +150,10 @@ class TideManager(Node):
         state.tide_state = tide_state
         state.tide_risk = float(risk)
         state.water_level_m = float(self.last_level)
-        state.tide_rate_m_per_minute = float(self.rise / max(self.duration / 60.0, 1e-6))
+        state.tide_rate_m_per_minute = float(
+            0.0 if self.hold or self.started_at is None or fraction >= 1.0
+            else self.rise / max(self.duration / 60.0, 1e-6)
+        )
         state.seconds_until_corridor_unsafe = -1.0
         state.corridor_traversable = True
         self.state_pub.publish(state)
@@ -144,16 +177,16 @@ class TideManager(Node):
                 value = self.firm_cost
                 # The water rectangle mirrors TerrainZones; terrain height clips it
                 # into a river that expands outward as the level rises.
-                # Obstacles remain a LiDAR planning overlay.
+                # Known static collision footprints are base-map no-go cells;
+                # dynamic detections remain an Autonomy-owned LiDAR overlay.
                 if self._contains(self.mudflat, x, y):
                     value = min(89, self.mud_cost + int(10 * fraction))
                 if (self._contains(self.channel, x, y)
                         and self.last_level >= self._terrain_height(x)):
-                    # Open water is easier to cross than viscous mud for an
-                    # air-cushion vehicle, although rising water adds a modest
-                    # navigation/obstacle-clearance cost.  It never becomes a
-                    # generic no-go cell solely because the tide is high.
+                    # Open water remains traversable for the air-cushion vehicle.
                     value = min(89, self.water_cost + int(10 * fraction))
+                if self._is_static_obstacle(x, y):
+                    value = 100
                 values.append(value)
         grid.data = values
         return grid
@@ -176,6 +209,13 @@ class TideManager(Node):
         return tuple(
             float(self.get_parameter(f"{prefix}_{axis}_m").value)
             for axis in ("min_x", "max_x", "min_y", "max_y")
+        )
+
+    @staticmethod
+    def _is_static_obstacle(x: float, y: float) -> bool:
+        return any(
+            (x - obstacle_x) ** 2 + (y - obstacle_y) ** 2 <= radius ** 2
+            for obstacle_x, obstacle_y, radius in STATIC_OBSTACLES
         )
 
     @staticmethod

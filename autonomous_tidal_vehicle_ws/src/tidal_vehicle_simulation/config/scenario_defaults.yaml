@@ -25,7 +25,8 @@ tide_manager:
     channel_max_x_m: 100.0
     channel_min_y_m: -30.0
     channel_max_y_m: 30.0
-    mud_min_x_m: 4.0
-    mud_max_x_m: 100.0
+    # The two 15-degree bank faces remain firm TRACK terrain until flooded.
+    mud_min_x_m: 7.7320508
+    mud_max_x_m: 96.2679492
     mud_min_y_m: -30.0
     mud_max_y_m: 30.0

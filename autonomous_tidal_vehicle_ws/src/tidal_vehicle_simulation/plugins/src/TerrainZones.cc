@@ -28,8 +28,11 @@
 #include <gz/math/Vector2.hh>
 #include <gz/plugin/RegisterMore.hh>  // 2nd+ file in this library
 #include <gz/sim/System.hh>
+#include <gz/msgs/stringmsg.pb.h>
+#include <gz/transport/Node.hh>
 
 #include "hover_plugins/TerrainRegistry.hh"
+#include "hover_plugins/TideProgress.hh"
 
 namespace hover
 {
@@ -71,17 +74,25 @@ class TerrainZones : public gz::sim::System, public gz::sim::ISystemConfigure,
       }
     }
     TerrainRegistry::Instance().Set(zones, ground);
+    this->node.Subscribe("/scenario_event", &TerrainZones::OnScenarioEvent, this);
   }
 
   public: void PreUpdate(const gz::sim::UpdateInfo &_info,
                          gz::sim::EntityComponentManager &) override
   {
-    if (!this->rising || _info.paused) return;
-    TerrainRegistry::Instance().Update(
-        std::chrono::duration<double>(_info.simTime).count());
+    if (!this->rising) return;
+    const double simTime = std::chrono::duration<double>(_info.simTime).count();
+    TerrainRegistry::Instance().Update(this->progress.Advance(simTime, _info.paused));
+  }
+
+  private: void OnScenarioEvent(const gz::msgs::StringMsg &_message)
+  {
+    this->progress.QueueEvent(_message.data());
   }
 
   private: bool rising{false};
+  private: TideProgress progress;
+  private: gz::transport::Node node;
 };
 }  // namespace hover
 

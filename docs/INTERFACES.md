@@ -119,8 +119,11 @@ return energy, return margin and return ETA from `/return_path`,
 values in `/safety_status`.
 
 `/scenario_event` is reserved for deterministic evaluation controls. The
-initial supported values are `operator_abort` (request a controlled return) and
-`reset` (stop and reset the safety supervisor). Simulation-specific fault
+The supported mission values are `operator_abort` (request a controlled return) and
+`reset` (stop and reset the safety supervisor and tide). Simulation also accepts
+`tide_rise`, `tide_hold`, `tide_resume`, and `tide_reset`; these synchronously
+control the rendered water, physics-side water level, `/terrain_state`, and
+`/terrain_costmap`. Simulation-specific fault
 injection remains owned by Evaluation and Simulation and should be reflected in
 `/vehicle_health` or `/terrain_state`.
 
@@ -140,7 +143,7 @@ Until the common TF tree is integrated, `/terrain_costmap`, `/odom`, `/mission_g
 
 ## LiDAR obstacle update rule
 
-Autonomy treats `/terrain_costmap` as the Simulation-owned base map. It must not republish or modify that source map. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the configured safety radius and overlaid as temporary no-go cells for route planning.
+Autonomy treats `/terrain_costmap` as the Simulation-owned base map. Known static tree and rock collision footprints are published there as cost `100` no-go cells. Autonomy must not republish or modify that source map. Valid finite `/scan` returns within the sensor minimum range and Autonomy's configured maximum range are projected into base-map cells, inflated by the configured safety radius and overlaid as temporary no-go cells for route planning.
 
 Each accepted scan replaces the previous temporary obstacle set. A changed set causes immediate route reassessment; a clear scan removes prior LiDAR cells. If the overlay blocks every route, the global planner publishes an empty `/planned_path` to stop the path follower's previous proposal.
 

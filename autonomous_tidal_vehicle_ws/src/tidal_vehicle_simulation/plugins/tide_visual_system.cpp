@@ -11,7 +11,11 @@
 #include <gz/sim/components/Name.hh>
 #include <gz/sim/components/Pose.hh>
 #include <gz/sim/components/Model.hh>
+#include <gz/msgs/stringmsg.pb.h>
+#include <gz/transport/Node.hh>
 #include <sdf/Element.hh>
+
+#include "hover_plugins/TideProgress.hh"
 
 namespace tidal_vehicle_simulation
 {
@@ -33,6 +37,7 @@ public:
       this->rise = sdf->Get<double>("rise_m");
     if (sdf && sdf->HasElement("duration_s"))
       this->duration = std::max(0.1, sdf->Get<double>("duration_s"));
+    this->node.Subscribe("/scenario_event", &TideVisualSystem::OnScenarioEvent, this);
   }
 
   void PreUpdate(const gz::sim::UpdateInfo &info, gz::sim::EntityComponentManager &ecm) override
@@ -51,7 +56,8 @@ public:
       else
         return;
     }
-    const double elapsed = std::max(0.0, std::chrono::duration<double>(info.simTime).count());
+    const double simTime = std::chrono::duration<double>(info.simTime).count();
+    const double elapsed = this->progress.Advance(simTime, info.paused);
     const double fraction = std::min(1.0, elapsed / this->duration);
     auto pose = this->basePose;
     pose.Pos().Z(this->basePose.Pos().Z() + this->rise * fraction);
@@ -66,6 +72,11 @@ public:
   }
 
 private:
+  void OnScenarioEvent(const gz::msgs::StringMsg &message)
+  {
+    this->progress.QueueEvent(message.data());
+  }
+
   std::string waterModel{"tidal_channel_water"};
   gz::sim::Entity waterEntity{gz::sim::kNullEntity};
   gz::math::Pose3d basePose{};
@@ -74,6 +85,8 @@ private:
   double initialLevel{0.02};
   double rise{0.55};
   double duration{120.0};
+  hover::TideProgress progress;
+  gz::transport::Node node;
 };
 }
 

@@ -3,6 +3,13 @@
 # the world's <world name="..."> must equal its file name (without .sdf).
 # Public topic names follow docs/INTERFACES.md. Keep the two in sync.
 
+# ---------------- scenario control (ROS -> Gazebo) --------------------------
+- ros_topic_name: /scenario_event
+  gz_topic_name: /scenario_event
+  ros_type_name: std_msgs/msg/String
+  gz_type_name: gz.msgs.StringMsg
+  direction: ROS_TO_GZ
+
 # ---------------- time -------------------------------------------------------
 - ros_topic_name: /clock
   gz_topic_name: /clock

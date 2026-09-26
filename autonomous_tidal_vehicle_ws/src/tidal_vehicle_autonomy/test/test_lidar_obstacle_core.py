@@ -62,7 +62,7 @@ def test_ignores_invalid_and_out_of_range_returns() -> None:
     assert obstacles == {(3, 1)}
 
 
-def test_inflates_obstacle_within_map_bounds() -> None:
+def test_inflates_obstacle_without_blocking_the_robot_cell() -> None:
     obstacles = obstacle_cells_from_scan(
         _safe_map(width=3, height=3),
         robot_x=0.5,
@@ -76,7 +76,7 @@ def test_inflates_obstacle_within_map_bounds() -> None:
         inflation_radius=1.0,
     )
 
-    assert obstacles == {(0, 0), (1, 0), (2, 0), (1, 1)}
+    assert obstacles == {(1, 0), (2, 0), (1, 1)}
 
 
 def test_overlay_does_not_modify_base_costmap() -> None:

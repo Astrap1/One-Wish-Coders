@@ -46,6 +46,11 @@ def obstacle_cells_from_scan(
             continue
         obstacles.update(_inflated_cells(costmap, hit_cell, inflation_radius))
 
+    # The cell containing the sensor is occupied by the vehicle itself and
+    # must remain a valid A* start. Coarse-grid inflation can otherwise reach
+    # back into this cell even when the detected obstacle is outside the
+    # configured vehicle clearance.
+    obstacles.discard(costmap.grid_from_world(robot_x, robot_y))
     return frozenset(obstacles)
 
 

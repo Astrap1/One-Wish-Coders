@@ -27,7 +27,9 @@ vehicle_mobility:
     retract_position: 0.25         # track joint position when retracted (m)
     gear_joints: [track_left_joint, track_right_joint]
     track_share_slope: 0.6         # cushion load share while climbing on tracks
-    track_deploy_slope_deg: 14.0   # deploy tracks for a sustained forward climb at or above this (1 deg guard band)
+    # V3 is hover-capable through 8 degrees and track-capable through 20 degrees.
+    # Deploy before the hover margin is exhausted; the 1.5 s dwell rejects bumps.
+    track_deploy_slope_deg: 8.0
     settle_gap_m: 0.03             # skirt gap when the vehicle rests on its tracks
     settle_gap_tolerance_m: 0.008
     slope_dwell_s: 1.5             # climb must persist this long (edges and bumps are brief)

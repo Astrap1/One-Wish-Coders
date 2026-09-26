@@ -154,6 +154,16 @@ def test_tracks_steep_slope_selects_track_with_slope_share() -> None:
     assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
 
 
+def test_v3_tracks_arm_at_eight_degree_forward_climb() -> None:
+    """V3 must deploy before its 8 degree hover-climb limit is exceeded."""
+    modes = _tracks(track_deploy_slope_deg=8.0, slope_dwell_s=0.2)
+    _enter_v2_hover(modes)
+    for _ in range(3):
+        modes.step(0.1, terrain="FIRM", slope_deg=8.0,
+                   hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+
+
 def test_low_or_non_firm_slope_does_not_leave_hover() -> None:
     modes = _tracks(slope_dwell_s=0.2)
     _enter_v2_hover(modes)

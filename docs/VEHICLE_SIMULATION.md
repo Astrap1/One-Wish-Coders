@@ -108,6 +108,7 @@ Version 2 scaled up: 3.0 × 1.8 × 1.9 m, 530 kg including a 100 kg payload, ser
 - **Zone speed limits** (split cost bands, `AGENTS.md`) in `vehicle_mobility_node` (`zone_speed_limits_mps`, `brake_decel_mps2`), the path follower and Safety. Each looks ahead as far as it needs to stop.
 - **Series-hybrid energy model:** the generator follows demand up to `genset_max_w` and tops up the battery. `/vehicle_health.fuel_percent` is reported (−1 on Versions 1 and 2).
 - **Collision detection:** contact sensors on the hull, skirt and track collisions (Gazebo's Contact system is loaded by the model) plus an IMU jolt check feed `collision_monitor_node` → `/vehicle/collision`. Ground contact (vertical normals) and the vehicle's own parts are filtered out.
+- **V3 track policy:** V3 also remains hover-first, but deploys tracks after a sustained forward firm-ground climb of **8° or more**. Its stated hover-climb limit is 8° and its stated tracked limit is 20°, so this earlier threshold avoids waiting until the 15° bank has already stalled hover propulsion. Water, mud, level ground, descent, pivoting and side tilt remain HOVER conditions.
 - **Cameras:** rear, left and right on the mast (320 × 240, 5 Hz), bridged only with `cameras:=all`. Gazebo renders a camera only while it is subscribed: real-time factor 0.94 with the front camera, 0.78 with all four.
 
 **Tests:**

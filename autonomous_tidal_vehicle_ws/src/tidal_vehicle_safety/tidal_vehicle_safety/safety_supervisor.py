@@ -71,7 +71,9 @@ class SafetySupervisor(Node):
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Path, "/planned_path", self._on_planned_path, 10)
         self.create_subscription(Path, "/return_path", self._on_return_path, 10)
-        self.create_subscription(String, "/mission_event", self._on_mission_event, 10)
+        self.create_subscription(
+            String, "/mission_event", self._on_mission_event, status_qos
+        )
         self.create_subscription(String, "/scenario_event", self._on_scenario_event, 10)
         self.create_timer(0.1, self._on_timer)
 

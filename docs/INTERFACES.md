@@ -18,7 +18,8 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/operator_cmd_vel` | Operator dashboard | Safety | `geometry_msgs/Twist` | Hold-to-run remote driving request. Safety is the only `/cmd_vel` publisher and caps this input to 0.8 m/s linear and 0.6 rad/s angular. The dashboard publishes at 10 Hz while a direction is held and sends zero on release; stale input stops the vehicle. |
 | `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb above 15° (capped at 1.5 m/s). Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
-| `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
+| `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Latest lifecycle event used by Safety for its internal mission phase. Reliable, transient-local QoS lets late-starting consumers recover the current lifecycle transition. |
+| `/mission_event_history` | Autonomy | Operator | `std_msgs/String` (JSON) | Reliable, transient-local snapshot of the most recent 20 lifecycle events. The browser dashboard uses it to restore its mission-event timeline after a restart. |
 | `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
 | `/points` | Simulation | Autonomy, Operator | `sensor_msgs/PointCloud2` | 16-channel 3D LiDAR, frame `lidar_link`, 10 Hz, 0.3–30 m. |
 | `/camera/image_raw`, `/camera/camera_info` | Simulation | Operator | `sensor_msgs/Image`, `CameraInfo` | Front camera, frame `camera_link`, 640×480 at 15 Hz. |
@@ -84,6 +85,12 @@ Autonomy publishes `/mission_event` at each meaningful lifecycle transition:
 | `mission_reset` | Stop the vehicle and reset to `PRELAUNCH`. |
 
 Autonomy emits `delivery_confirmed` when odometry reaches the outbound path endpoint and `mission_complete` when it reaches the HOME path endpoint. On completion or reset, it publishes empty active paths so the path follower proposes a stop.
+
+`/mission_event` is reliable and transient-local, retaining the most recent
+lifecycle transition for late-starting Safety and operator consumers. Autonomy
+also publishes a reliable, transient-local `/mission_event_history` JSON
+snapshot containing the latest 20 events for the browser dashboard; this is a
+small demo-facing retained timeline, not a general event database.
 
 When Safety sets `return_required=true`, Autonomy must stop proposing the
 outbound route and publish a freshly stamped `/return_path` to HOME. The same

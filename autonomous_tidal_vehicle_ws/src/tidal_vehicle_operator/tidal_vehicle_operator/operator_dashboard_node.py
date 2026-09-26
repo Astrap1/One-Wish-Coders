@@ -5,6 +5,7 @@ from __future__ import annotations
 from geometry_msgs.msg import PoseStamped, Twist
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 
 from tidal_vehicle_interfaces.msg import SafetyStatus
@@ -25,7 +26,14 @@ class OperatorDashboardNode(Node):
         self._return_margin_percent = 0.0
         self._reason = "Awaiting telemetry."
 
-        self.create_subscription(String, "/mission_event", self._on_mission_event, 10)
+        mission_event_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self.create_subscription(
+            String, "/mission_event", self._on_mission_event, mission_event_qos
+        )
         self.create_subscription(SafetyStatus, "/safety_status", self._on_safety_status, 10)
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd_vel, 10)

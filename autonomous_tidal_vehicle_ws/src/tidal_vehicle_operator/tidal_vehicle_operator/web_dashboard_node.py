@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import io
+import json
 from queue import Empty, Queue
 import threading
 import time
@@ -67,7 +68,20 @@ class BrowserDashboardNode(Node):
         self._remote_requests: Queue[dict[str, object]] = Queue()
         self._remote_timeout_s = 0.35
 
-        self.create_subscription(String, "/mission_event", self._on_mission_event, 10)
+        mission_event_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self.create_subscription(
+            String, "/mission_event", self._on_mission_event, mission_event_qos
+        )
+        self.create_subscription(
+            String,
+            "/mission_event_history",
+            self._on_mission_event_history,
+            mission_event_qos,
+        )
         self.create_subscription(SafetyStatus, "/safety_status", self._on_safety_status, 10)
         self.create_subscription(VehicleHealth, "/vehicle_health", self._on_vehicle_health, 10)
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
@@ -169,14 +183,49 @@ class BrowserDashboardNode(Node):
 
     def _on_mission_event(self, message: String) -> None:
         event = message.data.strip()
-        self._mission_events.append({"time": time.strftime("%H:%M:%S"), "event": event or "(empty event)"})
-        self._mission_events = self._mission_events[-20:]
+        self._apply_mission_event(event)
+        self._reason = f"Mission event: {event}"
+        self._publish_state()
+
+    def _on_mission_event_history(self, message: String) -> None:
+        """Restore the retained lifecycle timeline after a dashboard restart."""
+        try:
+            payload = json.loads(message.data)
+            raw_events = payload.get("events", [])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            self.get_logger().warning("Ignoring invalid /mission_event_history payload")
+            return
+
+        if not isinstance(raw_events, list):
+            self.get_logger().warning("Ignoring non-list /mission_event_history payload")
+            return
+
+        history: list[dict[str, str]] = []
+        for item in raw_events[-20:]:
+            if not isinstance(item, dict):
+                continue
+            event = item.get("event")
+            if not isinstance(event, str):
+                continue
+            timestamp = item.get("time")
+            history.append(
+                {
+                    "time": timestamp if isinstance(timestamp, str) else "--:--:--",
+                    "event": event or "(empty event)",
+                }
+            )
+
+        self._mission_events = history
+        if history:
+            self._apply_mission_event(history[-1]["event"])
+            self._reason = f"Mission event: {history[-1]['event']}"
+        self._publish_state()
+
+    def _apply_mission_event(self, event: str) -> None:
         if event == "delivery_confirmed":
             self._mission_state = "DELIVERED"
         elif event in {"mission_complete", "mission_reset"}:
             self._mission_state = "HOLD"
-        self._reason = f"Mission event: {event}"
-        self._publish_state()
 
     def _on_safety_status(self, message: SafetyStatus) -> None:
         self._mission_state = message.state

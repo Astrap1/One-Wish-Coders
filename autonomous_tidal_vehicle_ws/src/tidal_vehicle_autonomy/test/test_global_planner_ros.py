@@ -1,5 +1,6 @@
 """ROS-level tests for terrain, LiDAR and return-route replanning."""
 
+import json
 import os
 
 os.environ.setdefault("ROS_DOMAIN_ID", "31")
@@ -23,18 +24,30 @@ from tidal_vehicle_autonomy.global_planner_node import GlobalPlannerNode
 
 
 class PlannerCapture(Node):
-    def __init__(self) -> None:
-        super().__init__("global_planner_capture")
+    def __init__(self, node_name: str = "global_planner_capture") -> None:
+        super().__init__(node_name)
         self.paths: list[Path] = []
         self.return_paths: list[Path] = []
         self.mission_events: list[str] = []
+        self.mission_event_histories: list[str] = []
+        mission_event_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
         self.create_subscription(Path, "/planned_path", self.paths.append, 10)
         self.create_subscription(Path, "/return_path", self.return_paths.append, 10)
         self.create_subscription(
             String,
             "/mission_event",
             lambda message: self.mission_events.append(message.data),
-            10,
+            mission_event_qos,
+        )
+        self.create_subscription(
+            String,
+            "/mission_event_history",
+            lambda message: self.mission_event_histories.append(message.data),
+            mission_event_qos,
         )
 
 
@@ -323,6 +336,38 @@ def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
         assert capture.mission_events.count("mission_reset") == 1
         assert capture.return_paths[-1].poses == []
     finally:
+        _destroy_test_nodes(planner, publisher, capture, executor)
+        rclpy.shutdown()
+
+
+def test_late_operator_recovers_retained_mission_event_history() -> None:
+    rclpy.init()
+    planner, publisher, capture, executor = _planner_test_nodes()
+    late_capture: PlannerCapture | None = None
+
+    try:
+        scenario_publisher = publisher.create_publisher(String, "/scenario_event", 10)
+        _spin_for(executor, 0.1)
+
+        reset = String()
+        reset.data = "reset"
+        scenario_publisher.publish(reset)
+        _spin_for(executor)
+        assert capture.mission_events[-1] == "mission_reset"
+
+        # This node joins after the transition.  It must receive both the
+        # current lifecycle event and the retained dashboard timeline.
+        late_capture = PlannerCapture("late_global_planner_capture")
+        executor.add_node(late_capture)
+        _spin_for(executor)
+
+        assert late_capture.mission_events == ["mission_reset"]
+        history = json.loads(late_capture.mission_event_histories[-1])
+        assert history["events"][-1]["event"] == "mission_reset"
+    finally:
+        if late_capture is not None:
+            executor.remove_node(late_capture)
+            late_capture.destroy_node()
         _destroy_test_nodes(planner, publisher, capture, executor)
         rclpy.shutdown()
 

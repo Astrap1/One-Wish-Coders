@@ -28,8 +28,12 @@
       <sensor name="navsat" type="navsat"><pose>0.93 0.25 0.48 0 0 0</pose><gz_frame_id>base_link</gz_frame_id>
         <always_on>1</always_on><update_rate>10</update_rate>
       </sensor>
+      <!-- Cushion clearance is calculated by AirCushion's physics raycasts.
+           These visual GPU rangers are therefore disabled in the demo profile:
+           keeping four render sensors at 50 Hz made WSLg simulation run far
+           below real time without providing a bridged ROS topic. -->
       <sensor name="ranger_fl" type="gpu_lidar"><pose>1 0.5 -0.2 0 1.5708 0</pose><gz_frame_id>base_link</gz_frame_id>
-        <always_on>1</always_on><update_rate>50</update_rate>
+        <always_on>0</always_on><update_rate>10</update_rate>
         <!-- 5 rays over +/-3 deg (a narrow ToF beam). A single-sample gpu_lidar
              returns wrong ranges in gz-sensors 8, so don't use samples = 1. -->
         <lidar><scan><horizontal><samples>5</samples><resolution>1</resolution>
@@ -37,7 +41,7 @@
           <range><min>0.01</min><max>2.0</max><resolution>0.001</resolution></range></lidar>
       </sensor>
       <sensor name="ranger_fr" type="gpu_lidar"><pose>1 -0.5 -0.2 0 1.5708 0</pose><gz_frame_id>base_link</gz_frame_id>
-        <always_on>1</always_on><update_rate>50</update_rate>
+        <always_on>0</always_on><update_rate>10</update_rate>
         <!-- 5 rays over +/-3 deg (a narrow ToF beam). A single-sample gpu_lidar
              returns wrong ranges in gz-sensors 8, so don't use samples = 1. -->
         <lidar><scan><horizontal><samples>5</samples><resolution>1</resolution>
@@ -45,7 +49,7 @@
           <range><min>0.01</min><max>2.0</max><resolution>0.001</resolution></range></lidar>
       </sensor>
       <sensor name="ranger_rl" type="gpu_lidar"><pose>-1 0.5 -0.2 0 1.5708 0</pose><gz_frame_id>base_link</gz_frame_id>
-        <always_on>1</always_on><update_rate>50</update_rate>
+        <always_on>0</always_on><update_rate>10</update_rate>
         <!-- 5 rays over +/-3 deg (a narrow ToF beam). A single-sample gpu_lidar
              returns wrong ranges in gz-sensors 8, so don't use samples = 1. -->
         <lidar><scan><horizontal><samples>5</samples><resolution>1</resolution>
@@ -53,7 +57,7 @@
           <range><min>0.01</min><max>2.0</max><resolution>0.001</resolution></range></lidar>
       </sensor>
       <sensor name="ranger_rr" type="gpu_lidar"><pose>-1 -0.5 -0.2 0 1.5708 0</pose><gz_frame_id>base_link</gz_frame_id>
-        <always_on>1</always_on><update_rate>50</update_rate>
+        <always_on>0</always_on><update_rate>10</update_rate>
         <!-- 5 rays over +/-3 deg (a narrow ToF beam). A single-sample gpu_lidar
              returns wrong ranges in gz-sensors 8, so don't use samples = 1. -->
         <lidar><scan><horizontal><samples>5</samples><resolution>1</resolution>
@@ -273,13 +277,17 @@
         <geometry><cylinder><radius>0.0515</radius><length>0.0717</length></cylinder></geometry>
         <surface><friction><ode><mu>0.5</mu><mu2>0.5</mu2></ode></friction></surface>
       </collision>
+      <!-- 5 Hz / 360 x 8 is ample for the 0.5 m navigation grid and keeps
+           Gazebo responsive under WSLg. Foxglove still receives /scan and the
+           raw PointCloud2, so this reduces rendering load rather than demo
+           observability. -->
       <sensor name="lidar_3d" type="gpu_lidar"><pose>0 0 0 0 0 0</pose><gz_frame_id>lidar_link</gz_frame_id>
-        <always_on>1</always_on><update_rate>10</update_rate><visualize>1</visualize>
+        <always_on>1</always_on><update_rate>5</update_rate><visualize>0</visualize>
         <lidar>
           <scan>
-            <horizontal><samples>900</samples><resolution>1</resolution>
+            <horizontal><samples>360</samples><resolution>1</resolution>
               <min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal>
-            <vertical><samples>16</samples><resolution>1</resolution>
+            <vertical><samples>8</samples><resolution>1</resolution>
               <min_angle>-0.26180</min_angle>
               <max_angle>0.26180</max_angle></vertical>
           </scan>
@@ -304,10 +312,12 @@
         <geometry><box><size>0.075 0.11 0.075</size></box></geometry>
         <surface><friction><ode><mu>0.5</mu><mu2>0.5</mu2></ode></friction></surface>
       </collision>
+      <!-- Operator-camera profile: sufficient for scene awareness while
+           avoiding a high-resolution render every simulation tick. -->
       <sensor name="front_camera" type="camera"><pose>0 0 0 0 0 0</pose><gz_frame_id>camera_link</gz_frame_id>
-        <always_on>1</always_on><update_rate>15</update_rate>
+        <always_on>1</always_on><update_rate>5</update_rate>
         <camera><horizontal_fov>1.40</horizontal_fov>
-          <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+          <image><width>320</width><height>240</height><format>R8G8B8</format></image>
           <clip><near>0.05</near><far>60</far></clip></camera>
       </sensor>
     </link>

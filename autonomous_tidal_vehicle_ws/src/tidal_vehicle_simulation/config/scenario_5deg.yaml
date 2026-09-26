@@ -1,0 +1,34 @@
+# Scenario values are simulation assumptions, not claims about field performance.
+tide_manager:
+  ros__parameters:
+    use_sim_time: true
+    initial_state: low
+    # A 104 m bank-to-bank delivery needs time to progress before the
+    # environment changes.  The SDF terrain and visible water use this same
+    # 180-second schedule.
+    scenario_duration_s: 180.0
+    initial_water_level_m: -2.80
+    water_rise_m: 2.80
+    tide_risk_max: 0.50
+    publish_period_s: 0.5
+    # The map and SDF TerrainZones describe the same planned corridor.
+    frame_id: map
+    map_resolution_m: 1.0
+    map_width_cells: 120
+    map_height_cells: 60
+    map_origin_x_m: -12.0
+    map_origin_y_m: -30.0
+    firm_cost: 10
+    mud_cost: 55
+    water_cost: 35
+    channel_min_x_m: 4.0
+    channel_max_x_m: 100.0
+    channel_min_y_m: -30.0
+    channel_max_y_m: 30.0
+    # The two 5-degree bank faces remain firm terrain until flooded.
+    mud_min_x_m: 15.4300523
+    mud_max_x_m: 88.5699477
+    upper_bank_end_x_m: 15.4300523
+    upper_delivery_start_x_m: 88.5699477
+    mud_min_y_m: -30.0
+    mud_max_y_m: 30.0

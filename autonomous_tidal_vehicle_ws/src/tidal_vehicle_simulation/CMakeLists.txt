@@ -60,6 +60,7 @@ if(ament_cmake_FOUND)
   if(BUILD_TESTING)
     find_package(ament_cmake_pytest REQUIRED)
     ament_add_pytest_test(vehicle_mobility_test test/test_vehicle_mobility.py)
+    ament_add_pytest_test(lidar_scan_test test/test_lidar_scan.py)
   endif()
 
   ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")

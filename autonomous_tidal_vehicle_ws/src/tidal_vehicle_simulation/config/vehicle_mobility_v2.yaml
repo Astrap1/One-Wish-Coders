@@ -47,11 +47,11 @@ lidar_scan:
   ros__parameters:
     use_sim_time: true
     bins: 720                      # 0.5 deg
-    # Reject the decorative terrain mesh / collision plane.  The LiDAR mast is
-    # 1.44 m above base_link, so -1.15 m retains obstacles about 0.3 m or
-    # taller while preventing near-ground returns from becoming a 360-degree
-    # no-go ring in the 2D planner.
-    min_height_m: -1.15
+    # Reject the decorative terrain mesh / collision plane. The LiDAR mast is
+    # 1.44 m above base_link, so -0.62 m ignores returns in the lowest
+    # ~0.82 m. This stops terrain texture/ground returns from filling the
+    # 2D obstacle overlay while retaining rocks, trunks and tall root systems.
+    min_height_m: -0.62
     max_height_m: 0.50
     range_min_m: 0.3
     range_max_m: 30.0

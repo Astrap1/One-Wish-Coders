@@ -68,11 +68,16 @@ class PathFollowerNode(Node):
         return float(self.get_parameter(name).value)
 
     def _on_path(self, message: Path) -> None:
-        self._path = [
+        path = [
             (pose.pose.position.x, pose.pose.position.y)
             for pose in message.poses
         ]
-        self._path_frame = message.header.frame_id
+        path_frame = message.header.frame_id
+        if path == self._path and path_frame == self._path_frame:
+            return
+
+        self._path = path
+        self._path_frame = path_frame
         self._progress_index = 0
         self._goal_reported = False
         if self._path:
@@ -150,10 +155,20 @@ def main(args: list[str] | None = None) -> None:
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-    finally:
-        node.destroy_node()
+    except RuntimeError:
         if rclpy.ok():
-            rclpy.shutdown()
+            raise
+    finally:
+        try:
+            node.destroy_node()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if rclpy.ok():
+                try:
+                    rclpy.shutdown()
+                except KeyboardInterrupt:
+                    pass
 
 
 if __name__ == "__main__":

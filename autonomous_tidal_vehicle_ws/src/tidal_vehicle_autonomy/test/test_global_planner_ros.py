@@ -18,6 +18,7 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 
 from tidal_vehicle_interfaces.msg import SafetyStatus
+import tidal_vehicle_autonomy.global_planner_node as planner_module
 from tidal_vehicle_autonomy.global_planner_node import GlobalPlannerNode
 
 
@@ -321,6 +322,50 @@ def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
         _spin_for(executor)
         assert capture.mission_events.count("mission_reset") == 1
         assert capture.return_paths[-1].poses == []
+    finally:
+        _destroy_test_nodes(planner, publisher, capture, executor)
+        rclpy.shutdown()
+
+
+def test_odometry_replans_only_after_meaningful_travel(monkeypatch) -> None:
+    calls: list[tuple[tuple[int, int], tuple[int, int]]] = []
+    real_plan_path = planner_module.plan_path
+
+    def counted_plan_path(costmap, start, goal):
+        calls.append((start, goal))
+        return real_plan_path(costmap, start, goal)
+
+    monkeypatch.setattr(planner_module, "plan_path", counted_plan_path)
+    rclpy.init()
+    planner, publisher, capture, executor = _planner_test_nodes()
+
+    try:
+        costmap_publisher = publisher.create_publisher(
+            OccupancyGrid, "/terrain_costmap", 10
+        )
+        odom_publisher = publisher.create_publisher(Odometry, "/odom", 10)
+        goal_publisher = publisher.create_publisher(
+            PoseStamped, "/mission_goal", 10
+        )
+        _spin_for(executor, 0.1)
+
+        costmap_publisher.publish(_costmap([0, 0, 0]))
+        odom_publisher.publish(_odometry(x_m=0.99, y_m=0.5))
+        goal_publisher.publish(_goal())
+        _spin_for(executor)
+
+        calls_after_goal = len(calls)
+        assert calls_after_goal > 0
+
+        # Crossing a grid boundary by a few centimetres must not let odometry
+        # noise repeatedly reset an otherwise unchanged route.
+        odom_publisher.publish(_odometry(x_m=1.01, y_m=0.5))
+        _spin_for(executor, 0.1)
+        assert len(calls) == calls_after_goal
+
+        odom_publisher.publish(_odometry(x_m=1.6, y_m=0.5))
+        _spin_for(executor, 0.1)
+        assert len(calls) > calls_after_goal
     finally:
         _destroy_test_nodes(planner, publisher, capture, executor)
         rclpy.shutdown()

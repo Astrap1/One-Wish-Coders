@@ -70,6 +70,13 @@ def test_follower_publishes_forward_proposal_and_stops_on_empty_path() -> None:
         assert any(command.linear.x > 0.0 for command in capture.commands)
         assert all(command.linear.y == 0.0 for command in capture.commands)
 
+        follower._progress_index = 2
+        refreshed_path = _straight_path()
+        refreshed_path.header.stamp.sec = 1
+        path_publisher.publish(refreshed_path)
+        _spin_for(executor)
+        assert follower._progress_index == 2
+
         empty_path = Path()
         empty_path.header.frame_id = "map"
         capture.commands.clear()

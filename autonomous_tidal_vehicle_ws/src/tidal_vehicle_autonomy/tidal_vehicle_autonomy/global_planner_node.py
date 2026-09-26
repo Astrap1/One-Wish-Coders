@@ -24,8 +24,8 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("blocked_cost_threshold", 90)
         self.declare_parameter("require_matching_frame", True)
         # Version 1 is approximately 1.2 m by 0.7 m. Use its half-diagonal
-        # plus a small clearance; the former Version-2-sized 1.7 m radius
-        # could close the entire demonstrator corridor from a few returns.
+        # plus a small clearance as the standalone default. The shared launch
+        # overrides this with the Version 2 footprint-specific value.
         self.declare_parameter("obstacle_inflation_radius_m", 0.75)
         self.declare_parameter("obstacle_max_range_m", 8.0)
         self.declare_parameter("home_x_m", 0.0)
@@ -42,6 +42,7 @@ class GlobalPlannerNode(Node):
         self._dynamic_obstacles: frozenset[GridCell] = frozenset()
         self._last_scan: LaserScan | None = None
         self._last_scan_pose: tuple[float, float, float] | None = None
+        self._last_odometry_replan_position: tuple[float, float] | None = None
         self._last_path_cells: tuple[GridCell, ...] | None = None
         self._last_return_path_cells: tuple[GridCell, ...] | None = None
         self._return_path_available = False
@@ -145,7 +146,26 @@ class GlobalPlannerNode(Node):
     def _on_odometry(self, message: Odometry) -> None:
         self._pose = message
         self._check_goal_reached()
+        if self._costmap is None or self._active_target() is None:
+            return
+
+        position = (message.pose.pose.position.x, message.pose.pose.position.y)
+        if self._last_odometry_replan_position is not None:
+            distance = hypot(
+                position[0] - self._last_odometry_replan_position[0],
+                position[1] - self._last_odometry_replan_position[1],
+            )
+            if distance < self._costmap.resolution * 0.5:
+                return
+        self._last_odometry_replan_position = position
         self._replan("odometry update")
+
+    def _remember_odometry_replan_position(self) -> None:
+        if self._pose is None:
+            self._last_odometry_replan_position = None
+            return
+        position = self._pose.pose.pose.position
+        self._last_odometry_replan_position = (position.x, position.y)
 
     def _on_goal(self, message: PoseStamped) -> None:
         if self._return_requested or self._mission_finished:
@@ -160,6 +180,7 @@ class GlobalPlannerNode(Node):
         self._active_path_end = None
         self._delivery_reported = False
         self._completion_reported = False
+        self._remember_odometry_replan_position()
         self._replan("new mission goal", force_publish=True)
 
     def _on_terrain_state(self, _: TerrainState) -> None:
@@ -182,6 +203,7 @@ class GlobalPlannerNode(Node):
         self.get_logger().warning(
             f"Safety requested return to HOME: {message.reason or 'no reason provided'}"
         )
+        self._remember_odometry_replan_position()
         self._replan("safety return request", force_publish=True)
 
     def _on_scenario_event(self, message: String) -> None:
@@ -198,6 +220,7 @@ class GlobalPlannerNode(Node):
         self._return_path_available = False
         self._active_path_end = None
         self._path_available = False
+        self._last_odometry_replan_position = None
         self._publish_empty_routes(include_return=True)
         self._publish_mission_event("mission_reset")
         self.get_logger().info("Mission reset; waiting for a new goal")
@@ -516,10 +539,20 @@ def main(args: list[str] | None = None) -> None:
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-    finally:
-        node.destroy_node()
+    except RuntimeError:
         if rclpy.ok():
-            rclpy.shutdown()
+            raise
+    finally:
+        try:
+            node.destroy_node()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if rclpy.ok():
+                try:
+                    rclpy.shutdown()
+                except KeyboardInterrupt:
+                    pass
 
 
 if __name__ == "__main__":

@@ -19,7 +19,6 @@ Each request below names an owner. **If you are a coding agent working in that o
 
 ### To Person 1 (Autonomy), `tidal_vehicle_autonomy`
 
-1. **Obstacle inflation for Version 2.** `global_planner` still uses its 0.75 m default for `obstacle_inflation_radius_m`, which was sized for Version 1 (1.2 × 0.7 m), and `sim.launch.py` passes no value. Version 2 is 2.5 × 1.5 m, so its half-diagonal is √(1.25² + 0.75²) ≈ 1.46 m. **Request: 1.7 m** (half-diagonal plus 0.25 m clearance). With 0.5 m cells that is 4 cells. Check the corridor's narrowest passages still have a route. If none remains, 1.5 m (half-diagonal only) is the floor. Person 4 can pass the value per vehicle from `sim.launch.py` if you prefer to keep your default.
 2. **LiDAR transform: no change needed.** The Version 2 LiDAR sits on a centre mast directly above `base_link` (x = 0, y = 0, z = 1.44 m), and `/scan` is published in `lidar_link`, which is axis-aligned with `base_link`. Your "LiDAR at the odometry position, facing forward" assumption is therefore exact in the horizontal plane. The mast height is already handled in `lidar_scan_node` (Person 4), which filters ground and self returns. Using TF instead is optional.
 3. **Turning capability (information).** With the rudders and puff ports, Version 2 is designed to reach the follower's 1.0 rad/s limit in HOVER, including a pivot in place (see *Turning aids* below). This still has to be verified in Gazebo (Role 4, open item 8). Braking uses 320 N of reverse thrust (≈ 1 m/s²), so stopping from 0.8 m/s takes well under 1 m, far inside the 8 m obstacle range. Raising `max_linear_speed` to about 1.5 m/s would still stop within about 2 m.
 
@@ -118,13 +117,15 @@ The dashboard may expose a circular fallback remote-control panel for operator d
 - Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state`, `/scan`, `/safety_status` and reset scenario events. It publishes the active `/planned_path`, Safety's `/return_path` and lifecycle `/mission_event` messages.
 - Implemented a ROS-independent, eight-connected A* core that minimises distance and terrain risk.
 - Agreed planner interpretation of `/terrain_costmap`: `0`--`19` firm-ground (TRACK) terrain, `20`--`59` hover terrain, `60`--`89` elevated-risk hover terrain, `90`--`100` no-go, and `-1` unknown/no-go.
-- The planner replans after cost-map, goal or terrain-state updates, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe.
+- The planner replans after cost-map, goal or terrain-state updates and after the vehicle travels at least half a map cell. It still checks mission completion on every odometry update, refuses mismatched frames, and publishes an empty path when a previously valid route becomes unsafe. The distance trigger prevents millimetre-scale odometry noise at grid boundaries from repeatedly running A*.
 - Added LiDAR obstacle projection: valid `/scan` returns become inflated blocked cells in an internal planning overlay, and a changed scan triggers route reassessment without modifying Simulation's terrain map.
 - Implemented `path_follower`, which consumes `/planned_path` and `/odom` and publishes forward and turning proposals on `/cmd_vel_proposed` at 10 Hz.
-- The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames.
-- Added seventeen ROS-independent planner, follower and LiDAR tests and five ROS topic integration tests.
+- The follower uses lookahead steering, slows near the goal, stops to correct large heading errors, and proposes zero motion for empty paths, stale odometry or mismatched frames. A timestamp-only refresh of identical path geometry preserves follower progress instead of resetting it to the first waypoint.
+- Added seventeen ROS-independent planner, follower and LiDAR tests and six ROS topic integration tests (23 Autonomy tests total).
+- The shared launcher now selects LiDAR inflation by vehicle: `0.75 m` for Version 1 and `1.7 m` for Version 2. The standalone planner default remains the Version 1 value.
+- Hardened the `global_planner` and `path_follower` entry points against ROS shutdown races; both processes now exit cleanly when the shared launch is interrupted.
 - Restored the autonomy package's `ament_python` build-tool declaration and verified the full eight-package workspace build.
-- Verified live simulated odometry and LiDAR integration. The full launcher completed an autonomous delivery and HOME return while Safety remained the only `/cmd_vel` publisher.
+- Verified live simulated odometry and LiDAR integration. The full launcher completed an autonomous delivery and HOME return while Safety remained the only `/cmd_vel` publisher. A later Version 2 static-world regression confirmed the `1.7 m` inflation override, Safety in `CRUISE`, and movement from approximately `x=0.00 m` to `x=5.32 m`; the newly added supervised remote-control path did not interfere with autonomous proposals.
 
 ### Path follower implementation details
 
@@ -153,7 +154,7 @@ Default path-follower parameters are:
 | `rotate_in_place_angle` | `0.7 rad` | Stop forward motion while correcting a large heading error. |
 | `odom_timeout` | `0.5 s` | Stop proposing motion when localisation is stale. |
 
-The follower proposes a zero command when the path is empty, odometry is missing or stale, frames do not match, or the goal is reached. The global planner publishes an empty path once when a new terrain map invalidates a previously published route. This prevents continued tracking of a stale route.
+The follower proposes a zero command when the path is empty, odometry is missing or stale, frames do not match, or the goal is reached. The global planner publishes an empty path once when a new terrain map invalidates a previously published route. This prevents continued tracking of a stale route. Repeated publications with the same frame and waypoint geometry are treated as freshness updates and do not reset the follower's progress index.
 
 The follower is independent of `TRACK` (Version 1: `WHEEL`), `TRANSITION` and `HOVER` actuator behaviour. Person 2 retains final command authority and remains the only publisher of `/cmd_vel`; Person 4 translates the approved body-motion command into wheel, lift-fan and propulsion-fan behaviour.
 
@@ -167,10 +168,10 @@ Default LiDAR parameters are:
 
 | Parameter | Default | Purpose |
 | --- | ---: | --- |
-| `obstacle_inflation_radius_m` | `0.75 m` | Cover the Version 1 vehicle's half-diagonal plus a small clearance; recalibrate for Version 2. |
+| `obstacle_inflation_radius_m` | `0.75 m` | Standalone and Version 1 default. The shared Version 2 launch overrides this with `1.7 m`. |
 | `obstacle_max_range_m` | `8.0 m` | Ignore detections beyond the useful local planning distance. |
 
-For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 0.75 m circular inflation is based on Version 1's approximately 1.2 m by 0.7 m footprint plus a small clearance. Person 4's final collision geometry and sensor-frame transform must replace these assumptions when Version 2 is available.
+For the first integration slice, the LiDAR is assumed to be located at the odometry position and aligned with the vehicle's forward direction. The 0.75 m circular inflation is based on Version 1's approximately 1.2 m by 0.7 m footprint plus a small clearance. The shared launcher uses 1.7 m for Version 2's approximately 1.46 m half-diagonal plus clearance. Person 4's final sensor-frame transform must replace the remaining odometry-position assumption.
 
 ### Return mission implementation details
 
@@ -214,10 +215,11 @@ Open integration items:
 3. **Rendering load.** The mangrove and rock meshes are heavy for the LiDAR and camera. With software rendering in a CPU-only container, the full ROS corridor stack ran at a real-time factor of 0.001–0.6 (the integration world runs near real time), so the corridor mission could not be timed there. Check the real-time factor on the demo laptop's GPU.
 4. **Sensor transform.** Resolved: the Version 2 LiDAR is directly above `base_link`, so Autonomy's "LiDAR at odometry position" assumption is exact horizontally (*Open requests*, item 2).
 5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
-6. Tune the corridor map rectangles, HOME/delivery coordinates and obstacle inflation so that the generated path matches the visibly safe route through the world.
-7. **Obstacle inflation and Safety energy figures.** Sent to Person 1 and Person 2 as *Open requests between workstreams*, items 1 and 4–6. Once they land, re-check the corridor route and the return timing.
-8. **Rudders and puff ports (new, not yet run in Gazebo).** Build the workspace, run all five Version 2 tests including the new `v2_turn_test`, and check that the 19 earlier checks still pass. Then rerun the integration-world mission.
-9. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
+6. Tune the corridor map rectangles, HOME/delivery coordinates and sensor-return geometry so that the generated path matches the visibly safe route through the world.
+7. **Version 2 obstacle inflation and route clearance.** The footprint correction is complete: the shared launch uses `0.75 m` inflation for Version 1 and `1.7 m` for Version 2. Revalidate HOME and return-route clearance in the newly expanded valley with the current collision proxies and LiDAR filtering. If near-terrain returns block HOME, align the spawn, HOME and grid origin or remove unintended returns; do not restore the undersized Version 1 radius.
+8. **Safety return energy (Person 2).** The energy and HOLD-drain work in *Open requests between workstreams*, items 4–6, remains open. Re-check corridor return timing after it lands.
+9. **Rudders and puff ports (new, not yet run in Gazebo).** Build the workspace, run all five Version 2 tests including the new `v2_turn_test`, and check that the 19 earlier checks still pass. Then rerun the integration-world mission.
+10. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
 
 ## Three-day build plan
 

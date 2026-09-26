@@ -47,9 +47,11 @@ def _prepend(var, *paths):
 # Per-vehicle files. Topic names on the ROS side are identical for both vehicles.
 VEHICLES = {
     "v1": {"model": "hovercraft", "urdf": "hovercraft.urdf",
-           "params": "vehicle_mobility.yaml", "bridge": "ros_gz_bridge.yaml"},
+           "params": "vehicle_mobility.yaml", "bridge": "ros_gz_bridge.yaml",
+           "obstacle_inflation_radius_m": 0.75},
     "v2": {"model": "hovercraft_v2", "urdf": "hovercraft_v2.urdf",
-           "params": "vehicle_mobility_v2.yaml", "bridge": "ros_gz_bridge_v2.yaml"},
+           "params": "vehicle_mobility_v2.yaml", "bridge": "ros_gz_bridge_v2.yaml",
+           "obstacle_inflation_radius_m": 1.7},
 }
 SPAWN_Z = {"tidal_corridor": 0.25}     # 0.25 m above the HOME plateau at z = 0 m
 
@@ -131,7 +133,10 @@ def _setup(context):
          Node(package="tidal_vehicle_simulation", executable="terrain_costmap_node.py",
               name="terrain_costmap", output="screen", parameters=[params])),
         Node(package="tidal_vehicle_autonomy", executable="global_planner",
-             name="global_planner", output="screen", parameters=[{"use_sim_time": True}]),
+             name="global_planner", output="screen",
+             parameters=[{"use_sim_time": True,
+                          "obstacle_inflation_radius_m":
+                              veh["obstacle_inflation_radius_m"]}]),
         Node(package="tidal_vehicle_autonomy", executable="path_follower",
              name="path_follower", output="screen", parameters=[{"use_sim_time": True}]),
         Node(package="tidal_vehicle_safety", executable="safety_supervisor",

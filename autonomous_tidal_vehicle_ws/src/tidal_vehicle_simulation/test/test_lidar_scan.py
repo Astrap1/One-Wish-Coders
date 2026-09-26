@@ -177,3 +177,16 @@ def test_optional_slope_filter_keeps_a_bank_but_not_a_rock() -> None:
     rock_bin = int((np.arctan2(3.0, 6.0) - angle_min) / increment)
     assert np.isfinite(ranges[rock_bin])
     assert not np.isfinite(ranges[int((0.0 - angle_min) / increment)])   # bank ignored
+
+
+def test_front_lidar_points_are_merged_from_the_mast_viewpoint() -> None:
+    """V3: a rock 3 m ahead of the bow LiDAR (1.18 m forward, 0.78 m below the
+    mast LiDAR) appears in /scan 4.18 m ahead of the vehicle centre."""
+    mast = np.array([[np.inf, 0.0, 0.0]])               # the mast sees nothing ahead
+    front = np.array([[3.0, 0.0, -0.3]])                # front LiDAR frame
+    merged = MODULE.merge_front_cloud(mast, front, [1.18, 0.0, -0.78])
+    assert np.allclose(merged[-1], [4.18, 0.0, -1.08])
+    ranges, angle_min, increment = cloud_to_ranges(
+        merged, bins=720, min_h=-1.70, max_h=0.5, self_footprint_radius=1.85)
+    assert abs(ranges[int((0.0 - angle_min) / increment)] - 4.18) < 1e-6
+    assert MODULE.merge_front_cloud(mast, None, [1.18, 0, -0.78]).shape == (1, 3)

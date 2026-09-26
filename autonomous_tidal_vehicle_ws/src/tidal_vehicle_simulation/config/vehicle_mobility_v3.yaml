@@ -35,6 +35,20 @@ vehicle_mobility:
     slope_dwell_s: 1.5             # climb must persist this long (edges and bumps are brief)
     track_exit_slope_deg: 4.0      # leave TRACK once the climb is below this (below the 8 deg deploy) ...
     track_exit_dwell_s: 0.5        # ... for this long (a bump on the bank does not retract)
+    # Smoother driving: speeding up and turning are ramped (slowing is never
+    # delayed), so the fans, rudders and puff ports get gradual commands.
+    max_linear_accel_mps2: 0.5     # 0 -> 1.2 m/s in 2.4 s
+    max_yaw_accel_rps2: 0.4        # 0 -> 0.3 rad/s in 0.75 s; turn reversals are gradual
+    # Slopes from the IMU. Downhill, gravity eats into the reverse-thrust
+    # braking (0.8 x 940 N / 530 kg = 1.42 m/s^2): the speed is capped so the
+    # vehicle can still stop within descent_stop_distance_m, and on a firm
+    # descent steeper than hover can hold (~8 deg) the tracks come down and brake.
+    use_imu_attitude: true
+    hover_brake_decel_mps2: 1.42
+    descent_stop_distance_m: 3.0
+    descent_crawl_mps: 0.5
+    track_descent_slope_deg: 7.0
+    descent_dwell_s: 0.3
     settle_vz_mps: 0.03            # settled on the tracks once vertical motion stops (uneven ground)
     ground_cmd_topic: /vehicle/cmd_vel_tracks
     gear_cmd_topic: /vehicle/tracks_cmd
@@ -84,6 +98,11 @@ lidar_scan:
     # Keep the 2D navigation slice within the hull/rock/trunk collision zone.
     # This rejects visual-only mangrove canopy above the vehicle.
     ground_obstacle_height_m: 1.30
+    # Front near-field LiDAR on the bow bay, merged into the same /scan: it sees
+    # low rocks in front of the bow where the mast LiDAR is blind.
+    front_cloud_topic: /points_front
+    front_lidar_xyz: [1.18, 0.0, -0.78]      # in lidar_link (1.04 m vs the mast's 1.82 m)
+    front_max_age_s: 0.3
 
 terrain_costmap:
   ros__parameters:

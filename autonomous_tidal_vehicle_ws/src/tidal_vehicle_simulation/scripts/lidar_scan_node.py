@@ -24,6 +24,14 @@ Parameters (config/vehicle_mobility.yaml, section lidar_scan):
   ground_obstacle_height_m     top of the terrain-relative obstacle slice (0 = off)
   range_min_m / range_max_m, bins
 
+Front LiDAR (Version 3; off when front_cloud_topic is empty):
+  front_cloud_topic            second LiDAR merged into the same scan (/points_front)
+  front_lidar_xyz              its position in lidar_link [x, y, z] (axis-aligned)
+  front_max_age_s              use its latest cloud only if it is at most this
+                               much older or newer than the mast cloud
+The merged points are expressed from the mast (lidar_link), so /scan keeps its
+frame and format and every filter below treats them like the mast's own.
+
 Alternative ground filter (Person 4; OFF by default, kept for worlds whose
 terrain profile is not built in -- the corridor filter above is the active one):
   slope_ground_filter_deg      along each bearing, a return that rises from the
@@ -93,6 +101,16 @@ def cloud_to_ranges(
         idx = np.clip(((a + math.pi) / (2 * math.pi) * bins).astype(int), 0, bins - 1)
         np.minimum.at(ranges, idx, r[keep])
     return ranges, -math.pi, 2 * math.pi / bins
+
+
+def merge_front_cloud(mast_xyz, front_xyz, front_offset):
+    """Mast-LiDAR points plus front-LiDAR points shifted into lidar_link
+    (both are fixed to the hull and axis-aligned, so a translation suffices)."""
+    mast = np.asarray(mast_xyz, dtype=float).reshape(-1, 3)
+    if front_xyz is None:
+        return mast
+    front = np.asarray(front_xyz, dtype=float).reshape(-1, 3) + np.asarray(front_offset, dtype=float)
+    return np.vstack([mast, front])
 
 
 def level_points(xyz, roll, pitch):
@@ -226,11 +244,18 @@ def main():
             self.slope_step = float(p("slope_ground_step_m", 0.15).value)
             self.level_imu = bool(p("level_with_imu", False).value)
             self.attitude = None
+            self.front_topic = str(p("front_cloud_topic", "").value)
+            self.front_offset = [float(v) for v in p("front_lidar_xyz", [0.0, 0.0, 0.0]).value]
+            self.front_max_age = float(p("front_max_age_s", 0.3).value)
+            self.front = None                       # (stamp_s, points in its own frame)
             self.odom = None
             self.pub = self.create_publisher(LaserScan, "/scan", qos_profile_sensor_data)
             self.create_subscription(PointCloud2, "/points", self.on_cloud, qos_profile_sensor_data)
             if self.ground_filter:
                 self.create_subscription(Odometry, "/odom", self.on_odom, 20)
+            if self.front_topic:
+                self.create_subscription(PointCloud2, self.front_topic, self.on_front,
+                                         qos_profile_sensor_data)
             if self.slope_deg > 0.0 and self.level_imu:
                 from sensor_msgs.msg import Imu
                 self.create_subscription(Imu, "/imu", self.on_imu, qos_profile_sensor_data)
@@ -245,8 +270,17 @@ def main():
         def on_odom(self, msg):
             self.odom = msg
 
+        def on_front(self, msg):
+            t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            self.front = (t, point_cloud2.read_points_numpy(
+                msg, field_names=("x", "y", "z"), skip_nans=True))
+
         def on_cloud(self, msg):
             pts = point_cloud2.read_points_numpy(msg, field_names=("x", "y", "z"), skip_nans=True)
+            if self.front is not None:
+                t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+                if abs(t - self.front[0]) <= self.front_max_age:
+                    pts = merge_front_cloud(pts, self.front[1], self.front_offset)
             above_ground = None
             if self.ground_filter:
                 if self.odom is None:

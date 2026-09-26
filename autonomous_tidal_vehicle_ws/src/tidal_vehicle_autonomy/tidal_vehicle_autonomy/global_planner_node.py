@@ -179,11 +179,12 @@ class GlobalPlannerNode(Node):
         self._last_odometry_replan_position = (position.x, position.y)
 
     def _on_goal(self, message: PoseStamped) -> None:
-        if self._return_requested or self._mission_finished:
+        if self._return_requested or self._mission_finished or self._delivery_reported:
             self.get_logger().warning(
-                "Ignoring a new mission goal until the current mission is reset"
+                "Ignoring a delivery-goal update after delivery or return has begun"
             )
             return
+        is_retarget = self._goal is not None
         self._goal = message
         self._last_path_cells = None
         self._last_return_path_cells = None
@@ -192,7 +193,10 @@ class GlobalPlannerNode(Node):
         self._delivery_reported = False
         self._completion_reported = False
         self._remember_odometry_replan_position()
-        self._replan("new mission goal", force_publish=True)
+        self._replan(
+            "outbound goal update" if is_retarget else "new mission goal",
+            force_publish=True,
+        )
 
     def _on_terrain_state(self, _: TerrainState) -> None:
         self._replan("terrain state update")

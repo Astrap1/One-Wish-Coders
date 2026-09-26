@@ -160,6 +160,19 @@ class SafetySupervisor(Node):
             self._planned_path_received_at = None
             self._last_autonomous_command_at = None
             self._reason = "Mission goal accepted; validating operating margin."
+        elif (
+            self._phase is MissionPhase.OUTBOUND
+            and self._return_requested_at is None
+        ):
+            # A new delivery target is valid while outbound.  Stop accepting
+            # the previous route until Autonomy confirms a fresh replan.
+            self._planned_path_received_at = None
+            self._last_autonomous_command_at = None
+            self._reason = "Mission goal updated; awaiting a fresh outbound route."
+        else:
+            self.get_logger().warning(
+                "Ignoring delivery-goal update after delivery or return has begun"
+            )
 
     def _on_planned_path(self, _message: Path) -> None:
         self._planned_path_received_at = self._now_s()

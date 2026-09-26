@@ -120,6 +120,58 @@ def test_supervisor_forwards_healthy_command_and_holds_critical_fault():
         rclpy.shutdown()
 
 
+def test_outbound_goal_update_requires_a_fresh_replanned_path():
+    rclpy.init()
+    supervisor = SafetySupervisor()
+    publisher = Node("safety_retarget_mock_publishers")
+    capture = CommandCapture()
+    executor = SingleThreadedExecutor()
+    for node in (supervisor, publisher, capture):
+        executor.add_node(node)
+
+    try:
+        costmap_pub = publisher.create_publisher(OccupancyGrid, "/terrain_costmap", 10)
+        health_pub = publisher.create_publisher(VehicleHealth, "/vehicle_health", 10)
+        terrain_pub = publisher.create_publisher(TerrainState, "/terrain_state", 10)
+        goal_pub = publisher.create_publisher(PoseStamped, "/mission_goal", 10)
+        planned_pub = publisher.create_publisher(Path, "/planned_path", 10)
+        return_pub = publisher.create_publisher(Path, "/return_path", 10)
+        proposed_pub = publisher.create_publisher(Twist, "/cmd_vel_proposed", 10)
+
+        costmap_pub.publish(_costmap())
+        health_pub.publish(_health(100.0))
+        terrain_pub.publish(_terrain())
+        goal_pub.publish(PoseStamped())
+        planned_pub.publish(_path([(1.0, 1.0), (2.0, 1.0)]))
+        return_pub.publish(_path([(1.0, 1.0), (0.0, 0.0)]))
+        _spin_for(executor)
+
+        proposed = Twist()
+        proposed.linear.x = 0.5
+        proposed_pub.publish(proposed)
+        _spin_for(executor)
+        assert capture.commands[-1].linear.x == 0.5
+
+        # Retargeting while outbound must stop the old route until Autonomy
+        # confirms a fresh replacement path.
+        capture.commands.clear()
+        goal_pub.publish(PoseStamped())
+        proposed_pub.publish(proposed)
+        _spin_for(executor)
+        assert capture.commands
+        assert capture.commands[-1].linear.x == 0.0
+
+        planned_pub.publish(_path([(1.0, 1.0), (1.0, 2.0)]))
+        proposed_pub.publish(proposed)
+        _spin_for(executor)
+        assert capture.commands[-1].linear.x == 0.5
+    finally:
+        for node in (capture, publisher, supervisor):
+            executor.remove_node(node)
+            node.destroy_node()
+        rclpy.shutdown()
+
+
 def test_remote_mode_uses_remote_command_despite_automatic_return_policy():
     rclpy.init()
     supervisor = SafetySupervisor()

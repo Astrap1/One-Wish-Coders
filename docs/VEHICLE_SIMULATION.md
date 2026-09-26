@@ -124,7 +124,15 @@ ros2 launch tidal_vehicle_bringup sim.launch.py rviz:=true world:=vehicle_tests/
 
 The common launch includes Safety, which is the only allowed `/cmd_vel` publisher. Use the scripted vehicle-test worlds for direct actuator and physics checks.
 
-**GPU check in WSL.** If Gazebo's LiDAR or camera show nothing, run `glxinfo -B`. It should list the D3D12 or vendor GPU, not `llvmpipe`. As a last resort, `export LIBGL_ALWAYS_SOFTWARE=1` works but is slow.
+**GPU check in WSL.** Run `glxinfo -B`; it must list the D3D12/vendor GPU, not
+`llvmpipe`. On the NVIDIA WSL2 demo host, launch with `gpu:=nvidia` to select
+the D3D12 NVIDIA adapter:
+
+```bash
+ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true dashboard:=true gpu:=nvidia
+```
+
+`LIBGL_ALWAYS_SOFTWARE=1` is only a fallback and is unsuitable for the live demo.
 
 ### Blender on Windows
 

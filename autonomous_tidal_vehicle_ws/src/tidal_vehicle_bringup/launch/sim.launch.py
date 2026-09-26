@@ -3,7 +3,7 @@
     ros2 launch tidal_vehicle_bringup sim.launch.py                        # Version 2 in the tidal corridor
     ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version 1 fallback
     ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
-    ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true
+    ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true gpu:=nvidia
     ros2 launch tidal_vehicle_bringup sim.launch.py dashboard:=true
 
 Starts:
@@ -57,9 +57,12 @@ SPAWN_Z = {"tidal_corridor": 0.25}     # drop height above z = 0 (the corridor g
 def _setup(context):
     world = LaunchConfiguration("world").perform(context)
     headless = LaunchConfiguration("headless").perform(context).lower() == "true"
+    gpu = LaunchConfiguration("gpu").perform(context).lower()
     vehicle = LaunchConfiguration("vehicle").perform(context)
     if vehicle not in VEHICLES:
         raise RuntimeError(f"vehicle must be one of {sorted(VEHICLES)}, got {vehicle!r}")
+    if gpu not in {"auto", "nvidia"}:
+        raise RuntimeError("gpu must be 'auto' or 'nvidia'")
     veh = VEHICLES[vehicle]
     bringup = Path(get_package_share_directory("tidal_vehicle_bringup"))
     sim_share = Path(get_package_share_directory("tidal_vehicle_simulation"))
@@ -87,7 +90,19 @@ def _setup(context):
     if headless:
         gz_cmd[2:2] = ["-s", "--headless-rendering"]
 
+    gpu_environment = []
+    if gpu == "nvidia":
+        # WSLg otherwise may select llvmpipe (software rendering) even when an
+        # NVIDIA adapter is available. Keep this opt-in: some GUI driver stacks
+        # have their own adapter policy, while the headless demo is validated
+        # with this D3D12 path.
+        gpu_environment = [
+            SetEnvironmentVariable("GALLIUM_DRIVER", "d3d12"),
+            SetEnvironmentVariable("MESA_D3D12_DEFAULT_ADAPTER_NAME", "NVIDIA"),
+        ]
+
     return [
+        *gpu_environment,
         SetEnvironmentVariable("GZ_SIM_RESOURCE_PATH", _prepend(
             "GZ_SIM_RESOURCE_PATH", desc_share / "models", sim_share / "models", sim_share / "worlds")),
         SetEnvironmentVariable("GZ_SIM_SYSTEM_PLUGIN_PATH", _prepend(
@@ -151,6 +166,8 @@ def generate_launch_description():
                               description="hover_only | terrain_auto; empty = vehicle default "
                                           "(v1 hover_only, v2 terrain_auto)"),
         DeclareLaunchArgument("headless", default_value="false"),
+        DeclareLaunchArgument("gpu", default_value="auto",
+                              description="auto | nvidia (WSLg D3D12 NVIDIA adapter)"),
         DeclareLaunchArgument("foxglove", default_value="true"),
         DeclareLaunchArgument("dashboard", default_value="false",
                               description="start the browser operator dashboard on port 8000"),

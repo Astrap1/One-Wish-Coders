@@ -3,7 +3,7 @@
 This package is owned by the integration lead. It provides the one-command system launch.
 
 ```bash
-ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true
+ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true dashboard:=true gpu:=nvidia
 ```
 
 This launches Vehicle Version 2 (`vehicle:=v2`, tracked) in the tidal corridor by default. Add `vehicle:=v1` for the wheeled Version 1 fallback. The launch spawns the chosen vehicle at HOME, and turns Safety's TRACK energy profile on for Version 2. In the corridor, its Gazebo terrain zones, moving water
@@ -32,6 +32,10 @@ supervisor remains the sole publisher of `/cmd_vel`. Switching back to
 Autonomous control immediately releases manual authority.
 The **Dispatch demo delivery** button publishes the documented `(14 m, 0 m)`
 map-frame mission goal for the tidal-corridor demonstration.
+
+On the NVIDIA WSL2 demo laptop, add `gpu:=nvidia`. This selects the WSLg D3D12
+adapter instead of Mesa's `llvmpipe` software renderer; verify it with
+`glxinfo -B` before a demo.
 
 The default integration world has no scripted vehicle commands. The complete command chain is `/cmd_vel_proposed` from Autonomy, approval on `/cmd_vel` from Safety, then internal track, wheel or fan commands from the mobility node. Safety must remain the only `/cmd_vel` publisher.
 

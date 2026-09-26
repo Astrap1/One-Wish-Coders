@@ -37,25 +37,25 @@ Version 3 is being designed for 30 km/h cruise and 50 km/h max over open water (
 **All workstreams**
 7. **Cost-band split (agreed).** `20`--`29` = open, surveyed water where fast travel is allowed; `30`--`59` = mud, shallow water, roots and debris. Band checks at `19`, `60` and `90` are unchanged. Don't reuse `20`--`29` for anything else.
 
-**Person 1 (Autonomy), `tidal_vehicle_autonomy`**
-8. **Speed by zone.** Look up the band of the cells ahead and propose at most: firm 4.2 m/s, open water 8.3 m/s cruise (13.9 m/s max), everything else 2.8 m/s. Slow down *before* entering a slower zone. Version 3 needs about 28 m to stop from 30 km/h and about 67 m from 50 km/h.
-9. **Slow for curves.** The turn radius at speed is about v² / (0.1 g): about 70 m at 30 km/h and about 8 m at 10 km/h. Cap speed by the route's curvature: v ≤ √(0.1 g R).
-10. **Look further ahead at speed.** Scale `lookahead_distance` with speed (for example 1 s of travel, at least 0.75 m). Scale `obstacle_max_range_m` with stopping distance, which is limited by the 30 m LiDAR. Version 3 obstacle inflation: half-diagonal √(1.5² + 0.9²) ≈ 1.75 m plus clearance, so about 2.0 m.
+**NOTICE to Person 1 (Autonomy): changes made in your package on 2026-09-26 by Person 4, at the team's request.** The split cost band now works end to end. Please review them. They are **off by default**: Versions 1 and 2 behave exactly as before, and only `vehicle:=v3` switches them on (`sim.launch.py`, `VEHICLES["v3"]["follower"]`).
+8. **Done: speed by zone.** `path_follower` has a new parameter, `zone_speed_limits_mps` (`[firm, open water, mud/roots/debris, elevated]`, `[0.0]` = off). When it's on, the follower subscribes to `/terrain_costmap`, samples the planned path from the vehicle out to its stopping distance (1 s reaction plus braking at `brake_decel_mps2`), and caps `max_linear_speed` at the slowest zone on that stretch, so it slows *before* a slower zone. New helpers are in `path_follower_core.py` (`zone_speed_limit`, `path_points_ahead`, `stopping_reach`), with tests in `test/test_speed_limits.py`.
+9. **Done: slow for curves.** `lateral_accel_limit_mps2` (0 = off) caps speed at √(a/κ), using the pure-pursuit curvature κ = 2 sin(error) / lookahead (`curvature_speed_limit`). Version 3 uses 1.0 m/s².
+10. **Done: longer look-ahead at speed; still open: obstacle range.** `lookahead_time_s` (0 = off) lengthens the lookahead to that many seconds of travel (Version 3: 1 s). The launch sets `obstacle_inflation_radius_m` to 2.0 m for Version 3. **Still yours:** `obstacle_max_range_m` (8 m) is shorter than Version 3's stopping distance above about 15 km/h. The zone limits keep the vehicle at 10 km/h near roots and debris, but consider scaling the range with speed, up to the 30 m LiDAR range.
 
-**Person 2 (Safety), `tidal_vehicle_safety`**
-11. **Zone speed limits.** Clamp the approved `/cmd_vel` to the zone limit of the band under and ahead of the vehicle (same table). HOLD if an obstacle is closer than the stopping distance at the current speed.
-12. **Hybrid energy.** Version 3 will report `fuel_percent` alongside `battery_percent` (item 15). Return estimates should use fuel as the main energy store. The first estimate is 2.5 L/h at 30 km/h on a 30 L tank. Refined figures will come from `tools/vehicle_sizing/v3_sizing.py` and the Version 3 mobility config.
+**NOTICE to Person 2 (Safety): changes made in your package on 2026-09-26 by Person 4, at the team's request.** Please review them. They are **off by default** and switched on only for `vehicle:=v3` (`VEHICLES["v3"]["safety"]`).
+11. **Done: zone speed limits.** `safety_supervisor` has new parameters, `zone_speed_limits_mps` (`[0.0]` = off) and `brake_decel_mps2`. When they're on, it subscribes to `/odom` and clamps both autonomous and remote `/cmd_vel` to the slowest zone between the vehicle and its stopping distance (`zone_limits.py`, tests in `test/test_zone_limits.py`). For Version 3 the launch also raises your state limits: CRUISE 13.9 m/s, CAUTION 2.8 m/s, RETURN 8.3 m/s. **Still yours:** HOLD when a LiDAR obstacle is closer than the stopping distance at the current speed.
+12. **Hybrid energy: still yours.** `/vehicle_health.fuel_percent` now exists: Version 3 reports diesel left, and Versions 1 and 2 report −1. On Version 3 the generator keeps `battery_percent` near 100%, so return estimates should use fuel. The first figure is about 2.5 L/h at 30 km/h on a 30 L tank; see `config/vehicle_mobility_v3.yaml` for the power model.
 
 **Person 3 (Environment), `tidal_vehicle_simulation` worlds and `tide_manager`**
 13. **Mark open, surveyed water.** Publish cost `20`--`29` only for water that is surveyed and free of roots and debris. Keep other water at `30`--`59`. Rising tide or new debris must move cells back to `30`+.
 14. **Optional:** a long open-water stretch (≥ 150 m) so a Version 3 demo can show speed. Person 4 will build a separate Version 3 speed test world regardless.
 
 **Person 5 (Operator), `tidal_vehicle_operator`**
-15. **Fuel and speed display.** The dashboard's Fuel card already reads `fuel_percent`, but nothing publishes it yet. Person 4 will add `float32 fuel_percent` to `VehicleHealth` (with the matching `docs/INTERFACES.md` update) when the Version 3 energy model lands; Versions 1 and 2 will report `-1` for "no fuel tank". Also show speed against the current zone limit.
-16. **Extra cameras and collisions on the dashboard.** Version 3 adds `/camera/rear/image_raw`, `/camera/left/image_raw` and `/camera/right/image_raw` (possibly a stitched top-down view) and a collision topic (item 17). Please show them, for example with a camera selector and a "collision" alert. Topic names are final once they are in `docs/INTERFACES.md`.
+15. **Fuel and speed display.** `VehicleHealth.fuel_percent` now exists (Version 3: diesel left; Versions 1 and 2: −1, meaning no fuel tank). Please feed it to the dashboard's Fuel card, and show speed against the current zone limit.
+16. **Extra cameras and collisions on the dashboard.** Version 3 now publishes `/camera/rear/image_raw`, `/camera/left/image_raw` and `/camera/right/image_raw` (with `cameras:=all`) and `/vehicle/collision` (item 17). All are in `docs/INTERFACES.md`. Please show them, for example with a camera selector and a collision alert.
 
 **Collision detection (Version 3; new topic)**
-17. **Proposed topic `/vehicle/collision`**, published by Person 4's vehicle controller when a contact sensor or the IMU jolt check detects a hit. It gives the time, the part that was hit (`hull`, `skirt`, `track_left`, `track_right`), the side (front, rear, left or right), what was hit if known, and an impact strength. Proposed as a small new message in `tidal_vehicle_interfaces`, to be agreed and added to `docs/INTERFACES.md` before use. **Person 2:** Safety should HOLD on a collision (then RETURN if the vehicle is still healthy), with a reason such as "collision: skirt front-left". **Person 1** (optional): mark the hit location as blocked in the planning overlay, like a LiDAR obstacle. **Person 5:** see item 16.
+17. **`/vehicle/collision` exists** (`tidal_vehicle_interfaces/Collision`, published by Person 4's `collision_monitor` on Version 3). It reports the source (`contact` or `imu`), the part (`hull`, `skirt`, `track_left`, `track_right`, or `unknown` for IMU), the side (front, rear, left or right), what was hit if known, and a strength. Ground contact is filtered out, and each hit is reported at most once per second. **Person 2:** please HOLD on a collision (then RETURN if the vehicle is still healthy), with a reason such as "collision: skirt front-left". **Person 1** (optional): mark the hit location as blocked in the planning overlay. **Person 5:** see item 16.
 
 ## Vehicle configuration and mobility modes
 
@@ -129,9 +129,9 @@ Agreed Version 2 design decisions:
 
 Simulation risk retired: Gazebo Harmonic's `TrackController`/`TrackedVehicle` work with DART and the Bullet collision detector, which the air-cushion ray casts need. They also work on the corridor's inclined `demo_terrain` collision surface. The tracks drive at the commanded speed, pivot in place without drift and climb a 15° ramp. The `hover::AirCushion` plugin gained a `lift_share` input for TRACK-mode load sharing, reversible thrust and a yaw reserve. Version 1 is unchanged by these additions.
 
-### Vehicle Version 3 (in design: not built, not in the demo)
+### Vehicle Version 3 (built and tested; not the demo vehicle yet)
 
-Version 3 is Version 2's design scaled up for **higher speed, sharper turning and more payload**. **Version 2 stays the demo vehicle and the launch default until Version 3 passes its own tests.** Nobody should switch the demo to Version 3 before then. The plan is `docs/VEHICLE_V3_PLAN.md`. The numbers below come from `tools/vehicle_sizing/v3_sizing.py`; its report is `docs/VEHICLE_V3_SIZING.md`, and you should rerun it after changing any input. They are first-order design estimates, not validated data.
+Version 3 is Version 2's design scaled up for **higher speed, sharper turning and more payload**. It is built (`vehicle:=v3`, `cameras:=all` for the extra cameras) and passes its Gazebo and ROS checks (`docs/VEHICLE_V3_PLAN.md`, *Status*). **Version 2 stays the demo vehicle and the launch default** until the team switches after corridor runs. Nobody should switch the demo to Version 3 before then. The plan is `docs/VEHICLE_V3_PLAN.md`. The numbers below come from `tools/vehicle_sizing/v3_sizing.py`; its report is `docs/VEHICLE_V3_SIZING.md`, and you should rerun it after changing any input. They are first-order design estimates, not validated data.
 
 Agreed Version 3 decisions (2026-09-26):
 
@@ -142,9 +142,9 @@ Agreed Version 3 decisions (2026-09-26):
 - **Turning:** rudders and puff ports carried over from Version 2 and sized up. At speed the turn radius is large (about 70 m at 30 km/h, about 200 m at 50 km/h), so routes must slow down before curves.
 - **Tracks:** kept, capped at about 15 km/h. Speed comes from hovering.
 - **Braking** from 50 km/h takes about 67 m with reverse thrust, beyond the 30 m LiDAR range. This is why high speed is only allowed in open, surveyed water.
-- **Cameras:** the front camera plus **rear, left and right** cameras for a full view around the vehicle, at the same low-load profile as Version 2's (320 × 240, 5 Hz). They can be switched on or off at launch. They must not slow the LiDAR or the front camera, and are off by default if they do. A **top-down (bird's-eye) view** is added only if it doesn't affect the other sensors: preferably stitched in software from the four cameras (no extra hardware), otherwise a downward camera on a short arm above the LiDAR, outside its ±15° beams.
+- **Cameras:** the front camera plus **rear, left and right** cameras for a full view around the vehicle, at the same low-load profile as Version 2's (320 × 240, 5 Hz). They can be switched on or off at launch. They must not slow the LiDAR or the front camera, and are off by default if they do. **No top-down camera was fitted**: any mount above the LiDAR would sit in its beams, so a bird's-eye view is left for software stitching of the four cameras later.
 - **Collision detection:** Gazebo contact sensors on the hull, skirt and tracks report what was hit and where. An IMU impact (jolt) check backs them up and would also work on a real vehicle. This adds one new topic (see the Version 3 requests).
-- **Launch:** `vehicle:=v3`, once built. Same frame names and public topics as Version 2, plus the planned `fuel_percent` (see the Version 3 open requests).
+- **Launch:** `vehicle:=v3` (and `cameras:=front|all`). Same frame names and public topics as Version 2, plus `fuel_percent`, `/vehicle/collision` and the extra camera topics (`docs/INTERFACES.md`).
 
 ## Team roles
 
@@ -245,6 +245,7 @@ The HOME values must match Person 2's safety parameters. The changing map-frame 
 
 ## Role 4: Vehicle simulation and integration status
 
+- **Version 3 built (2026-09-26), not the demo vehicle.** `vehicle:=v3` (`cameras:=all` adds the rear, left and right cameras). It passes all its Gazebo checks: 50 km/h, braking from 50 km/h in 58 m, turn radius 9 m at 10 km/h and 77 m at 30 km/h, the 15° ramp on the tracks, and the Version 2 scenarios. The collision test reports "skirt front hit wall". Full ROS missions in the integration world complete with zero false collisions and with the zone speed limits held. Details: `docs/VEHICLE_V3_PLAN.md` (*Status*) and `docs/VEHICLE_SIMULATION.md` (*Version 3*). Not yet run in the tidal corridor.
 - **Version 2 delivered on `main` and is the launch default.** It includes the Blender model (visually polished to Version 1's standard, with the hull blended into the skirt), SDF/URDF, the mobility controller (`gear: tracks`), a bridge configuration and the test worlds described in `docs/VEHICLE_SIMULATION.md`. Launch with `ros2 launch tidal_vehicle_bringup sim.launch.py`, or add `vehicle:=v1` for the fallback.
 - **Gazebo physics verified:** all 19 Version 2 checks pass (`tools/vehicle_tests/analyze.py`):
   - hover gap 5.05 cm held with the tracks retracted;

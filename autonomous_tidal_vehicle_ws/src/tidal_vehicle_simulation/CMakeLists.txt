@@ -55,6 +55,8 @@ install(PROGRAMS
   scripts/collision_test_teleop.py
   scripts/gen_test_worlds.py
   scripts/gen_test_worlds_v2.py
+  scripts/gen_test_worlds_v3.py
+  scripts/collision_monitor_node.py
   DESTINATION lib/${PROJECT_NAME})
 
 if(ament_cmake_FOUND)
@@ -62,6 +64,7 @@ if(ament_cmake_FOUND)
     find_package(ament_cmake_pytest REQUIRED)
     ament_add_pytest_test(vehicle_mobility_test test/test_vehicle_mobility.py)
     ament_add_pytest_test(lidar_scan_test test/test_lidar_scan.py)
+    ament_add_pytest_test(collision_monitor_test test/test_collision_monitor.py)
     ament_add_pytest_test(tide_manager_test test/test_tide_manager.py)
   endif()
 

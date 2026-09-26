@@ -1,0 +1,1156 @@
+{
+  "generated_by": "assets/vehicle_blender/version_2/build_vehicle.py",
+  "blender_version": "4.2.0",
+  "model_name": "hovercraft_v3",
+  "units": "metres, kilograms, radians",
+  "axes": "REP-103: +X forward, +Y left, +Z up",
+  "model_frame": "ground plane under hull centre, vehicle standing on its deployed tracks (TRACK mode: all joints at position 0)",
+  "note": "origin_xyz = link origin (joint pivot) in the model frame. origin_in_parent = pose to use for the SDF joint/link (no rotation anywhere: all link frames are axis-aligned). collision may be one primitive or a list.",
+  "total_mass_kg": 530.0,
+  "hull_com_z": 0.42,
+  "cushion": {
+    "skirt_bottom_track_mode": 0.03,
+    "hover_gap": 0.05,
+    "corner_xy": [
+      1.35,
+      0.75
+    ]
+  },
+  "tracks": {
+    "half_length": 0.85,
+    "radius": 0.14,
+    "width": 0.32,
+    "gauge": 1.0,
+    "stroke": 0.25
+  },
+  "rudders": {
+    "max_angle_rad": 0.4363
+  },
+  "puff_ports": {
+    "x": 0.888,
+    "y": 0.8369,
+    "z": 0.51,
+    "width": 0.288,
+    "height": 0.12,
+    "discharge_coefficient": 0.8,
+    "cushion_pressure_pa": 986.7,
+    "force_n": 54.6,
+    "shutter_travel": 0.312
+  },
+  "links": {
+    "hull": {
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "mass_kg": 287.4,
+      "mesh": {
+        "dae": "meshes/hull.dae",
+        "glb": "meshes/hull.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          2.76,
+          1.44,
+          0.39999999999999997
+        ],
+        "pose": [
+          0,
+          0,
+          0.010000000000000009,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -1.492,
+          -0.892,
+          -0.25
+        ],
+        "max": [
+          1.492,
+          0.892,
+          1.2872
+        ]
+      },
+      "parent": null,
+      "note": "root link (base_link)"
+    },
+    "skirt": {
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.23
+      ],
+      "mass_kg": 22.0,
+      "mesh": {
+        "dae": "meshes/skirt.dae",
+        "glb": "meshes/skirt.glb"
+      },
+      "collision": [
+        {
+          "type": "box",
+          "size": [
+            2.82,
+            1.8,
+            0.18
+          ],
+          "pose": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "cylinder",
+          "radius": 0.09,
+          "length": 1.8,
+          "pose": [
+            1.41,
+            0,
+            0,
+            1.5707963267948966,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "cylinder",
+          "radius": 0.09,
+          "length": 1.8,
+          "pose": [
+            -1.41,
+            0,
+            0,
+            1.5707963267948966,
+            0,
+            0
+          ]
+        }
+      ],
+      "bbox_local": {
+        "min": [
+          -1.5,
+          -0.9,
+          -0.2
+        ],
+        "max": [
+          1.5,
+          0.9,
+          0.0877
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.0,
+        0.0,
+        -0.27
+      ],
+      "joint": {
+        "name": "skirt_joint",
+        "type": "fixed"
+      }
+    },
+    "lift_fan": {
+      "origin_xyz": [
+        0.54,
+        0.0,
+        0.74
+      ],
+      "mass_kg": 15.0,
+      "mesh": {
+        "dae": "meshes/lift_fan.dae",
+        "glb": "meshes/lift_fan.glb"
+      },
+      "collision": {
+        "type": "cylinder",
+        "radius": 0.336,
+        "length": 0.04,
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.3299,
+          -0.3381,
+          -0.027
+        ],
+        "max": [
+          0.336,
+          0.3381,
+          0.055
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.54,
+        0.0,
+        0.24
+      ],
+      "joint": {
+        "name": "lift_fan_joint",
+        "type": "continuous",
+        "axis": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    "thrust_fan_left": {
+      "origin_xyz": [
+        -1.1,
+        0.45,
+        1.16
+      ],
+      "mass_kg": 14.0,
+      "mesh": {
+        "dae": "meshes/thrust_fan_left.dae",
+        "glb": "meshes/thrust_fan_left.glb"
+      },
+      "collision": {
+        "type": "cylinder",
+        "radius": 0.35,
+        "length": 0.04,
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          1.5707963267948966,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.0272,
+          -0.3478,
+          -0.35
+        ],
+        "max": [
+          0.065,
+          0.3478,
+          0.3281
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -1.1,
+        0.45,
+        0.66
+      ],
+      "joint": {
+        "name": "thrust_fan_left_joint",
+        "type": "continuous",
+        "axis": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    "thrust_fan_right": {
+      "origin_xyz": [
+        -1.1,
+        -0.45,
+        1.16
+      ],
+      "mass_kg": 14.0,
+      "mesh": {
+        "dae": "meshes/thrust_fan_right.dae",
+        "glb": "meshes/thrust_fan_right.glb"
+      },
+      "collision": {
+        "type": "cylinder",
+        "radius": 0.35,
+        "length": 0.04,
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          1.5707963267948966,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.0272,
+          -0.3478,
+          -0.35
+        ],
+        "max": [
+          0.065,
+          0.3478,
+          0.3281
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -1.1,
+        -0.45,
+        0.66
+      ],
+      "joint": {
+        "name": "thrust_fan_right_joint",
+        "type": "continuous",
+        "axis": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    "rudder_left": {
+      "origin_xyz": [
+        -1.38,
+        0.45,
+        1.16
+      ],
+      "mass_kg": 2.0,
+      "mesh": {
+        "dae": "meshes/rudder_left.dae",
+        "glb": "meshes/rudder_left.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.12,
+          0.012,
+          0.7
+        ],
+        "pose": [
+          -0.048,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.108,
+          -0.008,
+          -0.37
+        ],
+        "max": [
+          0.012,
+          0.008,
+          0.37
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -1.38,
+        0.45,
+        0.66
+      ],
+      "joint": {
+        "name": "rudder_left_joint",
+        "type": "revolute",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "lower": -0.5236,
+        "upper": 0.5236
+      }
+    },
+    "rudder_right": {
+      "origin_xyz": [
+        -1.38,
+        -0.45,
+        1.16
+      ],
+      "mass_kg": 2.0,
+      "mesh": {
+        "dae": "meshes/rudder_right.dae",
+        "glb": "meshes/rudder_right.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.12,
+          0.012,
+          0.7
+        ],
+        "pose": [
+          -0.048,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.108,
+          -0.008,
+          -0.37
+        ],
+        "max": [
+          0.012,
+          0.008,
+          0.37
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -1.38,
+        -0.45,
+        0.66
+      ],
+      "joint": {
+        "name": "rudder_right_joint",
+        "type": "revolute",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "lower": -0.5236,
+        "upper": 0.5236
+      }
+    },
+    "track_left": {
+      "origin_xyz": [
+        0.0,
+        0.5,
+        0.14
+      ],
+      "mass_kg": 35.0,
+      "mesh": {
+        "dae": "meshes/track_left.dae",
+        "glb": "meshes/track_left.glb"
+      },
+      "collision": [
+        {
+          "type": "box",
+          "size": [
+            1.7,
+            0.32,
+            0.28
+          ],
+          "pose": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "cylinder",
+          "radius": 0.14,
+          "length": 0.32,
+          "pose": [
+            0.85,
+            0,
+            0,
+            1.5707963267948966,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "cylinder",
+          "radius": 0.14,
+          "length": 0.32,
+          "pose": [
+            -0.85,
+            0,
+            0,
+            1.5707963267948966,
+            0,
+            0
+          ]
+        }
+      ],
+      "bbox_local": {
+        "min": [
+          -0.9905,
+          -0.253,
+          -0.14
+        ],
+        "max": [
+          0.9905,
+          0.16,
+          0.3
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.0,
+        0.5,
+        -0.36
+      ],
+      "joint": {
+        "name": "track_left_joint",
+        "type": "prismatic",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "lower": -0.02,
+        "upper": 0.27,
+        "control": "position",
+        "note": "0 = deployed (TRACK mode); 0.25 = retracted into the hull (HOVER mode)"
+      }
+    },
+    "track_right": {
+      "origin_xyz": [
+        0.0,
+        -0.5,
+        0.14
+      ],
+      "mass_kg": 35.0,
+      "mesh": {
+        "dae": "meshes/track_right.dae",
+        "glb": "meshes/track_right.glb"
+      },
+      "collision": [
+        {
+          "type": "box",
+          "size": [
+            1.7,
+            0.32,
+            0.28
+          ],
+          "pose": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "cylinder",
+          "radius": 0.14,
+          "length": 0.32,
+          "pose": [
+            0.85,
+            0,
+            0,
+            1.5707963267948966,
+            0,
+            0
+          ]
+        },
+        {
+          "type": "cylinder",
+          "radius": 0.14,
+          "length": 0.32,
+          "pose": [
+            -0.85,
+            0,
+            0,
+            1.5707963267948966,
+            0,
+            0
+          ]
+        }
+      ],
+      "bbox_local": {
+        "min": [
+          -0.9905,
+          -0.16,
+          -0.14
+        ],
+        "max": [
+          0.9905,
+          0.253,
+          0.3
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.0,
+        -0.5,
+        -0.36
+      ],
+      "joint": {
+        "name": "track_right_joint",
+        "type": "prismatic",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "lower": -0.02,
+        "upper": 0.27,
+        "control": "position",
+        "note": "0 = deployed (TRACK mode); 0.25 = retracted into the hull (HOVER mode)"
+      }
+    },
+    "puff_bow_left": {
+      "origin_xyz": [
+        0.888,
+        0.84,
+        0.51
+      ],
+      "mass_kg": 0.6,
+      "mesh": {
+        "dae": "meshes/puff_bow_left.dae",
+        "glb": "meshes/puff_bow_left.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.308,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.156,
+          -0.0036,
+          -0.07
+        ],
+        "max": [
+          0.156,
+          0.0144,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.888,
+        0.84,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_bow_left_joint",
+        "type": "prismatic",
+        "axis": [
+          -1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.332,
+        "control": "position",
+        "note": "0 = closed; 0.312 = vent fully open"
+      }
+    },
+    "puff_bow_right": {
+      "origin_xyz": [
+        0.888,
+        -0.84,
+        0.51
+      ],
+      "mass_kg": 0.6,
+      "mesh": {
+        "dae": "meshes/puff_bow_right.dae",
+        "glb": "meshes/puff_bow_right.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.308,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.156,
+          -0.0144,
+          -0.07
+        ],
+        "max": [
+          0.156,
+          0.0036,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.888,
+        -0.84,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_bow_right_joint",
+        "type": "prismatic",
+        "axis": [
+          -1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.332,
+        "control": "position",
+        "note": "0 = closed; 0.312 = vent fully open"
+      }
+    },
+    "puff_stern_left": {
+      "origin_xyz": [
+        -0.888,
+        0.84,
+        0.51
+      ],
+      "mass_kg": 0.6,
+      "mesh": {
+        "dae": "meshes/puff_stern_left.dae",
+        "glb": "meshes/puff_stern_left.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.308,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.156,
+          -0.0036,
+          -0.07
+        ],
+        "max": [
+          0.156,
+          0.0144,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -0.888,
+        0.84,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_stern_left_joint",
+        "type": "prismatic",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.332,
+        "control": "position",
+        "note": "0 = closed; 0.312 = vent fully open"
+      }
+    },
+    "puff_stern_right": {
+      "origin_xyz": [
+        -0.888,
+        -0.84,
+        0.51
+      ],
+      "mass_kg": 0.6,
+      "mesh": {
+        "dae": "meshes/puff_stern_right.dae",
+        "glb": "meshes/puff_stern_right.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.308,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.156,
+          -0.0144,
+          -0.07
+        ],
+        "max": [
+          0.156,
+          0.0036,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -0.888,
+        -0.84,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_stern_right_joint",
+        "type": "prismatic",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.332,
+        "control": "position",
+        "note": "0 = closed; 0.312 = vent fully open"
+      }
+    },
+    "payload_box": {
+      "origin_xyz": [
+        -0.504,
+        0.0,
+        0.74
+      ],
+      "mass_kg": 100.0,
+      "mesh": {
+        "dae": "meshes/payload_box.dae",
+        "glb": "meshes/payload_box.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.72,
+          0.54,
+          0.35
+        ],
+        "pose": [
+          0,
+          0,
+          0.175,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.3876,
+          -0.294,
+          0.0
+        ],
+        "max": [
+          0.384,
+          0.294,
+          0.405
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -0.504,
+        0.0,
+        0.24
+      ],
+      "joint": {
+        "name": "payload_box_joint",
+        "type": "fixed"
+      }
+    },
+    "lidar": {
+      "origin_xyz": [
+        0.0,
+        0.0,
+        1.82
+      ],
+      "mass_kg": 1.0,
+      "mesh": {
+        "dae": "meshes/lidar.dae",
+        "glb": "meshes/lidar.glb"
+      },
+      "collision": {
+        "type": "cylinder",
+        "radius": 0.0515,
+        "length": 0.0717,
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.0515,
+          -0.0515,
+          -0.0359
+        ],
+        "max": [
+          0.0515,
+          0.0515,
+          0.0398
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.0,
+        0.0,
+        1.32
+      ],
+      "joint": {
+        "name": "lidar_joint",
+        "type": "fixed"
+      }
+    },
+    "camera": {
+      "origin_xyz": [
+        1.284,
+        0.0,
+        0.8
+      ],
+      "mass_kg": 0.2,
+      "mesh": {
+        "dae": "meshes/camera.dae",
+        "glb": "meshes/camera.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.075,
+          0.11,
+          0.075
+        ],
+        "pose": [
+          -0.055,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.111,
+          -0.075,
+          -0.0375
+        ],
+        "max": [
+          0.0,
+          0.075,
+          0.046
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        1.284,
+        0.0,
+        0.3
+      ],
+      "joint": {
+        "name": "camera_joint",
+        "type": "fixed"
+      }
+    }
+  },
+  "sensors": {
+    "imu": {
+      "parent": "hull",
+      "xyz": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "type": "imu"
+    },
+    "navsat": {
+      "parent": "hull",
+      "xyz": [
+        1.116,
+        0.3,
+        0.98
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "type": "navsat"
+    },
+    "lidar_3d": {
+      "parent": "lidar",
+      "xyz": [
+        0.0,
+        0,
+        1.82
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "type": "gpu_lidar",
+      "channels": 16,
+      "hfov_deg": 360,
+      "vfov_deg": [
+        -15,
+        15
+      ],
+      "range_m": [
+        0.3,
+        30.0
+      ],
+      "rate_hz": 10
+    },
+    "front_camera": {
+      "parent": "camera",
+      "xyz": [
+        1.284,
+        0,
+        0.8
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "type": "camera"
+    },
+    "rear_camera": {
+      "parent": "hull",
+      "xyz": [
+        -0.075,
+        9.184850993605149e-18,
+        1.66
+      ],
+      "rpy": [
+        0,
+        0.2617993877991494,
+        3.141592653589793
+      ],
+      "type": "camera"
+    },
+    "left_camera": {
+      "parent": "hull",
+      "xyz": [
+        4.592425496802574e-18,
+        0.075,
+        1.66
+      ],
+      "rpy": [
+        0,
+        0.2617993877991494,
+        1.5707963267948966
+      ],
+      "type": "camera"
+    },
+    "right_camera": {
+      "parent": "hull",
+      "xyz": [
+        4.592425496802574e-18,
+        -0.075,
+        1.66
+      ],
+      "rpy": [
+        0,
+        0.2617993877991494,
+        -1.5707963267948966
+      ],
+      "type": "camera"
+    },
+    "ranger_fl": {
+      "parent": "hull",
+      "xyz": [
+        1.2,
+        0.6,
+        0.3
+      ],
+      "rpy": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "type": "gpu_lidar (narrow, downward)"
+    },
+    "ranger_fr": {
+      "parent": "hull",
+      "xyz": [
+        1.2,
+        -0.6,
+        0.3
+      ],
+      "rpy": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "type": "gpu_lidar (narrow, downward)"
+    },
+    "ranger_rl": {
+      "parent": "hull",
+      "xyz": [
+        -1.2,
+        0.6,
+        0.3
+      ],
+      "rpy": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "type": "gpu_lidar (narrow, downward)"
+    },
+    "ranger_rr": {
+      "parent": "hull",
+      "xyz": [
+        -1.2,
+        -0.6,
+        0.3
+      ],
+      "rpy": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "type": "gpu_lidar (narrow, downward)"
+    }
+  }
+}

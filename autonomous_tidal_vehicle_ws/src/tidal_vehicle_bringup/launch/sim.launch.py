@@ -2,13 +2,15 @@
 
     ros2 launch tidal_vehicle_bringup sim.launch.py                        # Version 2 in the tidal corridor
     ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version 1 fallback
+    ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v3 cameras:=all   # Version 3 (in development)
     ros2 launch tidal_vehicle_bringup sim.launch.py world:=vehicle_tests/integration_test tide:=false
     ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true foxglove:=true gpu:=nvidia
     ros2 launch tidal_vehicle_bringup sim.launch.py dashboard:=true
 
 Starts:
   * Gazebo Harmonic with `world` (path relative to tidal_vehicle_simulation/worlds, no .sdf)
-  * the `vehicle` (v2: hovercraft_v2, tracked; v1: hovercraft, wheeled), spawned at HOME
+  * the `vehicle` (v2: hovercraft_v2, tracked; v1: hovercraft, wheeled; v3: hovercraft_v3,
+    high-speed series hybrid, not yet the demo vehicle), spawned at HOME
     unless the world already includes it
   * tide:=true (default) starts Person 3's tide_manager (/terrain_state and the changing
     /terrain_costmap); tide:=false starts the static integration cost map instead
@@ -44,7 +46,8 @@ def _prepend(var, *paths):
     return ":".join([str(p) for p in paths] + ([old] if old else []))
 
 
-# Per-vehicle files. Topic names on the ROS side are identical for both vehicles.
+# Per-vehicle files. Topic names on the ROS side are identical for all vehicles;
+# Version 3 adds /vehicle/collision, fuel_percent and the extra camera topics.
 VEHICLES = {
     "v1": {"model": "hovercraft", "urdf": "hovercraft.urdf",
            "params": "vehicle_mobility.yaml", "bridge": "ros_gz_bridge.yaml",
@@ -52,6 +55,21 @@ VEHICLES = {
     "v2": {"model": "hovercraft_v2", "urdf": "hovercraft_v2.urdf",
            "params": "vehicle_mobility_v2.yaml", "bridge": "ros_gz_bridge_v2.yaml",
            "obstacle_inflation_radius_m": 1.7},
+    # Version 3 (in development; AGENTS.md "Vehicle Version 3"). Its zone speed
+    # limits (split cost bands) also go to the path follower and Safety.
+    "v3": {"model": "hovercraft_v3", "urdf": "hovercraft_v3.urdf",
+           "params": "vehicle_mobility_v3.yaml", "bridge": "ros_gz_bridge_v3.yaml",
+           "cameras_bridge": "ros_gz_bridge_v3_cameras.yaml",
+           "obstacle_inflation_radius_m": 2.0,
+           "follower": {"max_linear_speed": 13.9, "max_angular_speed": 1.0,
+                        "zone_speed_limits_mps": [4.2, 13.9, 2.8, 2.8],
+                        "brake_decel_mps2": 1.0, "lateral_accel_limit_mps2": 1.0,
+                        "lookahead_time_s": 1.0},
+           "safety": {"zone_speed_limits_mps": [4.2, 13.9, 2.8, 2.8], "brake_decel_mps2": 1.0,
+                      "cruise_linear_speed_limit_mps": 13.9,
+                      "caution_linear_speed_limit_mps": 2.8,
+                      "return_linear_speed_limit_mps": 8.3},
+           "collision_monitor": True},
 }
 SPAWN_Z = {"tidal_corridor": 0.25}     # 0.25 m above the HOME plateau at z = 0 m
 
@@ -77,6 +95,19 @@ def _setup(context):
     bridge_cfg = Path("/tmp") / f"tidal_bridge_{world_name}_{vehicle}.yaml"
     bridge_cfg.write_text((bringup / "config" / veh["bridge"]).read_text()
                           .replace("WORLD", world_name))
+    cameras = LaunchConfiguration("cameras").perform(context).lower()
+    if cameras not in {"front", "all"}:
+        raise RuntimeError("cameras must be 'front' or 'all'")
+    extra_bridge = []
+    if cameras == "all" and "cameras_bridge" in veh:
+        # A camera is only rendered while something subscribes to it, so the
+        # extra cameras cost nothing unless they are bridged.
+        cams_cfg = Path("/tmp") / f"tidal_bridge_cameras_{world_name}_{vehicle}.yaml"
+        cams_cfg.write_text((bringup / "config" / veh["cameras_bridge"]).read_text()
+                            .replace("WORLD", world_name))
+        extra_bridge = [Node(package="ros_gz_bridge", executable="parameter_bridge",
+                             name="ros_gz_bridge_cameras", output="screen",
+                             parameters=[{"config_file": str(cams_cfg), "use_sim_time": True}])]
     urdf = (desc_share / "urdf" / veh["urdf"]).read_text()
     params = str(sim_share / "config" / veh["params"])
     safety_params = str(safety_share / "config" / "safety_params.yaml")
@@ -117,6 +148,10 @@ def _setup(context):
           if spawn else []),
         Node(package="ros_gz_bridge", executable="parameter_bridge", name="ros_gz_bridge",
              output="screen", parameters=[{"config_file": str(bridge_cfg), "use_sim_time": True}]),
+        *extra_bridge,
+        *([Node(package="tidal_vehicle_simulation", executable="collision_monitor_node.py",
+                name="collision_monitor", output="screen", parameters=[params])]
+          if veh.get("collision_monitor") else []),
         Node(package="robot_state_publisher", executable="robot_state_publisher", output="screen",
              parameters=[{"robot_description": urdf, "use_sim_time": True}]),
         Node(package="tidal_vehicle_simulation", executable="lidar_scan_node.py", name="lidar_scan",
@@ -138,14 +173,16 @@ def _setup(context):
                           "obstacle_inflation_radius_m":
                               veh["obstacle_inflation_radius_m"]}]),
         Node(package="tidal_vehicle_autonomy", executable="path_follower",
-             name="path_follower", output="screen", parameters=[{"use_sim_time": True}]),
+             name="path_follower", output="screen",
+             parameters=[{"use_sim_time": True, **veh.get("follower", {})}]),
         Node(package="tidal_vehicle_safety", executable="safety_supervisor",
              name="safety_supervisor", output="screen",
              # Version 2 is hover-first; tracks deploy only for an exceptional
              # steep firm-land climb, which a 2D cost map cannot infer. Use the
              # conservative hover profile for every ordinary route segment.
              parameters=[safety_params, {"use_sim_time": True,
-                                         "track_mode_enabled": False}]),
+                                         "track_mode_enabled": False,
+                                         **veh.get("safety", {})}]),
         Node(package="foxglove_bridge", executable="foxglove_bridge", output="screen",
              parameters=[{"port": 8765, "address": "0.0.0.0", "use_sim_time": True}],
              condition=IfCondition(LaunchConfiguration("foxglove"))),
@@ -164,7 +201,11 @@ def generate_launch_description():
         DeclareLaunchArgument("world", default_value="tidal_corridor",
                               description="world under tidal_vehicle_simulation/worlds, without .sdf"),
         DeclareLaunchArgument("vehicle", default_value="v2",
-                              description="v2 (tracked, the demo vehicle) | v1 (wheeled fallback)"),
+                              description="v2 (tracked, the demo vehicle) | v1 (wheeled fallback) "
+                                          "| v3 (high-speed, in development)"),
+        DeclareLaunchArgument("cameras", default_value="front",
+                              description="front | all (Version 3: also the rear, left and "
+                                          "right cameras)"),
         DeclareLaunchArgument("tide", default_value="true",
                               description="run the tide manager instead of the static integration map"),
         DeclareLaunchArgument("mode_policy", default_value="",

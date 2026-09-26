@@ -247,7 +247,8 @@ def mud_ab():
 # Version 2 (hovercraft_v2: retractable tracks + cushion load sharing)
 # --------------------------------------------------------------------------
 def _v2(test):
-    p = RES / test / "hover_hovercraft_v2.csv"
+    model = "hovercraft_v3" if test.startswith("v3_") else "hovercraft_v2"
+    p = RES / test / f"hover_{model}.csv"
     return load(p) if p.exists() else None
 
 
@@ -265,11 +266,11 @@ def _tilt(d):
     return math.degrees(max(np.max(np.abs(d["roll"])), np.max(np.abs(d["pitch"]))))
 
 
-def v2_hover():
-    d = _v2("v2_hover_test")
+def v2_hover(v="v2"):
+    d = _v2(f"{v}_hover_test")
     if d is None:
         return
-    t = "v2_hover_test"
+    t = f"{v}_hover_test"
     g = d["gap_mean"][_win(d, 6, 25)]
     check(t, "Tracks retracted into the hull before propulsion", f"{at(d, 6, 'track_left_joint'):.3f} m",
           "0.25 m (±0.01)", abs(at(d, 6, "track_left_joint") - 0.25) < 0.01)
@@ -286,11 +287,11 @@ def v2_hover():
     check(t, "Stable: max roll/pitch", f"{_tilt(d):.1f}°", "< 5°", _tilt(d) < 5)
 
 
-def v2_track():
-    d = _v2("v2_track_test")
+def v2_track(v="v2"):
+    d = _v2(f"{v}_track_test")
     if d is None:
         return
-    t = "v2_track_test"
+    t = f"{v}_track_test"
     v = (at(d, 8, "x") - at(d, 3, "x")) / 5.0
     check(t, "TRACK speed at 1.0 m/s (3-8 s)", f"{v:.3f} m/s", "1.0 m/s (±0.1)", abs(v - 1.0) < 0.1)
     r = _yaw_rate(d, 9, 14)
@@ -303,11 +304,11 @@ def v2_track():
           abs(z - top) < 0.2)
 
 
-def v2_load_share():
-    d = _v2("v2_load_share_test")
+def v2_load_share(v="v2"):
+    d = _v2(f"{v}_load_share_test")
     if d is None:
         return
-    t = "v2_load_share_test"
+    t = f"{v}_load_share_test"
     m = _win(d, 4, 14)
     sup, g = np.mean(d["support"][m]), d["gap_mean"][m]
     check(t, "Cushion carries the commanded 60 % share", f"{sup:.3f}", "0.60 (±0.05)", abs(sup - 0.6) < 0.05)
@@ -317,11 +318,11 @@ def v2_load_share():
     check(t, "Track drive with load share at 1.0 m/s", f"{v:.3f} m/s", "1.0 m/s (±0.1)", abs(v - 1.0) < 0.1)
 
 
-def v2_transition():
-    d = _v2("v2_transition_test")
+def v2_transition(v="v2"):
+    d = _v2(f"{v}_transition_test")
     if d is None:
         return
-    t = "v2_transition_test"
+    t = f"{v}_transition_test"
     xs = at(d, 32, "x")                      # stopped on the bank (bank starts at x = 26)
     check(t, "HOVER across water and mud, stops on the bank", f"x {xs:.1f} m", "> 26 m", xs > 26)
     g = d["gap_mean"][_win(d, 8, 25)]
@@ -337,11 +338,11 @@ def v2_transition():
           math.degrees(np.max(np.abs(d["roll"]))) < 5)
 
 
-def v2_turn():
-    d = _v2("v2_turn_test")
+def v2_turn(v="v2"):
+    d = _v2(f"{v}_turn_test")
     if d is None:
         return
-    t = "v2_turn_test"
+    t = f"{v}_turn_test"
     ra, rb = _yaw_rate(d, 22, 28), _yaw_rate(d, 50, 56)    # 1.0 rad/s at 1.5 m/s
     check(t, "Turn at 1.5 m/s, fans only (aids off)", f"{ra:.3f} rad/s", "reference", True)
     check(t, "Turn at 1.5 m/s with rudders + puff ports", f"{rb:.3f} rad/s",
@@ -366,11 +367,52 @@ def v2_turn():
     check(t, "Stops after a zero command", f"{vs:.3f} m/s", "< 0.1 m/s", vs < 0.1)
 
 
+def v3_speed():
+    d = _v2("v3_speed_test")
+    if d is None:
+        return
+    t = "v3_speed_test"
+    kmh = lambda v: v * 3.6
+    after = _win(d, 6, 30)
+    i = int(np.argmax(d["speed"][after] > 4.0))
+    t_hump = d["t"][after][i] - 6.0 if d["speed"][after][i] > 4.0 else float("inf")
+    check(t, "Over the water hump (reaches 14 km/h)", f"{t_hump:.1f} s", "< 15 s", t_hump < 15)
+    v = np.mean(d["speed"][_win(d, 26, 36)])
+    check(t, "Cruise at 30 km/h", f"{kmh(v):.1f} km/h", "30 km/h (±2)", abs(kmh(v) - 30) < 2)
+    v = np.mean(d["speed"][_win(d, 52, 60)])
+    check(t, "50 km/h over open water", f"{kmh(v):.1f} km/h", "50 km/h (±2)", abs(kmh(v) - 50) < 2)
+    m = _win(d, 60, 75)
+    x, y, sp = d["x"][m], d["y"][m], d["speed"][m]
+    j = int(np.argmax(sp < 0.3)) if np.any(sp < 0.3) else len(sp) - 1
+    dist = float(np.sum(np.hypot(np.diff(x[:j + 1]), np.diff(y[:j + 1]))))
+    check(t, "Braking distance from 50 km/h (reverse thrust)", f"{dist:.0f} m",
+          "≤ 60 m (sizing: 54 m + 1 s reaction)", dist <= 60)
+    r10 = _yaw_rate(d, 100, 110)
+    v10 = np.mean(d["speed"][_win(d, 100, 110)])
+    check(t, "Turn at 10 km/h (0.30 rad/s asked)", f"{r10:.2f} rad/s, radius {v10 / max(r10, 1e-3):.1f} m",
+          "0.30 rad/s (±0.06)", abs(r10 - 0.30) < 0.06)
+    r30 = _yaw_rate(d, 140, 150)
+    v30 = np.mean(d["speed"][_win(d, 140, 150)])
+    check(t, "Turn at 30 km/h (0.12 rad/s asked)", f"{r30:.3f} rad/s, radius {v30 / max(r30, 1e-3):.0f} m, "
+          f"{kmh(v30):.0f} km/h", "0.12 rad/s (±0.03), ≥ 27 km/h", abs(r30 - 0.12) < 0.03 and kmh(v30) >= 27)
+    rp = _yaw_rate(d, 168, 177)
+    check(t, "Pivot in place (0.6 rad/s asked)", f"{rp:.2f} rad/s", "0.6 rad/s (±0.15)", abs(rp - 0.6) < 0.15)
+    vmax = np.max(d["speed"][_win(d, 177, 207)])
+    check(t, "Speed margin above 50 km/h (58 km/h asked)", f"{kmh(vmax):.1f} km/h", "≥ 52 km/h", kmh(vmax) >= 52)
+    g = d["gap_mean"][_win(d, 8, 207)]
+    check(t, "Hover gap at speed", f"{g.min() * 100:.1f}..{g.max() * 100:.1f} cm", "within 3..8 cm",
+          g.min() > 0.03 and g.max() < 0.08)
+    check(t, "Stable: max roll/pitch", f"{_tilt(d):.1f}°", "< 5°", _tilt(d) < 5)
+
+
 def main():
     PLOTS.mkdir(parents=True, exist_ok=True)
     for f in (empty_test, gap_hold, hover_drive, transition, debris, cmd_vel, mud_ab,
               v2_hover, v2_track, v2_load_share, v2_transition, v2_turn):
         f()
+    for f in (v2_hover, v2_track, v2_load_share, v2_transition, v2_turn):
+        f("v3")
+    v3_speed()
     lines = ["| Test | Check | Result | Target | |", "|---|---|---|---|---|"]
     for t, n, v, tg, ok in checks:
         lines.append(f"| {t} | {n} | {v} | {tg} | {'PASS' if ok else 'FAIL'} |")

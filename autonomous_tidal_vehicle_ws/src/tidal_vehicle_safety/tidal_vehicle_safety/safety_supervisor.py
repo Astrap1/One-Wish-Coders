@@ -5,8 +5,10 @@ from __future__ import annotations
 from typing import Optional
 
 import rclpy
+import math
+
 from geometry_msgs.msg import PoseStamped, Twist
-from nav_msgs.msg import OccupancyGrid, Path
+from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Bool, String
@@ -22,6 +24,7 @@ from .return_estimator import (
     estimate_return,
     path_ends_at_home,
 )
+from .zone_limits import zone_limit_ahead
 
 
 class SafetySupervisor(Node):
@@ -75,6 +78,14 @@ class SafetySupervisor(Node):
             String, "/mission_event", self._on_mission_event, status_qos
         )
         self.create_subscription(String, "/scenario_event", self._on_scenario_event, 10)
+        # Zone speed limits from the split cost bands (AGENTS.md); off unless
+        # zone_speed_limits_mps has four values (sim.launch.py sets them for v3)
+        self._zone_limits = [float(v) for v in self.get_parameter("zone_speed_limits_mps").value]
+        if len(self._zone_limits) != 4:
+            self._zone_limits = []
+        self._odom: Optional[tuple[float, float, float, float]] = None
+        if self._zone_limits:
+            self.create_subscription(Odometry, "/odom", self._on_odom, 10)
         self.create_timer(0.1, self._on_timer)
 
     def _declare_parameters(self) -> None:
@@ -119,6 +130,10 @@ class SafetySupervisor(Node):
             "mobility_degradation_weight": 0.7,
             "minimum_return_buffer_percent": 8.0,
             "return_energy_contingency_ratio": 0.20,
+            # Version 3 zone limits: [firm, open surveyed water,
+            # mud/roots/debris, elevated risk] in m/s; [0.0] = off
+            "zone_speed_limits_mps": [0.0],
+            "brake_decel_mps2": 1.0,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -438,9 +453,27 @@ class SafetySupervisor(Node):
         self._publish_stop()
         self._publish_status(False)
 
+    def _on_odom(self, message: Odometry) -> None:
+        q = message.pose.pose.orientation
+        yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z))
+        v = message.twist.twist.linear
+        self._odom = (message.pose.pose.position.x, message.pose.pose.position.y, yaw,
+                      math.hypot(v.x, v.y))
+
+    def _zone_limit(self) -> Optional[float]:
+        """Slowest zone limit between the vehicle and its stopping distance."""
+        if not self._zone_limits or self._odom is None or self._costmap is None:
+            return None
+        x, y, yaw, speed = self._odom
+        return zone_limit_ahead(self._costmap.cost_at, x, y, yaw, speed,
+                                self._zone_limits, self._parameter("brake_decel_mps2"))
+
     def _limited_command(self, command: Twist, state: str, *, remote: bool = False) -> Twist:
+        zone = self._zone_limit()
         if remote:
             linear_limit = self._parameter("remote_linear_speed_limit_mps")
+            if zone is not None:
+                linear_limit = min(linear_limit, zone)
             angular_limit = self._parameter("remote_angular_speed_limit_radps")
             approved = Twist()
             approved.linear.x = max(-linear_limit, min(linear_limit, command.linear.x))
@@ -452,6 +485,8 @@ class SafetySupervisor(Node):
             RETURN: "return_linear_speed_limit_mps",
         }[state]
         limit = self._parameter(limit_name)
+        if zone is not None:
+            limit = min(limit, zone)
         approved = Twist()
         approved.linear.x = max(-limit, min(limit, command.linear.x))
         approved.angular.z = command.angular.z

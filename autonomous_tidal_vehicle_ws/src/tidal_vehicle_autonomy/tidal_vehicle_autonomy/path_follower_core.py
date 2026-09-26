@@ -108,3 +108,62 @@ def _distance(pose: Pose2D, waypoint: Waypoint) -> float:
 
 def _clamp(value: float, lower: float, upper: float) -> float:
     return max(lower, min(value, upper))
+
+
+# --------------------------------------------------------------------------
+# Speed limits for higher-speed vehicles (Version 3). Off unless the node is
+# given zone limits / a lateral-acceleration limit, so Version 2 is unchanged.
+# --------------------------------------------------------------------------
+def zone_speed_limit(costs: Sequence[int], limits: Sequence[float]) -> float | None:
+    """Lowest speed limit (m/s) of the sampled cost cells, using the split cost
+    bands in AGENTS.md: limits = [firm 0-19, open surveyed water 20-29,
+    mud/shallow water/roots/debris 30-59, elevated risk 60-89]. No-go and
+    unknown cells are the planner's job. None when nothing matched."""
+    if len(limits) != 4:
+        return None
+    bands = ((0, 19), (20, 29), (30, 59), (60, 89))
+    out = None
+    for cost in costs:
+        for (low, high), limit in zip(bands, limits):
+            if low <= cost <= high:
+                out = limit if out is None else min(out, limit)
+    return out
+
+
+def path_points_ahead(
+    pose: Pose2D, waypoints: Sequence[Waypoint], start_index: int, reach_m: float,
+    step_m: float = 0.5,
+) -> list[Waypoint]:
+    """Points every step_m along the path, from the vehicle out to reach_m."""
+    points: list[Waypoint] = [(pose.x, pose.y)]
+    previous = (pose.x, pose.y)
+    travelled = 0.0
+    for waypoint in waypoints[max(start_index, 0):]:
+        segment = hypot(waypoint[0] - previous[0], waypoint[1] - previous[1])
+        steps = max(1, int(segment / step_m))
+        for k in range(1, steps + 1):
+            f = k / steps
+            points.append((previous[0] + f * (waypoint[0] - previous[0]),
+                           previous[1] + f * (waypoint[1] - previous[1])))
+        travelled += segment
+        previous = waypoint
+        if travelled >= reach_m:
+            break
+    return points
+
+
+def stopping_reach(speed: float, brake_decel: float, reaction_s: float = 1.0,
+                   minimum_m: float = 2.0) -> float:
+    """How far ahead to look for a slower zone: reaction plus braking distance."""
+    return max(minimum_m, speed * reaction_s + speed * speed / (2.0 * max(brake_decel, 0.1)))
+
+
+def curvature_speed_limit(heading_error: float, lookahead_m: float,
+                          lateral_accel: float) -> float | None:
+    """Pure-pursuit curvature k = 2 sin(error) / lookahead; v <= sqrt(a / k)."""
+    if lateral_accel <= 0.0 or lookahead_m <= 0.0:
+        return None
+    curvature = 2.0 * abs(sin(heading_error)) / lookahead_m
+    if curvature < 1e-6:
+        return None
+    return (lateral_accel / curvature) ** 0.5

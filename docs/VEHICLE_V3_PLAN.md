@@ -22,16 +22,33 @@ Version 3 scales up Version 2 for higher speed, sharper turning and more payload
 - **Cameras:** front (as Version 2) plus rear, left and right, at 320 × 240 and 5 Hz, switchable at launch (for example `cameras:=front|all`). The real-time factor is measured with them on; if they slow the LiDAR or the front camera, they default to off. The top-down view is only added if it doesn't affect the other sensors: preferably stitched from the four cameras in software, otherwise a downward camera on an arm above the LiDAR, outside its ±15° beams.
 - **Collision detection:** Gazebo contact sensors (`gz-sim-contact-system`) on the hull, skirt and track collisions, plus an IMU jolt check, feed the proposed `/vehicle/collision` topic (`AGENTS.md` request 17).
 
+## Status (2026-09-26)
+
+Built and tested in Gazebo (ROS 2 Jazzy, Gazebo 8.15, WSL), steps 1–8 below. **Version 2 remains the demo vehicle.**
+
+| Check | Result |
+|---|---|
+| Blender spec checks | all pass (3.0 × 1.8 × 1.88 m, 530 kg, CoM height/beam 0.30, LiDAR beams clear the ducts, mast cameras in the LiDAR's blind cone) |
+| Over the water hump | 3.1 s to 14 km/h |
+| Cruise / top speed | 30.0 km/h / 50.0 km/h; 58 km/h available |
+| Braking from 50 km/h | 58 m (reverse thrust) |
+| Turn radius at 10 / 30 km/h | 9 m / 77 m |
+| Pivot in place | 0.62 rad/s |
+| Version 2 scenarios run with Version 3 | all pass: hover, 15° ramp on the tracks, load share, water → mud → bank, turning aids |
+| Collision test (bow into a wall) | "skirt, front, hit 'wall'" on `/vehicle/collision` |
+| Full ROS mission (integration world) | delivered and home in 27–31 s of sim time; zero false collisions; `/cmd_vel` ≤ 2.8 m/s on mud; fuel 99.98 → 99.92 %, battery held at 100 % |
+| Cameras | front only: real-time factor 0.94; all four: 0.78 (the extra cameras render only when bridged) |
+
 ## Steps (Person 4)
 
 1. **Sizing script.** ✅ `tools/vehicle_sizing/v3_sizing.py` (first-order models, all checks pass).
-2. **Blender model.** `assets/vehicle_blender/version_3/build_vehicle.py`, a copy of the Version 2 pipeline with the Version 3 dimensions, bigger ducts, engine bay, exhaust, fuel tank and faired payload. Its spec checks go in `renders/dimensions.txt`.
-3. **Description.** `gen_description_v3.py` → `models/hovercraft_v3/`, `urdf/hovercraft_v3.urdf`.
-4. **Physics.** `hover::AirCushion` gains an optional realistic drag model: air drag (CdA), air-intake drag, skirt drag, the over-water hump (Froude-dependent), and fan thrust falling off with speed. Version 2 keeps its current, deliberately high glide drag, so its tests are unchanged.
-5. **Mobility.** `config/vehicle_mobility_v3.yaml`: zone speed caps from the cost bands (the last line of defence), a hybrid fuel and battery energy model, and `fuel_percent` on `/vehicle_health` (interface change, see `AGENTS.md` request 15).
-6. **Launch.** `vehicle:=v3` in `sim.launch.py`; the default stays `v2`.
-7. **Sensors.** Rear, left and right cameras (plus the top-down view if it passes the load check), the bridge entries, and the contact sensors plus IMU jolt check publishing `/vehicle/collision` once its message is agreed.
-8. **Tests.** A long open-water test world. Checks: top speed ≥ 50 km/h, cruise 30 km/h, crossing the hump, stopping distance at 10 / 30 / 50 km/h, turn radius at 10 / 30 / 50 km/h, zone speed caps, the rudders and puff ports at speed, a collision reported for a deliberate hit (part and side correct), and the real-time factor with all cameras on. The Version 2 checks must stay green.
+2. **Blender model.** ✅ `assets/vehicle_blender/version_3/build_vehicle.py`, a copy of the Version 2 pipeline with the Version 3 dimensions, bigger ducts, engine bay, exhaust, fuel tank and faired payload. Its spec checks go in `renders/dimensions.txt`.
+3. **Description.** ✅ `gen_description_v3.py` → `models/hovercraft_v3/`, `urdf/hovercraft_v3.urdf`.
+4. **Physics.** ✅ `hover::AirCushion` gains an optional realistic drag model: air drag (CdA), air-intake drag, skirt drag, the over-water hump (Froude-dependent), and fan thrust falling off with speed. Version 2 keeps its current, deliberately high glide drag, so its tests are unchanged.
+5. **Mobility.** ✅ `config/vehicle_mobility_v3.yaml`: zone speed caps from the cost bands (the last line of defence), a hybrid fuel and battery energy model, and `fuel_percent` on `/vehicle_health` (interface change, see `AGENTS.md` request 15).
+6. **Launch.** ✅ `vehicle:=v3` in `sim.launch.py`; the default stays `v2`.
+7. **Sensors.** ✅ Rear, left and right cameras. No top-down *camera*: anything mounted above the LiDAR would block its beams, so a bird's-eye view should be stitched from the four cameras in software later, the bridge entries, and the contact sensors plus IMU jolt check publishing `/vehicle/collision` once its message is agreed.
+8. **Tests.** ✅ A long open-water test world. Checks: top speed ≥ 50 km/h, cruise 30 km/h, crossing the hump, stopping distance at 10 / 30 / 50 km/h, turn radius at 10 / 30 / 50 km/h, zone speed caps, the rudders and puff ports at speed, a collision reported for a deliberate hit (part and side correct), and the real-time factor with all cameras on. The Version 2 checks must stay green.
 9. **Integration.** Once the Version 3 requests from Persons 1, 2, 3 and 5 have landed, run the corridor missions with `vehicle:=v3`. Only then consider it for the demo.
 
 ## Open questions for later

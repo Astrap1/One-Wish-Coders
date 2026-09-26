@@ -6,6 +6,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Collision.msg"
   "msg/SafetyStatus.msg"
   "msg/TerrainState.msg"
   "msg/VehicleHealth.msg"

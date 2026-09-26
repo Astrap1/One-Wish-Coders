@@ -85,6 +85,39 @@ With the full ROS stack in the integration world, an autonomous goal across the 
 - conda/RoboStack builds of gz-sim 8.10 lack `Model::SetStatic`. Build with `-DTIDAL_BUILD_TIDE_VISUAL=OFF` there.
 - The apt Gazebo that ROS 2 Jazzy installs has `Model::SetStatic`, so none of this applies on the WSL laptop.
 
+## Version 3: high-speed series hybrid (in development)
+
+```bash
+ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v3                     # front camera only
+ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v3 cameras:=all        # + rear, left, right
+```
+
+Version 2 scaled up: 3.0 × 1.8 × 1.9 m, 530 kg including a 100 kg payload, series hybrid (a 20 kW diesel generator, 30 L of fuel, a 5 kWh buffer battery), 2 × 0.7 m ducted fans (940 N), rudders and puff ports, retractable tracks (15 km/h), a LiDAR mast raised to 1.82 m, and four cameras. Decisions: `AGENTS.md`, *Vehicle Version 3*. Plan, status and results: [`VEHICLE_V3_PLAN.md`](VEHICLE_V3_PLAN.md). Sizing: `tools/vehicle_sizing/v3_sizing.py`.
+
+**Model pipeline:** `assets/vehicle_blender/version_3/build_vehicle.py` → `gen_description_v3.py` → `models/hovercraft_v3/`, `urdf/hovercraft_v3.urdf`.
+
+**What is new in the simulation:**
+- **High-speed drag** in `hover::AirCushion`, off unless set (Version 2 keeps its demo glide drag). It has four terms:
+  - `glide_constant_drag`: skirt and spray drag, 104 N;
+  - `water_hump_drag` / `water_hump_speed`: the over-water wave hump, 261 N peak at 3.0 m/s;
+  - `thrust_falloff_speed`: fan thrust falls linearly to zero at 31.9 m/s;
+  - air drag through `glide_quadratic_drag` (0.5 ρ CdA).
+
+  Sideways, the skirt resists up to 10% of the weight (`glide_lateral_factor` 5).
+- **Skirt collision** is the stiff round bag (box plus bag ends), not the 11 cm of flexible fingers. The bow overhang can therefore ride up a 15° bank, and debris under about 11 cm passes under the skirt.
+- **Zone speed limits** (split cost bands, `AGENTS.md`) in `vehicle_mobility_node` (`zone_speed_limits_mps`, `brake_decel_mps2`), the path follower and Safety. Each looks ahead as far as it needs to stop.
+- **Series-hybrid energy model:** the generator follows demand up to `genset_max_w` and tops up the battery. `/vehicle_health.fuel_percent` is reported (−1 on Versions 1 and 2).
+- **Collision detection:** contact sensors on the hull, skirt and track collisions (Gazebo's Contact system is loaded by the model) plus an IMU jolt check feed `collision_monitor_node` → `/vehicle/collision`. Ground contact (vertical normals) and the vehicle's own parts are filtered out.
+- **Cameras:** rear, left and right on the mast (320 × 240, 5 Hz), bridged only with `cameras:=all`. Gazebo renders a camera only while it is subscribed: real-time factor 0.94 with the front camera, 0.78 with all four.
+
+**Tests:**
+```bash
+python3 autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation/scripts/gen_test_worlds_v3.py --no-render-sensors --out /tmp/v3worlds
+for t in "v3_speed_test 222" "v3_hover_test 62" "v3_track_test 48" "v3_load_share_test 18"          "v3_transition_test 63" "v3_turn_test 96"; do WORLD_DIR=/tmp/v3worlds tools/vehicle_tests/run_test.sh $t; done
+python3 tools/vehicle_tests/analyze.py        # v3_* rows in results/acceptance.md
+tools/vehicle_tests/run_collision_test.sh     # bow into a wall -> /vehicle/collision
+```
+
 ## 1. Where things live
 
 | Path | What |

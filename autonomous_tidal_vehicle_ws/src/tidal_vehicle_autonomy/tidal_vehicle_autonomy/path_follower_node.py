@@ -2,15 +2,26 @@
 
 from __future__ import annotations
 
-from math import atan2
+from dataclasses import replace
+from math import atan2, floor, hypot
 from time import monotonic
 
 from geometry_msgs.msg import Twist
-from nav_msgs.msg import Odometry, Path
+from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.node import Node
 
-from .path_follower_core import compute_command, FollowerConfig, Pose2D, Waypoint
+from .path_follower_core import (
+    compute_command,
+    curvature_speed_limit,
+    FollowerConfig,
+    normalise_angle,
+    path_points_ahead,
+    Pose2D,
+    stopping_reach,
+    Waypoint,
+    zone_speed_limit,
+)
 
 
 class PathFollowerNode(Node):
@@ -41,6 +52,19 @@ class PathFollowerNode(Node):
         self._goal_reported = False
         self._frame_warning_active = False
 
+        # Zone speed limits from the split cost bands (AGENTS.md), a
+        # curvature limit and a speed-scaled lookahead. All off by default
+        # (Version 2); sim.launch.py sets them for Version 3.
+        self._zone_limits = [float(v) for v in self.get_parameter("zone_speed_limits_mps").value]
+        if len(self._zone_limits) != 4:
+            self._zone_limits = []
+        self._brake_decel = self._parameter("brake_decel_mps2")
+        self._lateral_accel = self._parameter("lateral_accel_limit_mps2")
+        self._lookahead_time = self._parameter("lookahead_time_s")
+        self._costmap: tuple | None = None
+        if self._zone_limits:
+            self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
+
         self._command_publisher = self.create_publisher(Twist, "/cmd_vel_proposed", 10)
         self.create_subscription(Path, "/planned_path", self._on_path, 10)
         self.create_subscription(Odometry, "/odom", self._on_odometry, 20)
@@ -60,6 +84,14 @@ class PathFollowerNode(Node):
             "slow_down_distance": 1.0,
             "rotate_in_place_angle": 1.05,
             "odom_timeout": 0.5,
+            # Version 3 (0 / empty = off): [firm, open surveyed water,
+            # mud/roots/debris, elevated risk] in m/s; braking deceleration for
+            # the look-ahead reach; lateral acceleration allowed in curves;
+            # lookahead grows to this many seconds of travel.
+            "zone_speed_limits_mps": [0.0],
+            "brake_decel_mps2": 1.0,
+            "lateral_accel_limit_mps2": 0.0,
+            "lookahead_time_s": 0.0,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -105,21 +137,58 @@ class PathFollowerNode(Node):
             return
 
         pose = self._pose_2d(self._odometry)
+        config = self._speed_limited_config(pose)
         command = compute_command(
             pose,
             self._path,
-            self._config,
+            config,
             self._progress_index,
         )
         self._progress_index = command.progress_index
+        linear_x = command.linear_x
+        if self._lateral_accel > 0.0 and command.target_index is not None:
+            tx, ty = self._path[command.target_index]
+            error = normalise_angle(atan2(ty - pose.y, tx - pose.x) - pose.yaw)
+            curve = curvature_speed_limit(error, config.lookahead_distance, self._lateral_accel)
+            if curve is not None:
+                linear_x = min(linear_x, curve)
         proposed = Twist()
-        proposed.linear.x = command.linear_x
+        proposed.linear.x = linear_x
         proposed.angular.z = command.angular_z
         self._command_publisher.publish(proposed)
 
         if command.goal_reached and not self._goal_reported:
             self._goal_reported = True
             self.get_logger().info("Path goal reached; proposing a stop")
+
+    def _on_costmap(self, message: OccupancyGrid) -> None:
+        info = message.info
+        self._costmap = (info.resolution, info.width, info.height,
+                         info.origin.position.x, info.origin.position.y, list(message.data))
+
+    def _speed_limited_config(self, pose: Pose2D) -> FollowerConfig:
+        """This tick's config: max speed capped by the slowest zone between
+        the vehicle and its stopping distance, lookahead scaled with speed."""
+        if not self._zone_limits and self._lookahead_time <= 0.0:
+            return self._config
+        twist = self._odometry.twist.twist.linear
+        speed = hypot(twist.x, twist.y)
+        changes = {}
+        if self._lookahead_time > 0.0:
+            changes["lookahead_distance"] = max(self._config.lookahead_distance,
+                                                speed * self._lookahead_time)
+        if self._zone_limits and self._costmap is not None:
+            res, width, height, ox, oy, data = self._costmap
+            reach = stopping_reach(speed, self._brake_decel)
+            costs = []
+            for x, y in path_points_ahead(pose, self._path, self._progress_index, reach):
+                col, row = int(floor((x - ox) / res)), int(floor((y - oy) / res))
+                if 0 <= col < width and 0 <= row < height:
+                    costs.append(int(data[row * width + col]))
+            zone = zone_speed_limit(costs, self._zone_limits)
+            if zone is not None:
+                changes["max_linear_speed"] = max(0.05, min(self._config.max_linear_speed, zone))
+        return replace(self._config, **changes) if changes else self._config
 
     def _frames_match(self) -> bool:
         odom_frame = self._odometry.header.frame_id

@@ -284,8 +284,30 @@ def sample_costmap(info: tuple, data, x: float, y: float, yaw: float,
     return out
 
 
+def zone_speed_limit(costs: list[int], limits: list[float]) -> float | None:
+    """Speed limit (m/s) for the split cost bands (AGENTS.md, *Shared
+    terrain-cost semantics*): the lowest limit of any sampled cell.
+    limits = [firm 0-19, open surveyed water 20-29, mud/shallow water/roots/
+    debris 30-59, elevated risk 60-89]. No-go and unknown cells are left to
+    the planner. None when nothing usable was sampled or limits are off."""
+    if len(limits) != 4:
+        return None
+    bands = [(0, 19), (20, 29), (30, 59), (60, 89)]
+    out = None
+    for c in costs:
+        for (lo, hi), limit in zip(bands, limits):
+            if lo <= c <= hi:
+                out = limit if out is None else min(out, limit)
+    return out
+
+
 class Battery:
-    """Simple declared energy model for the simulation demonstration."""
+    """Simple declared energy model for the simulation demonstration.
+
+    Version 3 (fuel_capacity_l > 0) is a series hybrid: a diesel generator
+    follows the electrical demand up to genset_max_w and recharges the small
+    buffer battery when it has spare capacity; the battery covers peaks above
+    the generator. fuel_percent is -1 for vehicles without a fuel tank."""
 
     def __init__(
         self,
@@ -297,6 +319,13 @@ class Battery:
         glide_b1: float = 5.0,
         glide_b2: float = 6.0,
         initial_percent: float = 100.0,
+        glide_c: float = 0.0,
+        fuel_capacity_l: float = 0.0,
+        genset_max_w: float = 0.0,
+        genset_efficiency: float = 0.92,
+        bsfc_kg_per_kwh: float = 0.25,
+        diesel_kg_per_l: float = 0.84,
+        recharge_w: float = 2000.0,
     ) -> None:
         self.cap_j = capacity_wh * 3600.0
         self.idle_w = idle_w
@@ -305,7 +334,32 @@ class Battery:
         self.wheels_w = wheels_w
         self.b1 = glide_b1
         self.b2 = glide_b2
+        self.c = glide_c
         self.percent = initial_percent
+        self.fuel_cap_l = fuel_capacity_l
+        self.fuel_l = fuel_capacity_l
+        self.genset_max_w = genset_max_w
+        self.eta_gen = genset_efficiency
+        self.bsfc = bsfc_kg_per_kwh
+        self.diesel_kg_per_l = diesel_kg_per_l
+        self.recharge_w = recharge_w
+
+    @property
+    def fuel_percent(self) -> float:
+        if self.fuel_cap_l <= 0.0:
+            return -1.0
+        return 100.0 * self.fuel_l / self.fuel_cap_l
+
+    def _draw(self, power: float, dt: float) -> None:
+        """Take `power` (W) for dt seconds from the generator and/or battery."""
+        gen_w = 0.0
+        if self.fuel_cap_l > 0.0 and self.fuel_l > 0.0:
+            want = power + (self.recharge_w if self.percent < 95.0 else 0.0)
+            gen_w = min(want, self.genset_max_w)
+            fuel_kg = gen_w / self.eta_gen * dt / 3.6e6 * self.bsfc
+            self.fuel_l = max(0.0, self.fuel_l - fuel_kg / self.diesel_kg_per_l)
+        net = power - gen_w                       # > 0 drains, < 0 charges the battery
+        self.percent = min(100.0, max(0.0, self.percent - 100.0 * net * dt / self.cap_j))
 
     def step(
         self,
@@ -324,6 +378,7 @@ class Battery:
             thrust = (
                 self.b1 * speed
                 + self.b2 * speed * speed
+                + (self.c if speed > 0.05 else 0.0)
                 + 20.0 * abs(w_cmd)
             )
             power += self.k_thrust * thrust
@@ -331,10 +386,7 @@ class Battery:
             abs(v_cmd) > 1e-3 or abs(w_cmd) > 1e-3
         ):
             power += self.wheels_w
-        self.percent = max(
-            0.0,
-            self.percent - 100.0 * power * dt / self.cap_j,
-        )
+        self._draw(power, dt)
         return self.percent, power
 
 
@@ -415,7 +467,19 @@ def main() -> None:
                 initial_percent=float(
                     parameter("initial_battery_percent", 100.0).value
                 ),
+                glide_c=float(parameter("glide_c", 0.0).value),
+                fuel_capacity_l=float(parameter("fuel_capacity_l", 0.0).value),
+                genset_max_w=float(parameter("genset_max_w", 0.0).value),
             )
+            # Zone speed caps from the split cost bands: [firm, open surveyed
+            # water, mud/shallow water/roots/debris, elevated risk] in m/s;
+            # empty = off. The vehicle looks ahead far enough to stop.
+            self.zone_limits = [float(v) for v in parameter(
+                "zone_speed_limits_mps", [0.0]).value]
+            if len(self.zone_limits) != 4:
+                self.zone_limits = []
+            self.brake_decel = float(parameter("brake_decel_mps2", 1.0).value)
+            self.speed = 0.0
             self.cmd = Twist()
             self.cmd_stamp = None
             self.terrain = "FIRM"
@@ -457,7 +521,7 @@ def main() -> None:
                 JointState, "/joint_states", self.on_joints, 10
             )
             self.create_subscription(Odometry, "/odom", self.on_odom, 10)
-            if self.terrain_source == "costmap":
+            if self.terrain_source == "costmap" or self.zone_limits:
                 self.create_subscription(
                     OccupancyGrid, "/terrain_costmap", self.on_costmap, 10
                 )
@@ -533,6 +597,17 @@ def main() -> None:
                     return terrain
             return self.terrain
 
+        def zone_limit(self) -> float | None:
+            """Lowest zone speed limit from here out to the stopping distance
+            (plus 1 s of travel), so the vehicle slows before a slower zone."""
+            if not self.zone_limits or self.costmap is None:
+                return None
+            x, y, yaw = self.pose
+            reach = max(self.lookahead_m,
+                        self.speed * 1.0 + self.speed ** 2 / (2.0 * max(self.brake_decel, 0.1)))
+            costs = sample_costmap(self.costmap[0], self.costmap[1], x, y, yaw, reach)
+            return zone_speed_limit(costs, self.zone_limits)
+
         def on_odom(self, message: Odometry) -> None:
             p = message.pose.pose.position
             q = message.pose.pose.orientation
@@ -541,6 +616,8 @@ def main() -> None:
             self.pose = (p.x, p.y, yaw)
             self.odom_seen = True
             self.vz = message.twist.twist.linear.z
+            t = message.twist.twist.linear
+            self.speed = math.hypot(t.x, t.y)
             # A forward climb only: side tilt, descending and a stationary
             # attitude do not deploy the tracks. REP-103 pitch > 0 is nose-down.
             roll = math.atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y))
@@ -561,6 +638,9 @@ def main() -> None:
             if age > self.cmd_timeout:
                 return 0.0, 0.0
             limit = self.max_track_v if self.modes.mode == "TRACK" else self.max_v
+            zone = self.zone_limit()
+            if zone is not None:
+                limit = min(limit, zone)
             linear = max(
                 -limit,
                 min(limit, self.cmd.linear.x),
@@ -628,6 +708,7 @@ def main() -> None:
             health.header.stamp = now
             health.header.frame_id = "base_link"
             health.battery_percent = float(self.battery.percent)
+            health.fuel_percent = float(self.battery.fuel_percent)
             health.mobility_health_percent = float(
                 self.get_parameter("mobility_health_percent").value
             )

@@ -1,0 +1,33 @@
+# Extra Version 3 cameras (rear, left, right on the mast, 320 x 240 at 5 Hz).
+# Bridged only with cameras:=all: Gazebo renders a camera only while something
+# subscribes to it, so leaving these out keeps the demo load unchanged.
+- ros_topic_name: /camera/rear/image_raw
+  gz_topic_name: /model/hovercraft_v3/camera/rear/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/rear/camera_info
+  gz_topic_name: /model/hovercraft_v3/camera/rear/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/left/image_raw
+  gz_topic_name: /model/hovercraft_v3/camera/left/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/left/camera_info
+  gz_topic_name: /model/hovercraft_v3/camera/left/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/right/image_raw
+  gz_topic_name: /model/hovercraft_v3/camera/right/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /camera/right/camera_info
+  gz_topic_name: /model/hovercraft_v3/camera/right/camera_info
+  ros_type_name: sensor_msgs/msg/CameraInfo
+  gz_type_name: gz.msgs.CameraInfo
+  direction: GZ_TO_ROS

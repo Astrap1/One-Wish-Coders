@@ -227,3 +227,30 @@ def test_tracks_settle_on_vertical_speed_on_uneven_ground() -> None:
         modes.step(0.1, terrain="FIRM", slope_deg=16.0,
                    hover_state="LOAD_SHARE", gap=0.045, gear_pos=0.0, vz=0.002)
     assert modes.mode == "TRACK"
+
+
+def test_zone_speed_limit_split_bands() -> None:
+    limits = [4.2, 8.3, 2.8, 2.8]            # firm, open water, mud/roots, elevated
+    zone = MODULE.zone_speed_limit
+    assert zone([25, 25, 22], limits) == 8.3          # open surveyed water: fast
+    assert zone([25, 25, 35], limits) == 2.8          # slow zone ahead: slow now
+    assert zone([10, 12], limits) == 4.2              # firm shore
+    assert zone([100, -1], limits) is None            # no-go / unknown: planner's job
+    assert zone([25], []) is None                     # limits off (Versions 1 and 2)
+
+
+def test_battery_without_fuel_reports_minus_one() -> None:
+    battery = MODULE.Battery(capacity_wh=10000.0, idle_w=150.0)
+    battery.step(10.0, False, None, 0.0, 0.0)
+    assert battery.fuel_percent == -1.0
+    assert battery.percent < 100.0
+
+
+def test_series_hybrid_burns_fuel_and_holds_battery() -> None:
+    battery = MODULE.Battery(capacity_wh=5000.0, idle_w=300.0, lift_fan_w=3900.0,
+                             thrust_w_per_n=20.0, glide_b1=2.0, glide_b2=0.6, glide_c=104.0,
+                             fuel_capacity_l=30.0, genset_max_w=20000.0)
+    for _ in range(3600):                              # one hour at 30 km/h
+        battery.step(1.0, True, "HOVER", 8.33, 0.0)
+    assert 99.0 < battery.percent <= 100.0             # the generator carries the load
+    assert 85.0 < battery.fuel_percent < 95.0          # about 2.5-3 L of 30 L per hour

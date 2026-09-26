@@ -68,6 +68,11 @@
 // Otherwise it falls back to a flat ground height. Water surfaces come from
 // the TerrainZones world system, because water has no collision geometry.
 //
+// High-speed drag (Version 3; off unless set): glide_constant_drag (N, skirt
+// and spray drag), water_hump_drag / water_hump_speed (the over-water wave
+// hump) and thrust_falloff_speed (ducted-fan thrust falls linearly to zero
+// there). Version 2 keeps its deliberately high demo glide drag instead.
+//
 // Load sharing (Version 2, TRACK mode): a value s in (0, 1] on lift_share
 // makes the cushion carry that fraction of the weight while the tracks carry
 // the rest. Each corner then gets a constant r * s * F0 (no spring term, so
@@ -215,6 +220,10 @@ class AirCushion : public System,
     this->yawKp     = get("yaw_rate_kp", 30.0);
     this->cmdTimeout = get("cmd_timeout", 0.5);
     this->waterGlideFactor = get("water_glide_drag_factor", 1.3);
+    this->cConst    = get("glide_constant_drag", 0.0);
+    this->humpDrag  = get("water_hump_drag", 0.0);
+    this->humpSpeed = get("water_hump_speed", 3.0);
+    this->falloffSpeed = get("thrust_falloff_speed", 0.0);
     this->cWater    = get("water_hull_drag", 60.0);
     this->cWaterYaw = get("water_yaw_drag", 10.0);
     this->useRaycast = _sdf->Get<bool>("use_raycast", true).first;
@@ -365,7 +374,17 @@ class AirCushion : public System,
       const double vFwd = v.Dot(fwdW);
       const double e = vRef - vFwd;
       // feed-forward: thrust that balances glide drag at the target speed
-      const double ff = this->b1 * vRef + this->b2 * vRef * std::abs(vRef);
+      double ff = this->b1 * vRef + this->b2 * vRef * std::abs(vRef);
+      if (std::abs(vRef) > 1e-6)
+      {
+        // physical terms (Version 3): constant skirt drag, the hump over water,
+        // and the extra command needed because thrust falls off with speed
+        const double mag = this->cConst * std::tanh(std::abs(vRef) / 0.3) +
+                           (this->overWater ? this->HumpDrag(std::abs(vRef)) : 0.0);
+        ff += std::copysign(mag, vRef);
+        if (vRef > 0.0)
+          ff /= std::max(0.2, this->FalloffFactor(vRef));
+      }
       double coll = ff + this->spdKp * e + this->spdKi * this->spdInt;
       const double collMax = 2.0 * this->maxThrust;
       const double collMin = -2.0 * this->reverseFrac * this->maxThrust;
@@ -599,13 +618,29 @@ class AirCushion : public System,
       const double vf = vxy.Dot(f2), vl = vxy.Dot(lat2);
       fTot += -(this->b1 + this->b2 * speed) * s * (vf * f2 + this->latFactor * vl * lat2);
       tTot.Z() += -this->bYaw * s * w.Z();
+      // Physical high-speed terms (Version 3; all zero by default):
+      // skirt / spray drag that barely depends on speed, and the wave "hump"
+      // over water, which peaks at water_hump_speed (Froude ~0.56) and decays
+      // above it as (v_hump / v)^2.
+      if (speed > 1e-6 && (this->cConst > 0.0 || this->humpDrag > 0.0))
+      {
+        const math::Vector3d dir = (vf * f2 + this->latFactor * vl * lat2) / speed;
+        double f = this->cConst * std::tanh(speed / 0.3);
+        if (terrain == Terrain::WATER)
+          f += this->HumpDrag(speed);
+        fTot += -std::min(1.0, support) * f * dir;
+      }
     }
+    this->overWater = (terrain == Terrain::WATER);
 
     // --- Rear fan thrust ----------------------------------------------------
+    // Ducted-fan thrust falls off with forward speed (the jet has less to add
+    // to the incoming air); thrust_falloff_speed ~ static jet speed, 0 = off.
     const math::Vector3d fwd = pose.Rot().RotateVector(math::Vector3d::UnitX);
+    const double falloff = this->FalloffFactor(v.Dot(fwd));
     for (int j = 0; j < 2; ++j)
     {
-      const math::Vector3d fW = fwd * this->thrust[j];
+      const math::Vector3d fW = fwd * this->thrust[j] * (this->thrust[j] > 0.0 ? falloff : 1.0);
       fTot += fW;
       tTot += pose.Rot().RotateVector(this->thrustPt[j]).Cross(fW);
     }
@@ -749,6 +784,24 @@ class AirCushion : public System,
   private: double reverseFrac{0.5}, yawReserve{0.0};
   private: double cMud{150}, mudRR{0.25}, cMudYaw{20}, rayRange{1.0};
   private: double waterGlideFactor{1.3}, cWater{60}, cWaterYaw{10};
+  private: double cConst{0}, humpDrag{0}, humpSpeed{3.0}, falloffSpeed{0};
+  private: bool overWater{false};
+
+  // Wave-making drag over water: rises to water_hump_drag at the hump speed,
+  // then decays as (v_hump / v)^2 once the craft is over the hump
+  private: double HumpDrag(double _v) const
+  {
+    if (this->humpDrag <= 0.0 || this->humpSpeed <= 0.0) return 0.0;
+    const double r = _v / this->humpSpeed;
+    return this->humpDrag * (r <= 1.0 ? r * r : 1.0 / (r * r));
+  }
+
+  // Share of static thrust a ducted fan still makes at forward speed _v
+  private: double FalloffFactor(double _v) const
+  {
+    if (this->falloffSpeed <= 0.0 || _v <= 0.0) return 1.0;
+    return std::max(0.0, 1.0 - _v / this->falloffSpeed);
+  }
   private: double lambda{0.05}, rudderK{0.55}, hdgKp{40}, hdgKd{25};
   private: double spdKp{40}, spdKi{10}, yawKp{30}, cmdTimeout{0.5}, spdInt{0};
   private: double latFactor{3.0};

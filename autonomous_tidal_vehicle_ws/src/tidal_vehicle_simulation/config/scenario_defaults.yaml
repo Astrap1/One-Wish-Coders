@@ -5,7 +5,10 @@ tide_manager:
     initial_state: low
     scenario_duration_s: 30.0
     initial_water_level_m: 0.02
-    water_rise_m: 2.40
+    # Keep the support surface continuous with the flat collision shore. A
+    # 0.55 m rise is large enough to be obvious in the operator view while
+    # avoiding a metre-scale vertical step at the channel boundary.
+    water_rise_m: 0.55
     risk_rate_per_minute: 0.05
     replan_risk_threshold: 0.60
     corridor_unsafe_risk_threshold: 0.85

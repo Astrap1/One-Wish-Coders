@@ -28,9 +28,12 @@ See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
 - Mud and water zones: add a `hover::TerrainZones` plugin to the world (see `worlds/vehicle_tests/transition_test.sdf`) so the vehicle's cushion and mud physics know where they are. Use Gazebo's `Buoyancy` system for water.
 
 `worlds/tidal_corridor.sdf` is the complete demo world: it includes the
-hovercraft, DART/Bullet physics, sensors, buoyancy and terrain-zone plugin. Its
-channel/mud rectangles exactly match the tide manager cost map. The tide manager,
-not the vehicle placeholder, provides `/terrain_state` and `/terrain_costmap`.
+hovercraft, DART/Bullet physics, sensors and terrain-zone plugin. Its
+channel/mud rectangles and tide profile exactly match the tide manager cost map.
+The tide manager, not the vehicle placeholder, provides `/terrain_state` and
+`/terrain_costmap`. The `TerrainZones` water level is a physical air-cushion
+surface: while in HOVER mode, the vehicle holds its configured skirt gap over
+the rising water rather than passively floating like a boat.
 
 For the live corridor, `models/terrain_demo/` retains the authored terrain mesh
 as a visual and uses an inclined box as the physics collision surface. The

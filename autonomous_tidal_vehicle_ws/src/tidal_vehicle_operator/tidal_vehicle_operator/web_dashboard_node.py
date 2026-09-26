@@ -60,7 +60,7 @@ class BrowserDashboardNode(Node):
         self._planned_path: list[dict[str, float]] = []
         self._return_path: list[dict[str, float]] = []
         self._mission_events: list[dict[str, str]] = []
-        self._cost_map: dict[str, object] = {"width": 0, "height": 0, "resolution": 1.0, "data": []}
+        self._cost_map: dict[str, object] = {"width": 0, "height": 0, "resolution": 1.0, "origin_x": 0.0, "origin_y": 0.0, "data": []}
         self._remote_enabled = False
         self._remote_action = "stop"
         self._remote_action_at = 0.0
@@ -222,12 +222,14 @@ class BrowserDashboardNode(Node):
         height = int(message.info.height)
         data = [int(value) for value in message.data]
         if width * height != len(data) or width <= 0 or height <= 0:
-            self._cost_map = {"width": 0, "height": 0, "resolution": 1.0, "data": []}
+            self._cost_map = {"width": 0, "height": 0, "resolution": 1.0, "origin_x": 0.0, "origin_y": 0.0, "data": []}
         else:
             self._cost_map = {
                 "width": width,
                 "height": height,
                 "resolution": float(message.info.resolution),
+                "origin_x": float(message.info.origin.position.x),
+                "origin_y": float(message.info.origin.position.y),
                 "data": data,
             }
         self._publish_state()

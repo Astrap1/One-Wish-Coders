@@ -17,6 +17,9 @@ See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
 - `scripts/gen_test_worlds.py` → `worlds/vehicle_tests/*.sdf` — vehicle test worlds
 - `worlds/vehicle_tests/integration_test.sdf` — unscripted world used by the common ROS launch
 - `config/vehicle_mobility.yaml` — mobility and battery assumptions
+- `config/vehicle_mobility_v2.yaml` — Version 2 track/hover settings. Its
+  LiDAR height gate rejects the ground mesh and retains raised roots, trunks
+  and debris for the planner's dynamic-obstacle overlay.
 
 ## Environment (Person 3)
 

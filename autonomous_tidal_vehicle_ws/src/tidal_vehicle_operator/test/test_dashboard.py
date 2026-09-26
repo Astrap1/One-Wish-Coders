@@ -107,9 +107,19 @@ def test_dashboard_declares_dom_helper_before_remote_handlers() -> None:
     page = web_dashboard.DASHBOARD_PAGE
 
     assert page.index("const E=id=>document.getElementById(id)") < page.index(
-        "E('remote-toggle').addEventListener"
+        "E('remote-toggle').onclick"
     )
 
 
 def test_dashboard_dispatch_goal_is_the_far_riverbank() -> None:
     assert "{kind:'goal',x:104.0,y:0.0}" in web_dashboard.DASHBOARD_PAGE
+
+
+def test_dashboard_has_one_unified_terrain_and_route_panel() -> None:
+    page = web_dashboard.DASHBOARD_PAGE
+
+    assert "Terrain map &amp; mission route" in page
+    assert "Terrain cost map" not in page
+    assert page.count('id="map"') == 1
+    assert 'id="cost-map"' not in page
+    assert "BARRIER A" in page and "BARRIER B" in page

@@ -12,6 +12,11 @@ state and cost map. The launch then starts the ROS-Gazebo bridge, robot state
 publisher, LiDAR conversion, vehicle mobility, global planner, path follower,
 safety supervisor and Foxglove bridge.
 
+Keep `tide:=true` (the default) for every bank-to-bank tidal-corridor demo.
+`tide:=false` starts the small legacy static integration map for the dedicated
+`vehicle_tests/integration_test` world; it does not cover the corridor's
+delivery point at `(104, 0)` and therefore cannot plan that mission.
+
 For a static vehicle-only test world, explicitly select it and disable the tide
 manager. The vehicle's low-tide placeholder terrain state and static cost map are
 then enabled:

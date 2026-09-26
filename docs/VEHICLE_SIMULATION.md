@@ -14,7 +14,8 @@ ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version
 - 2.5 m long, 1.5 m wide, 1.5 m high; 300 kg including a 30 kg payload box.
 - Bag skirt with segmented fingers.
 - Lift fan offset forward, so the 16-channel LiDAR sits on a centre mast directly above `base_link` at 1.44 m.
-- Two reversible ducted fans (200 N each, 80% reverse) with rudders.
+- Two reversible ducted fans (200 N each, 80% reverse) with rudders in their slipstream (±25° commanded).
+- Four puff ports: louvred side vents (0.24 × 0.12 m) at the bow and stern on both sides, fed with cushion air.
 - Two inboard rubber tracks (0.28 m wide, 1.40 m contact, 0.84 m gauge) on prismatic joints. They retract 0.25 m into hull wells in HOVER.
 
 **Rebuild the model:**
@@ -30,6 +31,14 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
   - `lift_share` (0–1): in TRACK mode the cushion carries that share of the weight and the tracks carry the rest. While a share is active the propulsion fans idle, because the tracks propel and brake; a fan speed loop holding zero would fight them.
   - `reverse_thrust_fraction` 0.8, which brakes and holds the vehicle on slopes up to about 6°.
   - `yaw_reserve_fraction` 0.3, which keeps some steering while braking.
+  - Turning aids (`rudder_control`, `puff_port_*`). In HOVER the yaw-rate controller asks for a yaw moment and shares it out in this order:
+    1. **Rudders.** The plugin sets both rudder angles on `rudder_left_cmd`/`rudder_right_cmd` (side force 0.55·T·sin δ at the stern). They are free while the fans push forward, strongest at speed and useless at zero thrust.
+    2. **Puff ports.** Opening a bow vent on one side and a stern vent on the other makes a pure yaw couple at any speed, including a pivot in place. Each vent gives 2·Cd·p·A ≈ 37 N at the 0.81 kPa cushion pressure (Cd 0.8), so a pair gives ≈ 55 N·m. Force scales with cushion pressure and follows a 0.15 s valve lag. Spare vent force damps sideways drift (150 N per m/s of slip).
+    3. **Differential fan thrust** supplies the rest, with the same speed-first limits as before.
+
+    The moment the rudders and vents actually deliver is subtracted, so the total never exceeds what the controller asked for. The aids are off in TRACK load sharing (the tracks steer). `/model/hovercraft_v2/turn_aids` (`gz.msgs.Boolean`, a Gazebo-only topic) switches them off for A/B tests.
+
+    Stated assumption: each open vent bleeds about 0.85 m³/s of cushion air, similar to the skirt's own leakage. The lift fan is assumed to have the flow margin for one open pair, and no lift loss is modelled. Version 1 doesn't set these parameters and is unchanged.
 - Gazebo's `TrackController` and `TrackedVehicle` drive the tracks from `/vehicle/cmd_vel_tracks`.
 - `hover::TerrainZones` water only counts where the water surface is above the measured ground. A water zone can also rise over time (`<rise>`, `<rise_duration>`).
 - No Gazebo buoyancy for Version 2 in the tidal corridor. The world's graded buoyancy treats everything below z = 0 as water, and the corridor ground is pitched below z = 0 just past HOME, so the hull floated off its tracks. Water support comes from the cushion over `TerrainZones` water, and solid ground lies under the water. The integration test world (flat ground at z = 0) keeps buoyancy for the channel.
@@ -49,7 +58,7 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
 **Tests:**
 ```bash
 python3 autonomous_tidal_vehicle_ws/src/tidal_vehicle_simulation/scripts/gen_test_worlds_v2.py --no-render-sensors --out /tmp/v2worlds
-for t in "v2_hover_test 62" "v2_track_test 48" "v2_load_share_test 18" "v2_transition_test 63"; do
+for t in "v2_hover_test 62" "v2_track_test 48" "v2_load_share_test 18" "v2_transition_test 63" "v2_turn_test 96"; do
   WORLD_DIR=/tmp/v2worlds tools/vehicle_tests/run_test.sh $t; done
 python3 tools/vehicle_tests/analyze.py        # v2_* rows in results/acceptance.md
 ```
@@ -63,6 +72,8 @@ All 19 Version 2 checks pass:
 | 15° ramp | climbed on the tracks |
 | Load share | 0.600 at 0.6 commanded, resting on the tracks (gap 2.7–3.0 cm) |
 | Water → mud → bank | hover across; stop; deploy; 40% share; climb a 12° bank on the tracks |
+
+Those 19 results predate the rudder and puff-port control. `v2_turn_test` (10 checks: turning at 1.5 m/s and pivoting in place, fans only against rudders plus puff ports) is new and **has not yet been run in Gazebo**. Rerun all five Version 2 tests before relying on these numbers.
 
 With the full ROS stack in the integration world, an autonomous goal across the water channel produced `delivery_confirmed` then `mission_complete` in 87 s. Open items in the tidal corridor are listed in `AGENTS.md` (Role 4).
 

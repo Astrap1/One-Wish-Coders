@@ -17,6 +17,9 @@ Output: tidal_vehicle_simulation/worlds/vehicle_tests/<name>.sdf
   v2_transition_test.sdf   HOVER across water and mud, stop on the firm bank,
                            deploy the tracks, reduce lift to 40 % load share, and
                            climb a 12 deg slope on the tracks.
+  v2_turn_test.sdf         HOVER turning A/B: a 1.0 rad/s turn at 1.5 m/s and a
+                           0.8 rad/s pivot in place, first with fans only
+                           (turn_aids off), then with rudders + puff ports.
 
 Each scenario is scripted with hover::ScriptedCommands (timed gz-transport
 messages), so each run is repeatable and needs no ROS in the loop.
@@ -77,6 +80,10 @@ def lift_share(m, t, share):
     return V1.cmd(t, f"/model/{m}/lift_share", "gz.msgs.Double", f"data: {share}")
 
 
+def turn_aids(m, t, on):
+    return V1.cmd(t, f"/model/{m}/turn_aids", "gz.msgs.Boolean", f"data: {'true' if on else 'false'}")
+
+
 def repeat(fn, t0, t1, dt=0.2):
     """Re-send a command so the 0.5 s command timeout never stops it."""
     out, t = [], t0
@@ -101,6 +108,21 @@ def build(sensors):
     W["v2_hover_test"] = world(
         "v2_hover_test",
         V1.block("ground", -20, 120, -60, 60, 0.0, "firm") + include(m, 0, 0), [], cmds, sensors)
+
+    # ---------------- HOVER turning: fans only vs rudders + puff ports ----
+    cmds = [turn_aids(m, 0.4, False), V1.hover_on(m, 0.5), tracks(m, 3.0, RETRACTED)]
+    for t0, aids in ((8.0, False), (36.0, True)):         # turn at speed, A then B
+        cmds += [turn_aids(m, t0, aids)]
+        cmds += repeat(lambda t: V1.hover_vel(m, t, 1.5), t0, t0 + 10)
+        cmds += repeat(lambda t: V1.hover_vel(m, t, 1.5, 1.0), t0 + 10, t0 + 20)
+        cmds += repeat(lambda t: V1.hover_vel(m, t, 0.0), t0 + 20, t0 + 28)
+    for t0, aids in ((64.0, True), (80.0, False)):        # pivot in place, B then A
+        cmds += [turn_aids(m, t0, aids)]
+        cmds += repeat(lambda t: V1.hover_vel(m, t, 0.0, 0.8), t0, t0 + 10)
+        cmds += repeat(lambda t: V1.hover_vel(m, t, 0.0), t0 + 10, t0 + 16)
+    W["v2_turn_test"] = world(
+        "v2_turn_test",
+        V1.block("ground", -40, 80, -60, 60, 0.0, "firm") + include(m, 0, 0), [], cmds, sensors)
 
     # ---------------- TRACK: straight, pivot, 15 deg ramp -----------------
     ramp_sdf, h15, _ = ramp("ramp15", 20.0, 8.0, -6, 6, 15.0)

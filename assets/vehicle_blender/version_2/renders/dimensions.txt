@@ -1,5 +1,5 @@
 === Per-link world bounding boxes (TRACK mode, metres) ===
-hull               origin (+0.000, +0.000, +0.500)  size (+2.484, +1.484, +1.200)  tris 25666
+hull               origin (+0.000, +0.000, +0.500)  size (+2.484, +1.484, +1.200)  tris 30226
 skirt              origin (+0.000, +0.000, +0.230)  size (+2.500, +1.500, +0.288)  tris 7584
 lift_fan           origin (+0.450, +0.000, +0.740)  size (+0.555, +0.563, +0.082)  tris 548
 thrust_fan_left    origin (-0.930, +0.350, +1.030)  size (+0.092, +0.501, +0.488)  tris 524
@@ -13,7 +13,7 @@ lidar              origin (+0.000, +0.000, +1.440)  size (+0.103, +0.103, +0.076
 camera             origin (+1.070, +0.000, +0.800)  size (+0.093, +0.125, +0.084)  tris 352
 
 OVERALL bbox min (-1.258, -0.750, -0.000) max (+1.250, +0.750, +1.480) size (+2.508, +1.500, +1.480)
-TOTAL triangles: 69134
+TOTAL triangles: 73694
 
 === AGENTS.md Version 2 checks ===
 [PASS] Skirt footprint length                            2.500 m  (spec 2.5 ± 0.01)
@@ -29,13 +29,14 @@ TOTAL triangles: 69134
 [PASS] Track gauge (centre to centre)                    0.840 m  (spec 0.84 ± 0.0)
 [PASS] Length-to-gauge ratio (skid steer: 1.0-1.8)       1.667   (spec 1.4 ± 0.4)
 [PASS] Track outer edge inside the skirt bag             0.560 m  (spec <= 0.5700000000000001)
+[PASS] Puff ports inside the skirt footprint (|y|)       0.697 m  (spec <= 0.75)
 [PASS] Payload box length (core)                         0.606 m  (spec 0.6 ± 0.01)
 [PASS] Payload box width (core)                          0.456 m  (spec 0.45 ± 0.01)
 [PASS] Payload box height (core)                         0.350 m  (spec 0.35 ± 0.01)
 [PASS] Total mass (incl. 30 kg payload)                300.000 kg  (spec 300.0 ± 0.05)
 [PASS] Centre-of-mass height, TRACK mode                 0.476 m  (spec <= 0.5)
        (CoM x -0.096 m before the generator balances the hull; CoM height / beam = 0.32)
-[PASS] Triangle budget                                69134.000 tri  (spec <= 150000)
+[PASS] Triangle budget                                73694.000 tri  (spec <= 150000)
 
 === HOVER mode (frame 100) ===
 [PASS] Cushion gap under the skirt                       0.050 m  (spec 0.05 ± 0.003)
@@ -48,6 +49,8 @@ Cushion pressure  300 kg * 9.81 / A = 813 Pa
 Track ground pressure, no cushion support  3754 Pa (0.784 m^2 contact)
 Track ground pressure at 60 % cushion load share  1502 Pa
 Retract stroke 0.25 m; HOVER rise 0.020 m
+Puff port: 0.24 x 0.12 m outlet, Cd 0.8: side force 2*Cd*p*A = 37 N, air flow 0.85 m^3/s each
+Puff-port yaw couple (bow + opposite stern vent) 55 N m; rudders 25 deg max
 
 Meshes + link_frames.json written to autonomous_tidal_vehicle_ws/src/tidal_vehicle_description/models/hovercraft_v2
 OVERALL: ALL CHECKS PASS

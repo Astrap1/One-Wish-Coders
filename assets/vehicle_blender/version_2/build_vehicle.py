@@ -105,6 +105,15 @@ DUCT_R_IN, DUCT_R_OUT = 0.265, 0.29
 DUCT_X0, DUCT_X1 = -1.15, -0.80
 RUDDER_X = -1.17
 RUDDER_CHORD, RUDDER_SPAN = 0.10, 0.50
+RUDDER_MAX_DEG = 25            # commanded deflection limit (joint limit is 30 deg)
+
+# Puff ports: four side vents fed from the cushion plenum, one on each side
+# at the bow and at the stern. A bow vent on one side plus a stern vent on
+# the other make a yaw couple at any speed; same-side pairs push sideways.
+PUFF_X = 0.74                  # +/- vent centre, x (on the straight topsides)
+PUFF_Z = 0.51                  # vent centre height, between chine and rub rail
+PUFF_W, PUFF_H = 0.24, 0.12    # outlet opening (m)
+PUFF_CD = 0.8                  # discharge coefficient of the louvred outlet
 
 # Payload box (sealed, orange): rated 30 kg
 PAY_X = -0.42                  # box centre, x
@@ -571,7 +580,17 @@ def build_hull():
             L.add(bm_box(0.42, 0.016, 0.008, bevel=0.002), "gunmetal",
                   T(-0.10, y + sy * 0.004, 0.468 + 0.019 * k))
         # registration / warning placard
-        L.add(bm_box(0.16, 0.006, 0.06), "label", T(0.60, sy * 0.681, 0.51))
+        L.add(bm_box(0.16, 0.006, 0.06), "label", T(0.40, sy * 0.681, 0.51))
+        # puff ports (bow and stern): framed outlet, dark duct mouth and
+        # angled shutter vanes that open to one side or close the vent
+        for px in (PUFF_X, -PUFF_X):
+            L.add(bm_box(PUFF_W + 0.03, 0.014, PUFF_H + 0.03, bevel=0.005), "gunmetal",
+                  T(px, sy * 0.679, PUFF_Z), tag="puff_ports")
+            L.add(bm_box(PUFF_W, 0.012, PUFF_H), "blade", T(px, sy * 0.682, PUFF_Z))
+            for k in range(5):
+                L.add(bm_box(0.034, 0.005, PUFF_H - 0.008, bevel=0.001), "aluminium",
+                      T(px - PUFF_W / 2 + 0.024 + k * (PUFF_W - 0.048) / 4,
+                        sy * 0.686, PUFF_Z) @ R('Z', 35), tag="puff_ports")
     # stern: tail lamps and a transom step
     for sy in (1, -1):
         L.add(bm_box(0.012, 0.10, 0.04, bevel=0.004), "tail_lamp",
@@ -1105,6 +1124,17 @@ def build_stage():
     return stage
 
 
+def cushion_pressure():
+    """Cushion pressure (Pa) that carries the whole vehicle on the rounded footprint."""
+    area = SKIRT_L * SKIRT_W - (4 - math.pi) * (BAG_CORNER_R + BAG_R) ** 2
+    return sum(MASS.values()) * 9.81 / area
+
+
+def puff_port_force():
+    """Side force (N) of one fully open puff port: jet momentum 2·Cd·p·A."""
+    return 2 * PUFF_CD * cushion_pressure() * PUFF_W * PUFF_H
+
+
 def vehicle_com(links):
     """Whole-vehicle centre of mass (TRACK mode): each link at its bbox centre,
     except the hull, whose battery-heavy mass sits at HULL_COM_Z."""
@@ -1176,6 +1206,8 @@ def measure(links, tags):
     check("Length-to-gauge ratio (skid steer: 1.0-1.8)", 2 * TRACK_HALF / gauge, 1.4, 0.4, "")
     bag_inner = SKIRT_W / 2 - 2 * BAG_R
     check_max("Track outer edge inside the skirt bag", TRACK_Y + TRACK_W / 2, bag_inner)
+    pplo, pphi = tags["hull"]["puff_ports"]
+    check_max("Puff ports inside the skirt footprint (|y|)", max(-pplo.y, pphi.y), SKIRT_W / 2)
     plo, phi = tags["payload_box"]["box_core"]
     check("Payload box length (core)", phi.x - plo.x, PAY_L, 0.01)
     check("Payload box width (core)", phi.y - plo.y, PAY_W, 0.01)
@@ -1210,6 +1242,12 @@ def measure(links, tags):
                  f"({contact:.3f} m^2 contact)")
     lines.append(f"Track ground pressure at 60 % cushion load share  {0.4 * W / contact:.0f} Pa")
     lines.append(f"Retract stroke {TRACK_STROKE} m; HOVER rise {HOVER_RISE:.3f} m")
+    fp = puff_port_force()
+    flow = PUFF_CD * PUFF_W * PUFF_H * math.sqrt(2 * W / area / 1.2)
+    lines.append(f"Puff port: {PUFF_W} x {PUFF_H} m outlet, Cd {PUFF_CD}: side force "
+                 f"2*Cd*p*A = {fp:.0f} N, air flow {flow:.2f} m^3/s each")
+    lines.append(f"Puff-port yaw couple (bow + opposite stern vent) {2 * fp * PUFF_X:.0f} N m; "
+                 f"rudders {RUDDER_MAX_DEG} deg max")
     return lines, ok_all
 
 
@@ -1240,6 +1278,12 @@ def export_all(links, tags, repo):
                                   round(SKIRT_W / 2 - BAG_CORNER_R / 2, 3)]},
         "tracks": {"half_length": TRACK_HALF, "radius": TRACK_R, "width": TRACK_W,
                    "gauge": 2 * TRACK_Y, "stroke": TRACK_STROKE},
+        "rudders": {"max_angle_rad": round(math.radians(RUDDER_MAX_DEG), 4)},
+        "puff_ports": {"x": PUFF_X, "y": round(tags["hull"]["puff_ports"][1].y, 4),
+                       "z": PUFF_Z, "width": PUFF_W, "height": PUFF_H,
+                       "discharge_coefficient": PUFF_CD,
+                       "cushion_pressure_pa": round(cushion_pressure(), 1),
+                       "force_n": round(puff_port_force(), 1)},
         "links": {}, "sensors": sensor_table(),
     }
     for name, ob in links.items():
@@ -1319,13 +1363,13 @@ def main():
     renders_dir = _HERE / "renders"
     lines, ok = measure(links, tags)
     model_dir = export_all(links, tags, repo)
-    lines.append(f"\nMeshes + link_frames.json written to {model_dir.relative_to(repo)}")
+    lines.append(f"\nMeshes + link_frames.json written to {model_dir.relative_to(repo).as_posix()}")
     if not eu.has_collada():
         lines.append("NOTE: this Blender has no COLLADA exporter (removed in 5.0) - "
                      "only .glb meshes were written; use those in the SDF.")
     lines.append(f"OVERALL: {'ALL CHECKS PASS' if ok else 'SOME CHECKS FAILED'}")
     renders_dir.mkdir(parents=True, exist_ok=True)
-    (renders_dir / "dimensions.txt").write_text("\n".join(lines) + "\n")
+    (renders_dir / "dimensions.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 
     build_stage()

@@ -228,6 +228,8 @@ def plugins_xml(links, data):
     rud = [links["rudder_left"]["origin_xyz"][0] - hull_o[0], 0.0,
            links["rudder_left"]["origin_xyz"][2] - hull_o[2]]
     trk = data["tracks"]
+    puff = data["puff_ports"]
+    puff_pt = [puff["x"], puff["y"], puff["z"] - hull_o[2]]
     out = [f"""
     <!-- Air cushion + glide drag + fan thrust + mud resistance (tidal_vehicle_simulation).
          Gains are the tested Version 1 values scaled to the 300 kg vehicle: same
@@ -261,6 +263,15 @@ def plugins_xml(links, data):
       <water_yaw_drag>500</water_yaw_drag>
       <vent_length>0.06</vent_length>
       <rudder_wash_coeff>0.55</rudder_wash_coeff>
+      <!-- turning aids in HOVER: the yaw moment goes to the rudders first, then
+           the puff ports, then differential fan thrust (off on turn_aids = false) -->
+      <rudder_control>true</rudder_control>
+      <rudder_max_angle>{data['rudders']['max_angle_rad']}</rudder_max_angle>
+      <!-- puff ports: bow/stern side vents of cushion air, 2*Cd*p*A each -->
+      <puff_port_force>{puff['force_n']}</puff_port_force>
+      <puff_port_point>{fmt(puff_pt)}</puff_port_point>
+      <puff_port_time_constant>0.15</puff_port_time_constant>
+      <puff_lateral_gain>150</puff_lateral_gain>
       <heading_kp>600</heading_kp><heading_kd>400</heading_kd>
       <!-- hover-mode velocity control on /model/<name>/cmd_vel_hover (gz.msgs.Twist) -->
       <speed_kp>480</speed_kp><speed_ki>120</speed_ki><yaw_rate_kp>800</yaw_rate_kp>
@@ -268,6 +279,7 @@ def plugins_xml(links, data):
       <use_raycast>true</use_raycast>
       <log_file>/tmp/hover_{{model}}.csv</log_file>
       <log_joint>track_left_joint</log_joint><log_joint>track_right_joint</log_joint>
+      <log_joint>rudder_left_joint</log_joint>
     </plugin>
 
     <!-- TRACK mode drive: skid steer on /model/<name>/cmd_vel (gz.msgs.Twist).

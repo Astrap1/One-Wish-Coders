@@ -337,10 +337,37 @@ def v2_transition():
           math.degrees(np.max(np.abs(d["roll"]))) < 5)
 
 
+def v2_turn():
+    d = _v2("v2_turn_test")
+    if d is None:
+        return
+    t = "v2_turn_test"
+    ra, rb = _yaw_rate(d, 22, 28), _yaw_rate(d, 50, 56)    # 1.0 rad/s at 1.5 m/s
+    check(t, "Turn at 1.5 m/s, fans only (aids off)", f"{ra:.3f} rad/s", "reference", True)
+    check(t, "Turn at 1.5 m/s with rudders + puff ports", f"{rb:.3f} rad/s",
+          "≥ 0.75 rad/s and ≥ 1.25 × fans only", rb >= 0.75 and rb >= 1.25 * ra)
+    rud = np.max(np.abs(d["rudder_left_joint"][_win(d, 46, 56)]))
+    check(t, "Rudders deflect in the turn", f"{math.degrees(rud):.1f}°", "> 5°", rud > math.radians(5))
+    pb, pa = _yaw_rate(d, 67, 74), _yaw_rate(d, 83, 90)    # 0.8 rad/s pivot
+    check(t, "Pivot, fans only (aids off)", f"{pa:.3f} rad/s", "reference", True)
+    check(t, "Pivot with puff ports", f"{pb:.3f} rad/s", "0.8 rad/s (±0.15) and > fans only",
+          abs(pb - 0.8) < 0.15 and pb > pa)
+    puff = np.max(np.abs(d["puff_bow"][_win(d, 64, 74)]))
+    check(t, "Puff ports open in the pivot", f"{puff:.1f} N", "> 10 N", puff > 10)
+    drift = math.hypot(at(d, 74, "x") - at(d, 64, "x"), at(d, 74, "y") - at(d, 64, "y"))
+    check(t, "Pivot with puff ports stays in place", f"{drift:.3f} m", "< 0.3 m", drift < 0.3)
+    g = d["gap_mean"][_win(d, 8, 96)]
+    check(t, "Hover gap while turning", f"{g.min() * 100:.2f}..{g.max() * 100:.2f} cm",
+          "within 3.5..6.5 cm", g.min() > 0.035 and g.max() < 0.065)
+    check(t, "Stable: max roll/pitch", f"{_tilt(d):.1f}°", "< 5°", _tilt(d) < 5)
+    vs = at(d, 95.9, "speed")
+    check(t, "Stops after a zero command", f"{vs:.3f} m/s", "< 0.1 m/s", vs < 0.1)
+
+
 def main():
     PLOTS.mkdir(parents=True, exist_ok=True)
     for f in (empty_test, gap_hold, hover_drive, transition, debris, cmd_vel, mud_ab,
-              v2_hover, v2_track, v2_load_share, v2_transition):
+              v2_hover, v2_track, v2_load_share, v2_transition, v2_turn):
         f()
     lines = ["| Test | Check | Result | Target | |", "|---|---|---|---|---|"]
     for t, n, v, tg, ok in checks:

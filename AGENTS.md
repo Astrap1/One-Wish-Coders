@@ -61,6 +61,7 @@ Version 2 sizing. These are stated design assumptions, not validated data. The g
 | Cushion pressure | ≈ 0.81 kPa over ≈ 3.6 m² of cushion | Within the usual 0.5–1.5 kPa range for light hovercraft. |
 | Lift power | ≈ 2–3 kW electrical | Air escaping under an 8 m skirt perimeter with a 6 mm effective gap, 50% fan-and-motor efficiency. |
 | Propulsion | Two reversible ducted fans, ≈ 200 N each, 80% reverse thrust | Thrust-to-weight ≈ 0.14. Reverse thrust of 320 N brakes the vehicle and holds it on slopes up to ≈ 6°. |
+| Turning aids | Two slipstream rudders (±25°); four puff ports (0.24 × 0.12 m side vents, bow and stern) | A puff port gives ≈ 37 N (2·Cd·p·A at 0.81 kPa, Cd 0.8), so a bow–stern pair gives a ≈ 55 N·m yaw couple at any speed. Each open vent bleeds ≈ 0.85 m³/s of cushion air. The lift fan is assumed to have that flow margin. |
 | Tracks | Two inboard tracks, 0.28 m wide, 1.40 m ground contact, 0.84 m gauge | Length-to-gauge ≈ 1.67, inside the 1.0–1.8 range where skid steering works well. Ground pressure ≈ 3.75 kPa with no cushion support and ≈ 1.5 kPa at 60% cushion load share. A standing person exerts roughly 15–25 kPa. They retract 0.25 m into hull wells. |
 | Slope limits (working) | HOVER climbs ≤ 8°; TRACK ≤ 20° (15° ramp tested) | Above 8° it climbs on the tracks with cushion assistance. When stopped or pivoting on slopes above 2° it uses the tracks, because the cushion slides sideways. |
 | Height and stability | Hull top 0.95 m, centre of mass 0.46 m above ground | Keeps centre-of-mass height to beam ≈ 0.31 so a compartmented skirt stays roll-stable on the cushion. The rest of the 1.5 m is the sensor mast. |
@@ -73,6 +74,7 @@ Agreed Version 2 design decisions:
 - **Payload.** Rated at 30 kg in a sealed box. It can carry up to about 80 kg at reduced performance: cushion pressure ≈ 1.0 kPa, lift power up about 26%, thrust-to-weight ≈ 0.12.
 - **Tracks.** Two inboard tracks under the hull, inside the skirt footprint, retracting vertically into hull wells. The overall width stays 1.5 m.
 - **Propulsion.** Two rear reversible ducted fans with rudders.
+- **Turning aids.** In HOVER, the controller inside `hover::AirCushion` shares the yaw moment it needs in this order: the rudders first (effective at speed), then the puff ports (effective at any speed, including a pivot in place), then differential fan thrust. Spare puff-port force damps sideways drift. The aids are off in TRACK mode, where the tracks steer. They are internal to Person 4's vehicle model and add no ROS topics.
 - **LiDAR.** On a mast at the vehicle's centre, directly above `base_link`, so its horizontal position matches the odometry position that Autonomy's obstacle projection assumes. The lift fan is offset forward.
 - **Style.** The same as Version 1: olive hull, black skirt, orange payload box. The hull topsides flare out over the skirt and sit on a bolted skirt-attachment flange, so the hull and skirt read as one craft. The skirt is a neoprene bag with 96 overlapping, curved fingers.
 - **Retraction.** In HOVER mode both tracks slide 0.25 m straight up into the hull wells, leaving their lowest point 0.22 m above the skirt bottom, so the cushion alone carries the vehicle. `renders/retract_comparison.png` shows both states, and the Gazebo check measures the retracted joint position (0.250 m) before propulsion starts.
@@ -196,7 +198,8 @@ Open integration items:
 5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
 6. Tune the corridor map rectangles, HOME/delivery coordinates and obstacle inflation so that the generated path matches the visibly safe route through the world.
 7. **Obstacle inflation (Person 1).** `obstacle_inflation_radius_m` is 0.75 m, tuned for Version 1's 1.2 × 0.7 m body. Version 2 (2.5 × 1.5 m, half-diagonal ≈ 1.46 m) needs about 1.7 m, or the planner may route it too close to roots and debris.
-8. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
+8. **Rudders and puff ports (new, not yet run in Gazebo).** Build the workspace, run all five Version 2 tests including the new `v2_turn_test`, and check that the 19 earlier checks still pass. Then rerun the integration-world mission.
+9. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
 
 ## Three-day build plan
 

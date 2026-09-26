@@ -23,6 +23,19 @@
     "gauge": 0.84,
     "stroke": 0.25
   },
+  "rudders": {
+    "max_angle_rad": 0.4363
+  },
+  "puff_ports": {
+    "x": 0.74,
+    "y": 0.6974,
+    "z": 0.51,
+    "width": 0.24,
+    "height": 0.12,
+    "discharge_coefficient": 0.8,
+    "cushion_pressure_pa": 813.1,
+    "force_n": 37.5
+  },
   "links": {
     "hull": {
       "origin_xyz": [

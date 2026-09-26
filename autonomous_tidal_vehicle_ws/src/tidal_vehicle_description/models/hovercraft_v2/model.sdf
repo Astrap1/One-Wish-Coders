@@ -376,6 +376,15 @@
       <water_yaw_drag>500</water_yaw_drag>
       <vent_length>0.06</vent_length>
       <rudder_wash_coeff>0.55</rudder_wash_coeff>
+      <!-- turning aids in HOVER: the yaw moment goes to the rudders first, then
+           the puff ports, then differential fan thrust (off on turn_aids = false) -->
+      <rudder_control>true</rudder_control>
+      <rudder_max_angle>0.4363</rudder_max_angle>
+      <!-- puff ports: bow/stern side vents of cushion air, 2*Cd*p*A each -->
+      <puff_port_force>37.5</puff_port_force>
+      <puff_port_point>0.74 0.6974 0.01</puff_port_point>
+      <puff_port_time_constant>0.15</puff_port_time_constant>
+      <puff_lateral_gain>150</puff_lateral_gain>
       <heading_kp>600</heading_kp><heading_kd>400</heading_kd>
       <!-- hover-mode velocity control on /model/<name>/cmd_vel_hover (gz.msgs.Twist) -->
       <speed_kp>480</speed_kp><speed_ki>120</speed_ki><yaw_rate_kp>800</yaw_rate_kp>
@@ -383,6 +392,7 @@
       <use_raycast>true</use_raycast>
       <log_file>/tmp/hover_{model}.csv</log_file>
       <log_joint>track_left_joint</log_joint><log_joint>track_right_joint</log_joint>
+      <log_joint>rudder_left_joint</log_joint>
     </plugin>
 
     <!-- TRACK mode drive: skid steer on /model/<name>/cmd_vel (gz.msgs.Twist).

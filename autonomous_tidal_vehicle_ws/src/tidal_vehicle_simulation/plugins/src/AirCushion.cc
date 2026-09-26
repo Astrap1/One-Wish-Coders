@@ -27,6 +27,26 @@
 // A_duct * T * delta (independent of forward speed), so the rudders steer
 // even at low speed.
 //
+// Turning aids (Version 2; off unless the SDF enables them, so Version 1 is
+// unchanged). In hover velocity mode the yaw-rate controller asks for a yaw
+// moment M, which is shared out in this order:
+//   1. rudders (<rudder_control>true</rudder_control>): the plugin sets both
+//      rudder angles on rudder_left_cmd / rudder_right_cmd so their side force
+//      gives M. Free while the fans push forward; useless at zero thrust.
+//   2. puff ports (<puff_port_force> > 0): four side vents, one on each side
+//      at the bow and the stern, bleed cushion air sideways. Opening a bow
+//      vent on one side and a stern vent on the other gives a pure yaw couple
+//      that works at any speed, including a pivot in place. Their force scales
+//      with cushion pressure (lift-fan ramp x cushion support). Spare vent
+//      force damps sideways drift (<puff_lateral_gain>, N per m/s of slip).
+//      The lift fan is assumed to have the flow margin to feed one pair.
+//   3. differential fan thrust: whatever the rudders and vents can't supply,
+//      within the same collective-first limits as before.
+// The moments actually delivered (measured rudder angles, lagged vent force)
+// are subtracted, so the three never add up to more than M. The aids are
+// off while load sharing (the tracks steer) and can be switched off at run
+// time on turn_aids for A/B tests.
+//
 // Low-level heading hold (the autopilot's inner loop, optional): once a
 // target heading arrives on cmd_heading, the collective thrust is split
 // left/right by a PD law on heading error. Phase 5's waypoint navigator
@@ -59,6 +79,7 @@
 //   subscribes  hover_enabled (gz.msgs.Boolean), thrust_left, thrust_right (gz.msgs.Double, N),
 //               lift_share (gz.msgs.Double, 0..1; < 0 or NaN = off),
 //               cmd_heading (gz.msgs.Double, rad; NaN = heading hold off),
+//               turn_aids (gz.msgs.Boolean; rudders + puff ports on/off, default on),
 //               cmd_vel_hover (gz.msgs.Twist: linear.x m/s, angular.z rad/s) —
 //               hover-mode velocity control. The fan thrusts are then computed
 //               here (feed-forward drag + PI on speed, P on yaw rate), which is
@@ -66,7 +87,9 @@
 //               older than <cmd_timeout> is treated as "stop".
 //   publishes   cushion_gap (gz.msgs.Double, mean gap m), corner_gaps (gz.msgs.Double_V),
 //               hover_state (gz.msgs.StringMsg: OFF | SPIN_UP | FAN_ON_NO_SUPPORT |
-//               HOVER | LOAD_SHARE | SPIN_DOWN), terrain (gz.msgs.StringMsg)
+//               HOVER | LOAD_SHARE | SPIN_DOWN), terrain (gz.msgs.StringMsg),
+//               rudder_left_cmd, rudder_right_cmd (gz.msgs.Double, rad; only
+//               with rudder_control, read by the rudder JointPositionControllers)
 
 #include <gz/msgs/boolean.pb.h>
 #include <gz/msgs/double.pb.h>
@@ -170,6 +193,13 @@ class AirCushion : public System,
     this->rudderK   = get("rudder_wash_coeff", 0.55);
     this->rudderArm = _sdf->Get<math::Vector3d>("rudder_point",
                         math::Vector3d(-0.62, 0, 0.2)).first;
+    this->rudderControl = _sdf->Get<bool>("rudder_control", false).first;
+    this->rudderMax = get("rudder_max_angle", 0.44);
+    this->puffForce = get("puff_port_force", 0.0);
+    this->puffPt    = _sdf->Get<math::Vector3d>("puff_port_point",
+                        math::Vector3d(0.8, 0.68, 0.0)).first;
+    this->puffTau   = get("puff_port_time_constant", 0.15);
+    this->puffLatGain = get("puff_lateral_gain", 0.0);
     this->hdgKp     = get("heading_kp", 40.0);
     this->hdgKd     = get("heading_kd", 25.0);
     this->spdKp     = get("speed_kp", 40.0);
@@ -220,6 +250,12 @@ class AirCushion : public System,
     this->node.Subscribe(ns + "thrust_right", &AirCushion::OnThrustRight, this);
     this->node.Subscribe(ns + "cmd_heading", &AirCushion::OnHeading, this);
     this->node.Subscribe(ns + "cmd_vel_hover", &AirCushion::OnCmdVel, this);
+    this->node.Subscribe(ns + "turn_aids", &AirCushion::OnTurnAids, this);
+    if (this->rudderControl)
+    {
+      this->pubRudder[0] = this->node.Advertise<msgs::Double>(ns + "rudder_left_cmd");
+      this->pubRudder[1] = this->node.Advertise<msgs::Double>(ns + "rudder_right_cmd");
+    }
     this->pubGap = this->node.Advertise<msgs::Double>(ns + "cushion_gap");
     this->pubCorners = this->node.Advertise<msgs::Double_V>(ns + "corner_gaps");
     this->pubState = this->node.Advertise<msgs::StringMsg>(ns + "hover_state");
@@ -258,7 +294,7 @@ class AirCushion : public System,
       this->log.open(p);
       this->log << "t,x,y,z,roll,pitch,yaw,vx,vy,speed,gap_fl,gap_fr,gap_rl,gap_rr,"
                    "gap_mean,cushion_force,support,hover_state,terrain,"
-                   "thrust_left,thrust_right";
+                   "thrust_left,thrust_right,rudder_cmd,puff_bow,puff_stern";
       for (const auto &j : this->logJoints) this->log << ',' << j.first;
       this->log << '\n';
     }
@@ -285,11 +321,12 @@ class AirCushion : public System,
     const math::Pose3d pose = *poseOpt;
     const math::Vector3d v = *vOpt, w = *wOpt;
 
-    bool enabled, velMode;
+    bool enabled, velMode, aidsOn;
     double cmdL, cmdR, hdg, vRef, rRef, cmdAge, share;
     {
       std::lock_guard<std::mutex> lock(this->mutex);
       enabled = this->hoverEnabled;
+      aidsOn = this->turnAids;
       share = this->liftShare;
       cmdL = this->thrustCmd[0];
       cmdR = this->thrustCmd[1];
@@ -300,6 +337,12 @@ class AirCushion : public System,
       if (this->velCmdStamp < 0) this->velCmdStamp = t;      // first msg: stamp in sim time
       cmdAge = t - this->velCmdStamp;
     }
+    // Turning aids apply only in hover velocity mode, never while the tracks
+    // carry the vehicle. Targets fall back to zero otherwise.
+    const bool aids = velMode && aidsOn && !(std::isfinite(share) && share >= 0.0);
+    double rudderTarget = 0.0;
+    std::array<double, 2> puffTarget{{0.0, 0.0}};      // bow, stern side force (N, +Y)
+
     if (velMode)
     {
       if (cmdAge > this->cmdTimeout) { vRef = 0.0; rRef = 0.0; }   // stale -> stop
@@ -317,7 +360,40 @@ class AirCushion : public System,
       coll = std::clamp(coll, collMin, collMax);
       // yaw: differential thrust (R - L) acting on the 2 x 0.175 m fan spacing
       const double arm = std::max(std::abs(this->thrustPt[0].Y()), 0.05);
-      double diff = (this->bYaw * rRef) / arm + this->yawKp * (rRef - w.Z());
+      // Yaw moment wanted (N m, + = nose left): feed-forward on glide yaw drag
+      // plus P on yaw rate. Same gains as the fans-only law it replaces.
+      const double mWant = this->bYaw * rRef + arm * this->yawKp * (rRef - w.Z());
+      double mLeft = mWant;
+      if (aids && this->rudderControl && this->rudderJoints.size() == 2)
+      {
+        // 1. Rudders. Side force k*T*sin(delta) at the stern gives a yaw moment
+        // x_rudder * k * T * sin(delta) (x_rudder < 0, so +delta turns right).
+        const double perSin = this->rudderArm.X() * this->rudderK *
+            (std::max(this->thrust[0], 0.0) + std::max(this->thrust[1], 0.0));
+        const double sMax = std::sin(this->rudderMax);
+        if (std::abs(perSin) > 1e-3)
+          rudderTarget = std::asin(std::clamp(mWant / perSin, -sMax, sMax));
+        mLeft -= this->RudderMoment(_ecm);           // what the rudders give now
+      }
+      if (aids && this->puffForce > 0.0)
+      {
+        // 2. Puff ports: a bow/stern pair on opposite sides is a pure couple.
+        const double fMax = this->puffForce * this->ramp *
+                            std::clamp(this->lastSupport, 0.0, 1.0);
+        const double xp = std::abs(this->puffPt.X());
+        if (fMax > 1e-6 && xp > 1e-3)
+        {
+          const double u = std::clamp(mLeft / (2.0 * fMax * xp), -1.0, 1.0);
+          // Spare vent force (after the yaw couple) damps sideways drift.
+          const math::Vector3d latW = pose.Rot().RotateVector(math::Vector3d::UnitY);
+          const double spare = fMax * (1.0 - std::abs(u));
+          const double fLat = std::clamp(-0.5 * this->puffLatGain * v.Dot(latW), -spare, spare);
+          puffTarget = {{u * fMax + fLat, -u * fMax + fLat}};
+        }
+        mLeft -= xp * (this->puffF[0] - this->puffF[1]);   // what the vents give now
+      }
+      // 3. Differential thrust supplies the rest.
+      double diff = mLeft / arm;
       // Collective (speed / braking) has priority: limit the differential so
       // both fans stay inside [-reverse_thrust_fraction, 1] x max thrust.
       // Otherwise a hard turn clips the reversing fan and the pair pushes
@@ -359,6 +435,21 @@ class AirCushion : public System,
     const double tMin = -this->reverseFrac * this->maxThrust;
     this->thrust[0] += (std::clamp(cmdL, tMin, maxThrust) - this->thrust[0]) * a;
     this->thrust[1] += (std::clamp(cmdR, tMin, maxThrust) - this->thrust[1]) * a;
+
+    // Puff-port vent valves respond with a first-order lag
+    const double ap = std::min(1.0, dt / std::max(this->puffTau, 1e-3));
+    for (int j = 0; j < 2; ++j)
+      this->puffF[j] += (puffTarget[j] - this->puffF[j]) * ap;
+
+    // Rudder angle commands (50 Hz is plenty for the joint controllers)
+    if (this->rudderControl && t - this->lastRudderPub >= 0.02 - 1e-9)
+    {
+      this->lastRudderPub = t;
+      this->rudderCmd = rudderTarget;
+      msgs::Double rm; rm.set_data(rudderTarget);
+      this->pubRudder[0].Publish(rm);
+      this->pubRudder[1].Publish(rm);
+    }
 
     // --- Gaps under each corner --------------------------------------------
     auto &reg = TerrainRegistry::Instance();
@@ -432,6 +523,7 @@ class AirCushion : public System,
       tTot += rW.Cross(fW);
     }
     const double support = fCushion / std::max(this->weight, 1e-6);
+    this->lastSupport = support;
     const bool onCushion = support > 0.5;
     const double gapMean = (gap[0] + gap[1] + gap[2] + gap[3]) / 4.0;
 
@@ -483,6 +575,24 @@ class AirCushion : public System,
       }
     }
 
+    // --- Puff ports: side jets of cushion air at the bow and stern ----------
+    // A +Y force on the craft comes from the vent on the right (-Y) side,
+    // whose jet blows to -Y; so each force acts at that side's vent.
+    if (this->puffForce > 0.0)
+    {
+      for (int j = 0; j < 2; ++j)                    // 0 = bow, 1 = stern
+      {
+        const double f = this->puffF[j];
+        if (std::abs(f) < 1e-9) continue;
+        const math::Vector3d pt((j == 0 ? 1.0 : -1.0) * std::abs(this->puffPt.X()),
+                                (f > 0 ? -1.0 : 1.0) * std::abs(this->puffPt.Y()),
+                                this->puffPt.Z());
+        const math::Vector3d fW = pose.Rot().RotateVector(math::Vector3d(0, f, 0));
+        fTot += fW;
+        tTot += pose.Rot().RotateVector(pt).Cross(fW);
+      }
+    }
+
     // --- Mud: sinkage / rolling resistance when not on the cushion ----------
     if (terrain == Terrain::MUD && !onCushion && speed > 1e-6)
     {
@@ -527,7 +637,8 @@ class AirCushion : public System,
                   << gap[0] << ',' << gap[1] << ',' << gap[2] << ',' << gap[3] << ','
                   << gapMean << ',' << fCushion << ',' << support << ','
                   << state << ',' << TerrainName(terrain) << ','
-                  << this->thrust[0] << ',' << this->thrust[1];
+                  << this->thrust[0] << ',' << this->thrust[1] << ','
+                  << this->rudderCmd << ',' << this->puffF[0] << ',' << this->puffF[1];
         for (const auto &j : this->logJoints)
         {
           auto jp = _ecm.Component<components::JointPosition>(j.second);
@@ -549,6 +660,23 @@ class AirCushion : public System,
   { std::lock_guard<std::mutex> l(this->mutex); this->thrustCmd[1] = _m.data(); this->velMode = false; }
   private: void OnHeading(const msgs::Double &_m)
   { std::lock_guard<std::mutex> l(this->mutex); this->headingCmd = _m.data(); }
+  private: void OnTurnAids(const msgs::Boolean &_m)
+  { std::lock_guard<std::mutex> l(this->mutex); this->turnAids = _m.data(); }
+
+  // Yaw moment (N m, + = nose left) the rudders make at their current angles
+  private: double RudderMoment(const EntityComponentManager &_ecm) const
+  {
+    double m = 0.0;
+    for (size_t j = 0; j < this->rudderJoints.size() && j < 2; ++j)
+    {
+      auto jp = _ecm.Component<components::JointPosition>(this->rudderJoints[j]);
+      const double delta = (jp && !jp->Data().empty()) ? jp->Data()[0] : 0.0;
+      m += this->rudderArm.X() * this->rudderK * std::max(this->thrust[j], 0.0) *
+           std::sin(delta);
+    }
+    return m;
+  }
+
   private: void OnCmdVel(const msgs::Twist &_m)
   {
     std::lock_guard<std::mutex> l(this->mutex);
@@ -580,6 +708,12 @@ class AirCushion : public System,
   private: double headingCmd{std::numeric_limits<double>::quiet_NaN()};
   private: math::Vector3d rudderArm{-0.62, 0, 0.2};
   private: std::vector<Entity> rudderJoints;
+  private: bool rudderControl{false}, turnAids{true};
+  private: double rudderMax{0.44}, rudderCmd{0}, lastRudderPub{-1e9};
+  private: double puffForce{0}, puffTau{0.15}, puffLatGain{0}, lastSupport{0};
+  private: math::Vector3d puffPt{0.8, 0.68, 0.0};
+  private: std::array<double, 2> puffF{{0, 0}};      // bow, stern side force (N, +Y)
+  private: std::array<transport::Node::Publisher, 2> pubRudder;
   private: double weight{0}, f0{0}, ramp{0};
   private: std::array<double, 2> thrust{{0, 0}};
   private: std::array<double, 4> prevGap{{1, 1, 1, 1}};

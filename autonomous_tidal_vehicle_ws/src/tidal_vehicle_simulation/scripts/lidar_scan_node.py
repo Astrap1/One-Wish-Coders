@@ -6,13 +6,17 @@ autonomy workstream's near-field obstacle sensing (docs/INTERFACES.md).
 For every azimuth bin it keeps the closest return whose height lies in a band
 above the ground, so low roots and debris show up as well as trunks. Returns
 that land on the vehicle itself (the rear fan ducts and payload box are
-inside the LiDAR's lower beams) are removed with a vehicle-footprint box.
+inside the LiDAR's lower beams) are removed with an inclusive vehicle-footprint
+box and, where configured, a circular envelope. The latter is used by Version
+3 so returns from its hull, skirt and outboard corners cannot create an
+obstacle immediately around itself.
 Output frame: lidar_link (axis-aligned with base_link).
 
 Parameters (config/vehicle_mobility.yaml, section lidar_scan):
   min_height_m / max_height_m  band relative to the LiDAR (default -0.62 .. 0.5:
                                from ~7 cm above ground in hover mode to 1.2 m)
-  self_box_m                   [xmin, xmax, ymin, ymax] vehicle box in lidar_link
+  self_box_m                   [xmin, xmax, ymin, ymax] inclusive vehicle box
+  self_footprint_radius_m      optional circular self-return envelope (metres)
   range_min_m / range_max_m, bins
 """
 import math
@@ -21,16 +25,21 @@ import numpy as np
 
 
 def cloud_to_ranges(xyz, bins=720, min_h=-0.62, max_h=0.5, rmin=0.3, rmax=30.0,
-                    self_box=(-1.10, 0.25, -0.52, 0.52)):
+                    self_box=(-1.10, 0.25, -0.52, 0.52),
+                    self_footprint_radius=0.0):
     """xyz: (N,3) points in the lidar frame -> (ranges[bins], angle_min, increment).
     Pure numpy, no ROS, so it can be tested offline."""
     xyz = np.asarray(xyz, dtype=float)
     xyz = xyz[np.all(np.isfinite(xyz), axis=1)]
     x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
     keep = (z >= min_h) & (z <= max_h)
-    xb0, xb1, yb0, yb1 = self_box
-    keep &= ~((x > xb0) & (x < xb1) & (y > yb0) & (y < yb1))      # own body
     r = np.hypot(x, y)
+    xb0, xb1, yb0, yb1 = self_box
+    in_box = (x >= xb0) & (x <= xb1) & (y >= yb0) & (y <= yb1)
+    if self_footprint_radius < 0.0:
+        raise ValueError("self_footprint_radius must be non-negative")
+    in_radius = r <= self_footprint_radius
+    keep &= ~(in_box | in_radius)                                  # own body
     keep &= (r >= rmin) & (r <= rmax)
     ranges = np.full(bins, np.inf)
     if keep.any():
@@ -57,13 +66,15 @@ def main():
             self.rmin = p("range_min_m", 0.3).value
             self.rmax = p("range_max_m", 30.0).value
             self.box = tuple(p("self_box_m", [-1.10, 0.25, -0.52, 0.52]).value)
+            self.self_radius = float(p("self_footprint_radius_m", 0.0).value)
             self.pub = self.create_publisher(LaserScan, "/scan", qos_profile_sensor_data)
             self.create_subscription(PointCloud2, "/points", self.on_cloud, qos_profile_sensor_data)
 
         def on_cloud(self, msg):
             pts = point_cloud2.read_points_numpy(msg, field_names=("x", "y", "z"), skip_nans=True)
             ranges, a0, inc = cloud_to_ranges(pts, self.bins, self.min_h, self.max_h,
-                                              self.rmin, self.rmax, self.box)
+                                              self.rmin, self.rmax, self.box,
+                                              self.self_radius)
             s = LaserScan()
             s.header = msg.header
             s.angle_min, s.angle_increment = a0, inc

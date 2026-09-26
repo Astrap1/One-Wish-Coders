@@ -68,7 +68,10 @@ lidar_scan:
     max_height_m: 0.50
     range_min_m: 0.3
     range_max_m: 30.0
-    self_box_m: [-1.56, 1.56, -0.95, 0.95]   # whole vehicle in lidar_link
+    # V3 LiDAR sits over the hull centre. A 1.75 m circular envelope contains
+    # its 3.0 x 1.8 m hull/skirt/track corner returns (including motion jitter).
+    # This replaces the old hand-tuned box with an inclusive tested mask.
+    self_footprint_radius_m: 1.75
 
 terrain_costmap:
   ros__parameters:

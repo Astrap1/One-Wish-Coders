@@ -42,10 +42,9 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
 | HOVER → TRACK | deploy the tracks while hovering → lower the lift to the TRACK load share | skirt gap at the on-track height (≤ 3.8 cm), or vertical speed below 3 cm/s in `LOAD_SHARE` | `track_deployment_fault` / `track_settle_timeout` |
 
 **Mode selection:**
-- It uses the `/terrain_costmap` bands, looking 2.5 m ahead along the heading. HOVER when hover terrain (20–89) lies ahead; TRACK on firm ground (0–19) after a 3 s dwell.
-- TRACK on climbing or side slopes above 8° that last 1.5 s.
-- Parks on the tracks when stopped for 5 s on a slope above 2°, and pivots on the tracks when a turn in place is asked on such a slope.
-- In TRACK mode the cushion carries 20% on firm, level ground and 60% on steep slopes.
+- Version 2 is hover-first across firm shore, mud and water: its tracks retract once the cushion is ready, and the fans hold the configured gap over the active support surface.
+- TRACK is selected only for a sustained (>1.5 s), forward climb above 15° on firm land. Side tilt, stopping, pivoting, descending, mud and water do not deploy it.
+- In that exceptional TRACK mode, the cushion carries 60% of the load while the tracks provide climbing traction. It returns to HOVER when the climb no longer applies.
 
 **Tests:**
 ```bash

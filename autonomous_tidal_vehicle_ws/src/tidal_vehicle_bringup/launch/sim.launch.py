@@ -119,10 +119,11 @@ def _setup(context):
              name="path_follower", output="screen", parameters=[{"use_sim_time": True}]),
         Node(package="tidal_vehicle_safety", executable="safety_supervisor",
              name="safety_supervisor", output="screen",
-             # Version 2 drives on tracks over firm ground: let Safety use its
-             # TRACK energy profile there (Version 1 demo runs hover_only).
+             # Version 2 is hover-first; tracks deploy only for an exceptional
+             # steep firm-land climb, which a 2D cost map cannot infer. Use the
+             # conservative hover profile for every ordinary route segment.
              parameters=[safety_params, {"use_sim_time": True,
-                                         "track_mode_enabled": vehicle == "v2"}]),
+                                         "track_mode_enabled": False}]),
         Node(package="foxglove_bridge", executable="foxglove_bridge", output="screen",
              parameters=[{"port": 8765, "address": "0.0.0.0", "use_sim_time": True}],
              condition=IfCondition(LaunchConfiguration("foxglove"))),

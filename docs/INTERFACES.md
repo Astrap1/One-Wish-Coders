@@ -14,7 +14,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/planned_path` | Autonomy | Path follower, Operator, Safety | `nav_msgs/Path` | Active proposed route: outbound normally, HOME route while return is latched. |
 | `/return_path` | Autonomy | Safety, Operator | `nav_msgs/Path` | Prospective route from the current pose to HOME during outbound travel; freshly republished and activated when return is required. |
 | `/cmd_vel_proposed` | Autonomy | Safety | `geometry_msgs/Twist` | Motion proposal before safety approval. |
-| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Routed to the fans in HOVER mode or to the ground gear in TRACK mode (Version 2 tracks, capped at 1.5 m/s; Version 1 wheels). Held at zero during TRANSITION. A command older than 0.5 s means stop. |
+| `/cmd_vel` | Safety | Simulation (`vehicle_mobility_node`) | `geometry_msgs/Twist` | Safety-approved motion command: `linear.x` (m/s, ≤ 2.5) and `angular.z` (rad/s, ≤ 1.0). Version 2 normally routes it to hover fans; its tracks are used only for a sustained, firm-land forward climb above 15° (capped at 1.5 m/s). Version 1 routes TRACK mode to wheels. Held at zero during TRANSITION. A command older than 0.5 s means stop. |
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Explicit lifecycle event used by Safety for its internal mission phase. |
 | `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
@@ -51,15 +51,15 @@ Safety:
 
 | Cost | Meaning | Mobility used by vehicle controller |
 | --- | --- | --- |
-| `0`--`19` | Firm shore | `TRACK` (Version 1: `WHEEL`) |
+| `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb exceeds 15° (Version 1: `WHEEL`) |
 | `20`--`59` | Mud or shallow water | `HOVER` |
 | `60`--`89` | Elevated-risk mud or shallow water | Conservative `HOVER` |
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
 
-Safety samples these bands along `/return_path`: track (Version 1: wheel) and
-hover segments use different declared energy/speed assumptions, and each
-ground--hover mode change adds transition energy and time to the return ETA.
+Safety samples these bands along `/return_path` using the conservative HOVER
+energy/speed profile. A 2D cost map cannot know whether a firm segment has the
+rare >15° forward climb that deploys Version 2 tracks.
 
 ## Vehicle-fault semantics
 

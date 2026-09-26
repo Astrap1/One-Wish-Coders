@@ -124,7 +124,9 @@ def _setup(context):
     urdf = (desc_share / "urdf" / veh["urdf"]).read_text()
     params = str(sim_share / "config" / veh["params"])
     safety_params = str(safety_share / "config" / "safety_params.yaml")
-    scenario_params = str(sim_share / "config" / "scenario_defaults.yaml")
+    scenario_config = ("scenario_5deg.yaml" if world_name == "tidal_corridor_5deg"
+                       else "scenario_defaults.yaml")
+    scenario_params = str(sim_share / "config" / scenario_config)
     tide = LaunchConfiguration("tide").perform(context).lower() in ("true", "1", "yes")
     # Spawn the vehicle at HOME (0, 0) unless the world file already includes it.
     spawn = f"<uri>model://{veh['model']}</uri>" not in world_file.read_text()

@@ -29,6 +29,8 @@ def _manager() -> tuple[TideManager, list[float]]:
     manager.held_fraction = 0.0
     manager.last_level = -2.8
     manager.resolution = 1.0
+    manager.upper_bank_end_x = 7.7320508
+    manager.upper_delivery_start_x = 96.2679492
     return manager, now
 
 

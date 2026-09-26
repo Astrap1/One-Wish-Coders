@@ -78,6 +78,8 @@ class TideManager(Node):
         self.declare_parameter("channel_max_y_m", 30.0)
         self.declare_parameter("mud_min_x_m", 7.7320508)
         self.declare_parameter("mud_max_x_m", 96.2679492)
+        self.declare_parameter("upper_bank_end_x_m", 7.7320508)
+        self.declare_parameter("upper_delivery_start_x_m", 96.2679492)
         self.declare_parameter("mud_min_y_m", -30.0)
         self.declare_parameter("mud_max_y_m", 30.0)
 
@@ -94,6 +96,12 @@ class TideManager(Node):
         self.firm_cost = int(self.get_parameter("firm_cost").value)
         self.mud_cost = int(self.get_parameter("mud_cost").value)
         self.water_cost = int(self.get_parameter("water_cost").value)
+        self.upper_bank_end_x = float(
+            self.get_parameter("upper_bank_end_x_m").value
+        )
+        self.upper_delivery_start_x = float(
+            self.get_parameter("upper_delivery_start_x_m").value
+        )
         self.channel = self._rectangle("channel")
         self.mudflat = self._rectangle("mud")
         # The demo starts at low tide and rises automatically; scenario events
@@ -213,15 +221,19 @@ class TideManager(Node):
         """Surface height of the piecewise-linear tidal valley."""
         if x <= 4.0 or x >= 100.0:
             return 0.0
-        if x < 7.7320508:
-            return -(x - 4.0) * 0.2679491924
+        bank_gradient = 1.0 / (self.upper_bank_end_x - 4.0)
+        lower_home_gradient = 2.0 / (50.0 - self.upper_bank_end_x)
+        lower_delivery_gradient = 2.0 / (self.upper_delivery_start_x - 54.0)
+        delivery_gradient = 1.0 / (100.0 - self.upper_delivery_start_x)
+        if x < self.upper_bank_end_x:
+            return -(x - 4.0) * bank_gradient
         if x < 50.0:
-            return -1.0 - (x - 7.7320508) * (2.0 / 42.2679492)
+            return -1.0 - (x - self.upper_bank_end_x) * lower_home_gradient
         if x <= 54.0:
             return -3.0
-        if x < 96.2679492:
-            return -3.0 + (x - 54.0) * (2.0 / 42.2679492)
-        return -1.0 + (x - 96.2679492) * 0.2679491924
+        if x < self.upper_delivery_start_x:
+            return -3.0 + (x - 54.0) * lower_delivery_gradient
+        return -1.0 + (x - self.upper_delivery_start_x) * delivery_gradient
 
     def _rectangle(self, prefix: str) -> tuple[float, float, float, float]:
         return tuple(

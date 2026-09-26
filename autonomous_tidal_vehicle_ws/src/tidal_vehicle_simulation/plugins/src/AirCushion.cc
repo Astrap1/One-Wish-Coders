@@ -32,7 +32,10 @@
 // moment M, which is shared out in this order:
 //   1. rudders (<rudder_control>true</rudder_control>): the plugin sets both
 //      rudder angles on rudder_left_cmd / rudder_right_cmd so their side force
-//      gives M. Free while the fans push forward; useless at zero thrust.
+//      gives M. Free while the fans push forward; useless at zero thrust, so
+//      they fade in above <rudder_min_thrust> (N, both fans) and move no
+//      faster than <rudder_rate> (rad/s, a servo slew limit): at low thrust
+//      they would otherwise swing stop to stop chasing small yaw errors.
 //   2. puff ports (<puff_port_force> > 0): four side vents, one on each side
 //      at the bow and the stern, bleed cushion air sideways. Opening a bow
 //      vent on one side and a stern vent on the other gives a pure yaw couple
@@ -197,6 +200,8 @@ class AirCushion : public System,
                         math::Vector3d(-0.62, 0, 0.2)).first;
     this->rudderControl = _sdf->Get<bool>("rudder_control", false).first;
     this->rudderMax = get("rudder_max_angle", 0.44);
+    this->rudderMinThrust = get("rudder_min_thrust", 0.0);
+    this->rudderRate = get("rudder_rate", 0.0);
     this->puffForce = get("puff_port_force", 0.0);
     this->puffPt    = _sdf->Get<math::Vector3d>("puff_port_point",
                         math::Vector3d(0.8, 0.68, 0.0)).first;
@@ -378,11 +383,17 @@ class AirCushion : public System,
       {
         // 1. Rudders. Side force k*T*sin(delta) at the stern gives a yaw moment
         // x_rudder * k * T * sin(delta) (x_rudder < 0, so +delta turns right).
-        const double perSin = this->rudderArm.X() * this->rudderK *
-            (std::max(this->thrust[0], 0.0) + std::max(this->thrust[1], 0.0));
+        // With little forward thrust there is little slipstream: the rudders
+        // could only reach their stops chasing small errors (chatter), so they
+        // fade in between rudder_min_thrust and twice that, and centre below.
+        const double tPos = std::max(this->thrust[0], 0.0) + std::max(this->thrust[1], 0.0);
+        const double perSin = this->rudderArm.X() * this->rudderK * tPos;
         const double sMax = std::sin(this->rudderMax);
-        if (std::abs(perSin) > 1e-3)
-          rudderTarget = std::asin(std::clamp(mWant / perSin, -sMax, sMax));
+        const double fade = this->rudderMinThrust > 0.0
+            ? std::clamp((tPos - this->rudderMinThrust) / this->rudderMinThrust, 0.0, 1.0)
+            : 1.0;
+        if (std::abs(perSin) > 1e-3 && fade > 0.0)
+          rudderTarget = fade * std::asin(std::clamp(mWant / perSin, -sMax, sMax));
         mLeft -= this->RudderMoment(_ecm);           // what the rudders give now
       }
       if (aids && this->puffForce > 0.0)
@@ -451,6 +462,17 @@ class AirCushion : public System,
     for (int j = 0; j < 2; ++j)
       this->puffF[j] += (puffTarget[j] - this->puffF[j]) * ap;
 
+    // Rudder servo: slew-rate limited towards the target
+    if (this->rudderRate > 0.0)
+    {
+      const double step = this->rudderRate * dt;
+      this->rudderCmd += std::clamp(rudderTarget - this->rudderCmd, -step, step);
+    }
+    else
+    {
+      this->rudderCmd = rudderTarget;
+    }
+
     // Rudder angles and puff-port shutters (50 Hz is plenty for the joint
     // controllers). A +Y force comes from the right-hand vent, so each end
     // opens the shutter on the side opposite the push, in proportion to the
@@ -458,10 +480,9 @@ class AirCushion : public System,
     if (t - this->lastRudderPub >= 0.02 - 1e-9)
     {
       this->lastRudderPub = t;
-      this->rudderCmd = rudderTarget;
       if (this->rudderControl)
       {
-        msgs::Double rm; rm.set_data(rudderTarget);
+        msgs::Double rm; rm.set_data(this->rudderCmd);
         this->pubRudder[0].Publish(rm);
         this->pubRudder[1].Publish(rm);
       }
@@ -739,6 +760,7 @@ class AirCushion : public System,
   private: std::vector<Entity> rudderJoints;
   private: bool rudderControl{false}, turnAids{true};
   private: double rudderMax{0.44}, rudderCmd{0}, lastRudderPub{-1e9};
+  private: double rudderMinThrust{0}, rudderRate{0};
   private: double puffForce{0}, puffTau{0.15}, puffLatGain{0}, lastSupport{0};
   private: math::Vector3d puffPt{0.8, 0.68, 0.0};
   private: std::array<double, 2> puffF{{0, 0}};      // bow, stern side force (N, +Y)

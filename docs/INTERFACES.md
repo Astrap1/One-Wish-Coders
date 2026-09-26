@@ -54,7 +54,8 @@ Safety:
 | Cost | Meaning | Mobility used by vehicle controller |
 | --- | --- | --- |
 | `0`--`19` | Firm shore | `HOVER`; Version 2 may select `TRACK` only when its measured forward climb exceeds 15° (Version 1: `WHEEL`) |
-| `20`--`59` | Mud or shallow water | `HOVER` |
+| `20`--`29` | Open, surveyed water (no roots or debris): fast travel allowed | `HOVER` |
+| `30`--`59` | Mud, shallow water, root or debris zones | `HOVER` |
 | `60`--`89` | Elevated-risk mud or shallow water | Conservative `HOVER` |
 | `90`--`100` | No-go | None |
 | `-1` | Unknown/no-go | None |
@@ -62,6 +63,14 @@ Safety:
 Safety samples these bands along `/return_path` using the conservative HOVER
 energy/speed profile. A 2D cost map cannot know whether a firm segment has the
 rare >15° forward climb that deploys Version 2 tracks.
+
+The `20`--`29` / `30`--`59` split was added on 2026-09-26 for Version 3's
+zone speed limits. The limits are: firm shore 15 km/h; open surveyed water
+cruise 30 km/h, max 50 km/h; mud, shallow water, roots and debris 10 km/h;
+elevated risk 10 km/h (see `AGENTS.md`, *Shared terrain-cost semantics*). Band
+checks at `19`, `60` and `90` are unchanged, so existing consumers keep working.
+Water is published at `30` until the environment workstream marks surveyed
+open water `20`--`29`.
 
 ## Vehicle-fault semantics
 

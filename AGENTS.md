@@ -20,7 +20,7 @@ Each request below names an owner. **If you are a coding agent working in that o
 ### To Person 1 (Autonomy), `tidal_vehicle_autonomy`
 
 2. **LiDAR transform: no change needed.** The Version 2 LiDAR sits on a centre mast directly above `base_link` (x = 0, y = 0, z = 1.44 m), and `/scan` is published in `lidar_link`, which is axis-aligned with `base_link`. Your "LiDAR at the odometry position, facing forward" assumption is therefore exact in the horizontal plane. The mast height is already handled in `lidar_scan_node` (Person 4), which filters ground and self returns. Using TF instead is optional.
-3. **Turning capability (information).** With the rudders and puff ports, Version 2 is designed to reach the follower's 1.0 rad/s limit in HOVER, including a pivot in place (see *Turning aids* below). This still has to be verified in Gazebo (Role 4, open item 8). Braking uses 320 N of reverse thrust (≈ 1 m/s²), so stopping from 0.8 m/s takes well under 1 m, far inside the 8 m obstacle range. Raising `max_linear_speed` to about 1.5 m/s would still stop within about 2 m.
+3. **Turning capability (information, verified 2026-09-26).** With the rudders and puff ports on, Version 2 turns at 0.85 rad/s at 1.5 m/s (fans only: 0.37) and pivots in place at 0.81 rad/s (fans only: 0.57), so your 0.45 rad/s follower limit can be raised if you want. Three clean integration-world missions completed in 68–70 s, with your target-cell arrival fix. Braking uses 320 N of reverse thrust (about 1 m/s²), so stopping from 0.8 m/s takes well under 1 m.
 
 ### To Person 2 (Safety), `tidal_vehicle_safety`
 
@@ -29,6 +29,33 @@ Safety's per-metre energy figures should match the battery drain that `vehicle_m
 4. **Hover return energy.** At your `hover_nominal_speed_mps` of 0.7 m/s the vehicle draws 150 + 2500 + 15 × 47 ≈ 3.36 kW, which is 1.33 Wh/m, or **0.0133 % per metre**. At the follower's 0.8 m/s it is 0.0121 %/m. `hover_energy_percent_per_m` is currently 0.05, about 3.8× the simulated drain. That makes Safety return or caution much earlier than the battery requires. **Request: 0.0133**, or about 0.02 if you want margin in this figure as well as in `return_margin_percent`. Your choice.
 5. **Hovering in place still drains the battery.** The lift fan keeps running while stopped. A `HOLD` in HOVER costs about 2.65 kW, which is **0.44 % per minute**. If HOLD waits for a tide window, the return estimate should include that time.
 6. **Track parameters are inactive for now.** Version 2 is hover-first: it deploys its tracks only for a sustained forward climb steeper than 15° on firm land, and `sim.launch.py` sets `track_mode_enabled: false` for both vehicles. If track mode is enabled later, use the Version 2 track figures: 150 + 0.6 × 2500 + 800 ≈ 2.45 kW at 1.0 m/s, which is **≈ 0.0068 %/m**, with `track_nominal_speed_mps` 1.0.
+
+### Version 3 requests (plan ahead: not needed for the Version 2 demo)
+
+Version 3 is being designed for 30 km/h cruise and 50 km/h max over open water (see *Vehicle Version 3*). These requests prepare each workstream for it. **None of them may slow or destabilise the Version 2 demo.** Keep Version 2 behaviour unchanged by default, for example behind a parameter or `vehicle:=v3`. All speed limits follow the split cost bands in *Shared terrain-cost semantics*.
+
+**All workstreams**
+7. **Cost-band split (agreed).** `20`--`29` = open, surveyed water where fast travel is allowed; `30`--`59` = mud, shallow water, roots and debris. Band checks at `19`, `60` and `90` are unchanged. Don't reuse `20`--`29` for anything else.
+
+**Person 1 (Autonomy), `tidal_vehicle_autonomy`**
+8. **Speed by zone.** Look up the band of the cells ahead and propose at most: firm 4.2 m/s, open water 8.3 m/s cruise (13.9 m/s max), everything else 2.8 m/s. Slow down *before* entering a slower zone. Version 3 needs about 28 m to stop from 30 km/h and about 67 m from 50 km/h.
+9. **Slow for curves.** The turn radius at speed is about v² / (0.1 g): about 70 m at 30 km/h and about 8 m at 10 km/h. Cap speed by the route's curvature: v ≤ √(0.1 g R).
+10. **Look further ahead at speed.** Scale `lookahead_distance` with speed (for example 1 s of travel, at least 0.75 m). Scale `obstacle_max_range_m` with stopping distance, which is limited by the 30 m LiDAR. Version 3 obstacle inflation: half-diagonal √(1.5² + 0.9²) ≈ 1.75 m plus clearance, so about 2.0 m.
+
+**Person 2 (Safety), `tidal_vehicle_safety`**
+11. **Zone speed limits.** Clamp the approved `/cmd_vel` to the zone limit of the band under and ahead of the vehicle (same table). HOLD if an obstacle is closer than the stopping distance at the current speed.
+12. **Hybrid energy.** Version 3 will report `fuel_percent` alongside `battery_percent` (item 15). Return estimates should use fuel as the main energy store. The first estimate is 2.5 L/h at 30 km/h on a 30 L tank. Refined figures will come from `tools/vehicle_sizing/v3_sizing.py` and the Version 3 mobility config.
+
+**Person 3 (Environment), `tidal_vehicle_simulation` worlds and `tide_manager`**
+13. **Mark open, surveyed water.** Publish cost `20`--`29` only for water that is surveyed and free of roots and debris. Keep other water at `30`--`59`. Rising tide or new debris must move cells back to `30`+.
+14. **Optional:** a long open-water stretch (≥ 150 m) so a Version 3 demo can show speed. Person 4 will build a separate Version 3 speed test world regardless.
+
+**Person 5 (Operator), `tidal_vehicle_operator`**
+15. **Fuel and speed display.** The dashboard's Fuel card already reads `fuel_percent`, but nothing publishes it yet. Person 4 will add `float32 fuel_percent` to `VehicleHealth` (with the matching `docs/INTERFACES.md` update) when the Version 3 energy model lands; Versions 1 and 2 will report `-1` for "no fuel tank". Also show speed against the current zone limit.
+16. **Extra cameras and collisions on the dashboard.** Version 3 adds `/camera/rear/image_raw`, `/camera/left/image_raw` and `/camera/right/image_raw` (possibly a stitched top-down view) and a collision topic (item 17). Please show them, for example with a camera selector and a "collision" alert. Topic names are final once they are in `docs/INTERFACES.md`.
+
+**Collision detection (Version 3; new topic)**
+17. **Proposed topic `/vehicle/collision`**, published by Person 4's vehicle controller when a contact sensor or the IMU jolt check detects a hit. It gives the time, the part that was hit (`hull`, `skirt`, `track_left`, `track_right`), the side (front, rear, left or right), what was hit if known, and an impact strength. Proposed as a small new message in `tidal_vehicle_interfaces`, to be agreed and added to `docs/INTERFACES.md` before use. **Person 2:** Safety should HOLD on a collision (then RETURN if the vehicle is still healthy), with a reason such as "collision: skirt front-left". **Person 1** (optional): mark the hit location as blocked in the planning overlay, like a LiDAR obstacle. **Person 5:** see item 16.
 
 ## Vehicle configuration and mobility modes
 
@@ -54,16 +81,20 @@ Safety's ground-mode return-energy parameters are `track_cost_max`, `track_energ
 
 ### Shared terrain-cost semantics
 
-The terrain cost map supplies the shared route and mobility interpretation:
+The terrain cost map supplies the shared route and mobility interpretation.
 
-- `0`--`19`: firm shore; the controller uses **TRACK** mode.
-- `20`--`59`: mud or shallow water; the controller uses **HOVER** mode (TRACK with a high cushion load share on slopes steeper than the hover limit).
-- `60`--`89`: elevated-risk mud or shallow water; the controller uses **HOVER** mode with conservative speed/energy assumptions.
-- `90`--`100`: no-go terrain.
-- `-1`: unknown terrain; treated as no-go.
+> **Change (agreed 2026-09-26): the `20`--`59` band is split.** `20`--`29` now means *open, surveyed water* where fast travel is allowed; `30`--`59` keeps the old meaning. This was added for Version 3's higher speeds. It is backwards compatible: Autonomy's and Safety's existing band checks (`≤ 19`, `≥ 60`, `≥ 90`) are unchanged. Versions 1 and 2 travel far below every speed limit. Current maps publish water at `30`, so nothing is fast-travel until Person 3 marks open-water cells `20`--`29`. **Every workstream: read this before changing cost values or speed logic.**
 
-Autonomy plans with these costs and Safety estimates the return energy/time using
-the same bands. A path that crosses a `90+` or `-1` cell is invalid.
+| Cost | Meaning | Mobility | Speed limit (Version 3; V1/V2 are slower anyway) |
+| --- | --- | --- | --- |
+| `0`--`19` | Firm shore | HOVER (Version 2 is hover-first; tracks only for a steep firm-land climb) | 15 km/h (4.2 m/s) |
+| `20`--`29` | **Open, surveyed water**: no roots or debris | HOVER | Cruise 30 km/h (8.3 m/s), max 50 km/h (13.9 m/s) |
+| `30`--`59` | Mud, shallow water, and root or debris zones | HOVER | 10 km/h (2.8 m/s) |
+| `60`--`89` | Elevated-risk mud or shallow water | Conservative HOVER | 10 km/h, with conservative energy assumptions |
+| `90`--`100` | No-go | None | – |
+| `-1` | Unknown, treated as no-go | None | – |
+
+Autonomy plans with these costs, and Safety estimates the return energy and time using the same bands. A path that crosses a `90+` or `-1` cell is invalid. The speed limits are layered: Autonomy proposes speeds within them, Safety enforces them, and Person 4's vehicle controller caps the command as a last line of defence. See *Vehicle Version 3* and the Version 3 open requests.
 
 ### Vehicle Version 2 (the demo vehicle)
 
@@ -97,6 +128,23 @@ Agreed Version 2 design decisions:
 - **Retraction.** In HOVER mode both tracks slide 0.25 m straight up into the hull wells, leaving their lowest point 0.22 m above the skirt bottom, so the cushion alone carries the vehicle. `renders/retract_comparison.png` shows both states, and the Gazebo check measures the retracted joint position (0.250 m) before propulsion starts.
 
 Simulation risk retired: Gazebo Harmonic's `TrackController`/`TrackedVehicle` work with DART and the Bullet collision detector, which the air-cushion ray casts need. They also work on the corridor's inclined `demo_terrain` collision surface. The tracks drive at the commanded speed, pivot in place without drift and climb a 15° ramp. The `hover::AirCushion` plugin gained a `lift_share` input for TRACK-mode load sharing, reversible thrust and a yaw reserve. Version 1 is unchanged by these additions.
+
+### Vehicle Version 3 (in design: not built, not in the demo)
+
+Version 3 is Version 2's design scaled up for **higher speed, sharper turning and more payload**. **Version 2 stays the demo vehicle and the launch default until Version 3 passes its own tests.** Nobody should switch the demo to Version 3 before then. The plan is `docs/VEHICLE_V3_PLAN.md`. The numbers below come from `tools/vehicle_sizing/v3_sizing.py`; its report is `docs/VEHICLE_V3_SIZING.md`, and you should rerun it after changing any input. They are first-order design estimates, not validated data.
+
+Agreed Version 3 decisions (2026-09-26):
+
+- **Speed targets:** cruise 30 km/h (8.3 m/s) and max 50 km/h (13.9 m/s), only over open, surveyed water (cost `20`--`29`). In root and debris zones and on mud it keeps to about 10 km/h (2.8 m/s). See *Shared terrain-cost semantics*.
+- **Power: series hybrid.** A diesel engine (about 20 kW) only drives a generator. The lift fan, thrust fans, tracks and electronics are all electric, with a 5 kWh buffer battery for bursts. This keeps the fast, reversible electric fan control that autonomy and braking rely on. Estimated fuel use is about 2.5 L/h at 30 km/h, giving about 12 h on a 30 L tank. The all-electric alternative would last about 2.8 h.
+- **Size and payload:** 3.0 × 1.8 m footprint, 100 kg rated payload, about 530 kg total. Cushion pressure is about 1.0 kPa, similar to Version 2.
+- **Faster:** bigger ducted fans (2 × 0.7 m, about 10 kW each; static thrust about 940 N, 18% of weight, enough to get over the water "hump" at about 11 km/h). Less drag from a faired bow and an enclosed payload. **The skirt design stays as in Version 2.**
+- **Turning:** rudders and puff ports carried over from Version 2 and sized up. At speed the turn radius is large (about 70 m at 30 km/h, about 200 m at 50 km/h), so routes must slow down before curves.
+- **Tracks:** kept, capped at about 15 km/h. Speed comes from hovering.
+- **Braking** from 50 km/h takes about 67 m with reverse thrust, beyond the 30 m LiDAR range. This is why high speed is only allowed in open, surveyed water.
+- **Cameras:** the front camera plus **rear, left and right** cameras for a full view around the vehicle, at the same low-load profile as Version 2's (320 × 240, 5 Hz). They can be switched on or off at launch. They must not slow the LiDAR or the front camera, and are off by default if they do. A **top-down (bird's-eye) view** is added only if it doesn't affect the other sensors: preferably stitched in software from the four cameras (no extra hardware), otherwise a downward camera on a short arm above the LiDAR, outside its ±15° beams.
+- **Collision detection:** Gazebo contact sensors on the hull, skirt and tracks report what was hit and where. An IMU impact (jolt) check backs them up and would also work on a real vehicle. This adds one new topic (see the Version 3 requests).
+- **Launch:** `vehicle:=v3`, once built. Same frame names and public topics as Version 2, plus the planned `fuel_percent` (see the Version 3 open requests).
 
 ## Team roles
 
@@ -218,7 +266,7 @@ Open integration items:
 6. Tune the corridor map rectangles, HOME/delivery coordinates and sensor-return geometry so that the generated path matches the visibly safe route through the world.
 7. **Version 2 obstacle inflation and route clearance.** The footprint correction is complete: the shared launch uses `0.75 m` inflation for Version 1 and `1.7 m` for Version 2. Revalidate HOME and return-route clearance in the newly expanded valley with the current collision proxies and LiDAR filtering. If near-terrain returns block HOME, align the spawn, HOME and grid origin or remove unintended returns; do not restore the undersized Version 1 radius.
 8. **Safety return energy (Person 2).** The energy and HOLD-drain work in *Open requests between workstreams*, items 4–6, remains open. Re-check corridor return timing after it lands.
-9. **Rudders and puff ports (new, not yet run in Gazebo).** Build the workspace, run all five Version 2 tests including the new `v2_turn_test`, and check that the 19 earlier checks still pass. Then rerun the integration-world mission.
+9. **Rudders and puff ports: verified and on (2026-09-26).** All 30 Version 2 checks pass. The rudders fade in above 15% thrust and slew at most 1.5 rad/s, which removed the low-speed chatter that led to them being switched off. Three clean autonomous missions completed. The demo sensor profile and the 400 yaw gain, previously hand-edited into `model.sdf`, now come from `gen_description_v2.py`. **Don't hand-edit generated `model.sdf` files; change the generator instead.**
 10. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
 
 ## Three-day build plan

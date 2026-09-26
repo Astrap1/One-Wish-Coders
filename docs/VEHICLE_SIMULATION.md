@@ -32,7 +32,7 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
   - `reverse_thrust_fraction` 0.8, which brakes and holds the vehicle on slopes up to about 6°.
   - `yaw_reserve_fraction` 0.3, which keeps some steering while braking.
   - Turning aids (`rudder_control`, `puff_port_*`). In HOVER the yaw-rate controller asks for a yaw moment and shares it out in this order:
-    1. **Rudders.** The plugin sets both rudder angles on `rudder_left_cmd`/`rudder_right_cmd` (side force 0.55·T·sin δ at the stern). They are free while the fans push forward, strongest at speed and useless at zero thrust.
+    1. **Rudders.** The plugin sets both rudder angles on `rudder_left_cmd`/`rudder_right_cmd` (side force 0.55·T·sin δ at the stern). They are free while the fans push forward, strongest at speed and useless at zero thrust. So they fade in between 60 N and 120 N of forward thrust (`rudder_min_thrust`, 15% of full thrust) and slew at no more than 1.5 rad/s (`rudder_rate`). Without this, at low speed they swung from stop to stop chasing small heading errors, which made the vehicle wobble.
     2. **Puff ports.** Opening a bow vent on one side and a stern vent on the other makes a pure yaw couple at any speed, including a pivot in place. Each vent gives 2·Cd·p·A ≈ 37 N at the 0.81 kPa cushion pressure (Cd 0.8), so a pair gives ≈ 55 N·m. Force scales with cushion pressure and follows a 0.15 s valve lag. Spare vent force damps sideways drift (150 N per m/s of slip).
     3. **Differential fan thrust** supplies the rest, with the same speed-first limits as before.
 
@@ -62,18 +62,21 @@ for t in "v2_hover_test 62" "v2_track_test 48" "v2_load_share_test 18" "v2_trans
   WORLD_DIR=/tmp/v2worlds tools/vehicle_tests/run_test.sh $t; done
 python3 tools/vehicle_tests/analyze.py        # v2_* rows in results/acceptance.md
 ```
-All 19 Version 2 checks pass:
+All 30 Version 2 checks pass (ROS 2 Jazzy, Gazebo 8.15, WSL, 2026-09-26) with the turning aids on:
 
 | Test | Result |
 |---|---|
-| Hover gap with the tracks retracted | 5.05 cm (4.2–5.4) |
-| HOVER tracking | 2.006 m/s at 2.0; 0.46 rad/s at 0.5 |
-| TRACK drive | 1.000 m/s; pivot 0.51 rad/s with 5 mm drift |
+| Hover gap with the tracks retracted | 5.05 cm (4.4–5.5) |
+| HOVER tracking | 2.006 m/s at 2.0; 0.51 rad/s at 0.5 |
+| TRACK drive | 1.000 m/s; pivot 0.51 rad/s with 6 mm drift |
 | 15° ramp | climbed on the tracks |
 | Load share | 0.600 at 0.6 commanded, resting on the tracks (gap 2.7–3.0 cm) |
 | Water → mud → bank | hover across; stop; deploy; 40% share; climb a 12° bank on the tracks |
+| Turn at 1.5 m/s, 1.0 rad/s asked | fans only 0.37 rad/s → with rudders and puff ports **0.85 rad/s**; rudders at 25° |
+| Pivot in place, 0.8 rad/s asked | fans only 0.57 rad/s → with puff ports **0.81 rad/s** (37 N per vent, shutters open 0.26 m, 0.12 m drift) |
+| Stability | max roll/pitch 0.2°; hover gap 4.3–5.6 cm while turning |
 
-Those 19 results predate the rudder and puff-port control. `v2_turn_test` (11 checks: turning at 1.5 m/s and pivoting in place, fans only against rudders plus puff ports) is new and **has not yet been run in Gazebo**. Rerun all five Version 2 tests before relying on these numbers.
+The earlier fans-only setting (turning aids off, the version on `main` before this change) also passes the 19 non-turning checks.
 
 With the full ROS stack in the integration world, an autonomous goal across the water channel produced `delivery_confirmed` then `mission_complete` in 87 s. Open items in the tidal corridor are listed in `AGENTS.md` (Role 4).
 

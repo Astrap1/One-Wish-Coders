@@ -89,6 +89,10 @@ Simulation risk retired: Gazebo Harmonic's `TrackController`/`TrackedVehicle` wo
 | 4 | Vehicle simulation and integration lead | Vehicle SDF model, sensors, mobility abstraction, ROS-Gazebo bridge, packages and one-command launch. | Mission-policy thresholds or dashboard narrative. |
 | 5 | Operator, evaluation and demo lead | Operator display, scenario runner, fault injection controls, metrics, comparison visuals and presentation story. | Direct vehicle control outside the documented operator controls. |
 
+### Remote-control fallback
+
+The dashboard may expose a circular fallback remote-control panel for operator demonstrations and recovery requests. It is a safety-gated request interface, not a direct actuator controller. Directional requests (`forward`, `reverse`, `left`, `right`) and `STOP` must be represented as operator intent and routed through the Safety supervisor; the dashboard must never publish `/cmd_vel` directly. Safety remains the only `/cmd_vel` publisher and may reject, clamp, hold or override every request. The fallback is for cases where autonomous planning or the normal goal workflow is unavailable, and it must be clearly labelled as such, logged, resettable and tested against the same emergency-stop and return rules as autonomous operation.
+
 ## Role 1: Autonomy implementation status
 
 - Implemented `global_planner`, which consumes `/terrain_costmap`, `/odom`, `/mission_goal`, `/terrain_state`, `/scan`, `/safety_status` and reset scenario events. It publishes the active `/planned_path`, Safety's `/return_path` and lifecycle `/mission_event` messages.

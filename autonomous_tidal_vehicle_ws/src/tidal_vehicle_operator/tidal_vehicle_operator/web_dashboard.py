@@ -39,6 +39,10 @@ DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     """.tech-only{display:none}.card{position:relative;overflow:hidden;background:linear-gradient(145deg,#111d36 0%,#0c152a 100%);border:1px solid #24496a;box-shadow:0 0 0 1px rgba(63,213,255,.04),0 12px 32px rgba(0,0,0,.25)}.card:before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(63,213,255,.06),transparent 35%,rgba(210,73,255,.04));opacity:.9}.card>*{position:relative}.label{color:#63d9ff;font-weight:700;letter-spacing:1.6px}.sub,.live,.legend{color:#839bb9}.value{color:#f4fbff;text-shadow:0 0 12px rgba(74,221,255,.2)}.status{background:#142d43;border:1px solid #38d6ff;color:#78e5ff;box-shadow:0 0 14px rgba(56,214,255,.18);letter-spacing:1px}.eyebrow{color:#63d9ff;text-shadow:0 0 10px rgba(99,217,255,.55)}h1{letter-spacing:1px;text-transform:uppercase}.ring .track{stroke:#1c3853}.ring .progress{stroke:#63e6dc;filter:drop-shadow(0 0 5px rgba(99,230,220,.55))}.ring .reserve-progress{stroke:#ffc857;filter:drop-shadow(0 0 5px rgba(255,200,87,.45))}.map,.tide,.camera{border:1px solid #214967;box-shadow:inset 0 0 28px rgba(0,0,0,.35)}body{background-color:#070d1a;background-image:linear-gradient(rgba(40,112,150,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(40,112,150,.055) 1px,transparent 1px),radial-gradient(circle at 50% -20%,#173a56 0%,#070d1a 56%);background-size:32px 32px,32px 32px,100% 100%}main{position:relative}main:after{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 4px);mix-blend-mode:screen;opacity:.25}.dot{ text-shadow:0 0 9px #35e28b}</style>""",
 )
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
+    "</style>",
+    ".remote-card{grid-column:1 / -1}.remote-pad{width:190px;height:190px;margin:14px auto;position:relative;border:1px solid #2d5370;border-radius:50%;background:radial-gradient(circle,#152941 0 31%,transparent 32%),linear-gradient(45deg,transparent 49%,#2d5370 50%,transparent 51%),linear-gradient(-45deg,transparent 49%,#2d5370 50%,transparent 51%);box-shadow:0 0 24px rgba(65,213,255,.1)}.remote-btn{position:absolute;width:42px;height:42px;border-radius:50%;border:1px solid #48d8ff;background:#10243a;color:#8ceaff;font-size:22px;cursor:pointer;box-shadow:0 0 10px rgba(72,216,255,.18)}.remote-btn:hover{background:#1d4c68;box-shadow:0 0 16px rgba(72,216,255,.45)}.remote-btn:active{transform:scale(.94)}.remote-up{top:8px;left:74px}.remote-down{bottom:8px;left:74px}.remote-left{left:8px;top:74px}.remote-right{right:8px;top:74px}.remote-stop{top:74px;left:74px;width:42px;height:42px;color:#ff8790;border-color:#bd5360;background:#351e2a;font-size:15px}.remote-status{text-align:center;color:#8da7c2;font-size:12px}.remote-note{text-align:center;color:#62809e;font-size:11px;margin-top:6px}</style>",
+)
+DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     "grid-template-columns:repeat(3,1fr)",
     "grid-template-columns:repeat(6,1fr)",
 )
@@ -49,12 +53,20 @@ DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
 DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
     "</main><script>",
     """</main><script>
-const grid=document.querySelector('.grid'),cameraCard=document.querySelector('#camera').closest('.card');
+const grid=document.querySelector('.grid'),cameraCard=document.querySelector('#camera').closest('.card'),remoteCard=document.querySelector('.remote-card');
 const cards=[...grid.children],by=id=>document.querySelector(id).closest('.card');
-const order=[by('#safety'),by('#speed'),by('#coordinates'),by('#fuel'),by('#energy'),by('#reserve'),by('#tide-level'),by('#tide-chart'),by('#map'),cameraCard];
+const order=[by('#safety'),by('#speed'),by('#coordinates'),by('#fuel'),by('#energy'),by('#reserve'),by('#tide-level'),by('#tide-chart'),by('#map'),cameraCard,remoteCard];
 order.forEach(card=>grid.appendChild(card));
-order.forEach((card,index)=>{card.style.gridColumn=index===0?'1 / -1':(index===1||index===2?'span 3':(index>=3&&index<=5?'span 2':'span 3'))});
+order.forEach((card,index)=>{card.style.gridColumn=index===0?'1 / -1':(index===7?'span 4':(index===1||index===2?'span 3':'span 2'))});
 """,
+)
+DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
+    "</section></main><script>",
+    """<article class="card remote-card"><div class="label">Fallback remote control</div><div class="remote-pad"><button class="remote-btn remote-up" data-remote="forward" aria-label="Forward">▲</button><button class="remote-btn remote-left" data-remote="left" aria-label="Left">◀</button><button class="remote-btn remote-stop" data-remote="stop" aria-label="Stop">■</button><button class="remote-btn remote-right" data-remote="right" aria-label="Right">▶</button><button class="remote-btn remote-down" data-remote="reverse" aria-label="Reverse">▼</button></div><div class="remote-status" id="remote-status">Safety-gated fallback · no direct vehicle command</div><div class="remote-note">Directional requests must be routed through Safety before actuation.</div></article></section></main><script>""",
+)
+DASHBOARD_PAGE = DASHBOARD_PAGE.replace(
+    "const E=id=>document.getElementById(id),C=x=>Number.isFinite(Number(x))?Number(x):0,T=[];",
+    "document.querySelectorAll('[data-remote]').forEach(button=>button.addEventListener('click',()=>{const status=document.getElementById('remote-status');if(status)status.textContent=(button.dataset.remote==='stop'?'STOP requested':'Directional request: '+button.dataset.remote)+' · awaiting Safety approval'}));const E=id=>document.getElementById(id),C=x=>Number.isFinite(Number(x))?Number(x):0,T=[];",
 )
 
 

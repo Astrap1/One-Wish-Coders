@@ -141,6 +141,7 @@ Agreed Version 3 decisions (2026-09-26):
 - **Faster:** bigger ducted fans (2 × 0.7 m, about 10 kW each; static thrust about 940 N, 18% of weight, enough to get over the water "hump" at about 11 km/h). Less drag from a faired bow and an enclosed payload. **The skirt design stays as in Version 2.**
 - **Turning:** rudders and puff ports carried over from Version 2 and sized up. At speed the turn radius is large (about 70 m at 30 km/h, about 200 m at 50 km/h), so routes must slow down before curves.
 - **Tracks:** kept, capped at about 15 km/h. Speed comes from hovering.
+- **Track deployment:** Version 3 remains hover-first, but deploys onto TRACK after a sustained forward firm-ground climb of **8° or more**. This is intentionally earlier than Version 2's 14° threshold: V3's stated hover-climb margin ends at 8°, while its tracks are intended to climb through 20°. Water, mud, level ground, descent, pivots and side tilt remain HOVER conditions.
 - **Braking** from 50 km/h takes about 67 m with reverse thrust, beyond the 30 m LiDAR range. This is why high speed is only allowed in open, surveyed water.
 - **Cameras:** the front camera plus **rear, left and right** cameras for a full view around the vehicle, at the same low-load profile as Version 2's (320 × 240, 5 Hz). They can be switched on or off at launch. They must not slow the LiDAR or the front camera, and are off by default if they do. **No top-down camera was fitted**: any mount above the LiDAR would sit in its beams, so a bird's-eye view is left for software stitching of the four cameras later.
 - **Collision detection:** Gazebo contact sensors on the hull, skirt and tracks report what was hit and where. An IMU impact (jolt) check backs them up and would also work on a real vehicle. This adds one new topic (see the Version 3 requests).
@@ -270,7 +271,7 @@ Open integration items:
 
 1. **Valley mission validation.** Confirm that Version 2 transitions smoothly from HOME down the 15° slope, rides the `TerrainZones` water surface across the basin, climbs the opposite 15° slope and reaches the delivery marker at `(104, 0)` without contacting the basin floor.
 2. **Tide timing validation.** The synchronized rise is now 2.80 m over 180 simulated seconds, from z = -2.80 m to the z = 0 bank crests. Confirm on the demo laptop that a normal delivery crosses while fresh terrain costs and routes are published. Use `tide_hold` for a static baseline, then `tide_resume` or `tide_rise` to demonstrate changing-terrain replanning. A blocked route, energy limit or vehicle fault—not water alone—demonstrates Safety fallback. `tide_hold`, `tide_resume`, and `tide_reset` are runtime-verified to keep the visible surface, physics-side level, `/terrain_state`, and `/terrain_costmap` under the same scenario control; laptop mission timing remains to be measured.
-3. **Rendering load.** The mangrove meshes remain heavy for the camera; rock visuals use native ellipsoids and both obstacle types retain simple collision proxies for LiDAR. With software rendering in a CPU-only container, the full ROS corridor stack ran at a real-time factor of 0.001–0.6 (the integration world runs near real time), so the corridor mission could not be timed there. Check the real-time factor on the demo laptop's GPU.
+3. **Terrain rendering optimisation (not done yet).** The mangrove meshes remain heavy for the camera; rocks already use low-cost native ellipsoids and both obstacle types retain simple collision proxies for physics and LiDAR. Before the final demo, create a low-poly visual/LOD mangrove variant while retaining the existing simple root/trunk collision proxies, reduce shadow-casting foliage, and benchmark real-time factor with the front camera enabled. With software rendering in a CPU-only container, the full ROS corridor stack ran at a real-time factor of 0.001–0.6 (the integration world runs near real time), so the corridor mission could not be timed there. Check the real-time factor on the demo laptop's GPU.
 4. **Sensor transform.** Resolved: the Version 2 LiDAR is directly above `base_link`, so Autonomy's "LiDAR at odometry position" assumption is exact horizontally (*Open requests*, item 2).
 5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
 6. Tune the corridor map rectangles, HOME/delivery coordinates and sensor-return geometry so that the generated path matches the visibly safe route through the world.
@@ -278,6 +279,7 @@ Open integration items:
 8. **Safety return energy (Person 2).** The energy and HOLD-drain work in *Open requests between workstreams*, items 4–6, remains open. Re-check corridor return timing after it lands.
 9. **Rudders and puff ports: verified and on (2026-09-26).** All 30 Version 2 checks pass. The rudders fade in above 15% thrust and slew at most 1.5 rad/s, which removed the low-speed chatter that led to them being switched off. Three clean autonomous missions completed. The demo sensor profile and the 400 yaw gain, previously hand-edited into `model.sdf`, now come from `gen_description_v2.py`. **Don't hand-edit generated `model.sdf` files; change the generator instead.**
 10. Add Person 5's Foxglove layout: 3D scene, `/camera/image_raw`, planned and return paths, terrain-cost map, battery, safety reason and tide-window fields.
+11. **Version 3 corridor stability.** Keep V3's 30–50 km/h configuration confined to its isolated open-water test world. Build a conservative corridor-speed profile, validate that it stays within map bounds through the obstacle detour and 15° embankment, then reassess whether it is appropriate for a demo.
 
 ## Three-day build plan
 
@@ -394,18 +396,17 @@ The water sheet itself is visual-only so it can pass through trees and rocks. Th
 ### Run the current map
 
 ```bash
-cd /home/tiffy/One-Wish-Coders/autonomous_tidal_vehicle_ws
+cd ~/One-Wish-Coders/autonomous_tidal_vehicle_ws
 source /opt/ros/jazzy/setup.bash
-pkill -f '^gz sim server$' || true
-colcon build --symlink-install --packages-select tidal_vehicle_simulation
+colcon build --symlink-install --packages-up-to tidal_vehicle_bringup
 source install/setup.bash
-ros2 launch tidal_vehicle_simulation environment.launch.py
+ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true dashboard:=true
 ```
 
 For a quick headless validation, replace the final command with:
 
 ```bash
-timeout 12s ros2 launch tidal_vehicle_simulation environment.launch.py
+timeout 12s ros2 launch tidal_vehicle_bringup sim.launch.py headless:=true
 ```
 
 The authoritative world is `src/tidal_vehicle_simulation/worlds/tidal_corridor.sdf`. Environment assets are under `src/tidal_vehicle_simulation/models/`, including `mangrove_imported/` and `rock_imported/`.

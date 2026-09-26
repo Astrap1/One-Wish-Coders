@@ -101,3 +101,11 @@ def test_browser_state_replaces_non_finite_telemetry_with_json_null() -> None:
     encoded = __import__("json").dumps(web_dashboard.DashboardHandler._state, allow_nan=False)
     assert '"estimated_return_energy_percent": null' in encoded
     assert '"eta": null' in encoded
+
+
+def test_dashboard_declares_dom_helper_before_remote_handlers() -> None:
+    page = web_dashboard.DASHBOARD_PAGE
+
+    assert page.index("const E=id=>document.getElementById(id)") < page.index(
+        "E('remote-toggle').addEventListener"
+    )

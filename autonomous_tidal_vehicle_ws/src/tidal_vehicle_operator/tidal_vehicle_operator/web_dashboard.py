@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
@@ -125,7 +126,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         return
 
 def update_dashboard_state(**kwargs: object) -> None:
-    DashboardHandler._state = dict(kwargs)
+    DashboardHandler._state = _json_safe(kwargs)
 
 def update_camera_frame(frame: bytes) -> None:
     DashboardHandler._camera_jpeg = frame
@@ -134,6 +135,17 @@ def update_camera_frame(frame: bytes) -> None:
 def set_remote_request_handler(handler: Callable[[dict[str, Any]], bool] | None) -> None:
     """Install the ROS-node callback used by the local dashboard HTTP endpoint."""
     DashboardHandler._remote_request_handler = handler
+
+
+def _json_safe(value: object) -> object:
+    """Convert ROS sentinel floats into JSON values that browsers can parse."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    return value
 
 def serve_dashboard(host: str = "0.0.0.0", port: int = 8000) -> None:
     server = ThreadingHTTPServer((host, port), DashboardHandler)

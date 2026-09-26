@@ -51,12 +51,14 @@ class PathFollowerNode(Node):
         defaults = {
             "control_rate_hz": 10.0,
             "max_linear_speed": 0.8,
-            "max_angular_speed": 1.0,
+            # Keep yaw demand within the stable operating envelope of the
+            # simplified air-cushion dynamics.
+            "max_angular_speed": 0.45,
             "lookahead_distance": 0.75,
             "goal_tolerance": 0.25,
-            "heading_gain": 1.5,
+            "heading_gain": 0.9,
             "slow_down_distance": 1.0,
-            "rotate_in_place_angle": 0.7,
+            "rotate_in_place_angle": 1.05,
             "odom_timeout": 0.5,
         }
         for name, value in defaults.items():

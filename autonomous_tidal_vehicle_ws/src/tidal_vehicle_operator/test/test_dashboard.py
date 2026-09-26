@@ -1,6 +1,6 @@
 import types
 
-from tidal_vehicle_operator import web_dashboard_node
+from tidal_vehicle_operator import web_dashboard, web_dashboard_node
 from tidal_vehicle_operator.operator_dashboard import build_dashboard_payload, summarize_dashboard
 
 
@@ -90,3 +90,14 @@ def test_build_dashboard_payload_exposes_status_class_for_ui_theming() -> None:
     )
 
     assert payload["status_class"] == "hold"
+
+
+def test_browser_state_replaces_non_finite_telemetry_with_json_null() -> None:
+    web_dashboard.update_dashboard_state(
+        estimated_return_energy_percent=float("nan"),
+        telemetry={"eta": float("inf")},
+    )
+
+    encoded = __import__("json").dumps(web_dashboard.DashboardHandler._state, allow_nan=False)
+    assert '"estimated_return_energy_percent": null' in encoded
+    assert '"eta": null' in encoded

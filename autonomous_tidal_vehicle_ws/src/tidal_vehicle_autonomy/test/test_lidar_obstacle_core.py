@@ -4,11 +4,13 @@ import pytest
 
 from tidal_vehicle_autonomy.lidar_obstacle_core import (
     ObstaclePersistenceFilter,
+    associate_obstacle_hits,
     inflate_no_go_cells,
     inflate_obstacle_cells,
     obstacle_cells_from_scan,
     obstacle_change_requires_replan,
     overlay_obstacles,
+    path_cells_ahead,
 )
 from tidal_vehicle_autonomy.planner_core import GridCostMap, plan_path
 
@@ -171,6 +173,23 @@ def test_inflates_confirmed_hit_centres_after_filtering() -> None:
     blocked = inflate_obstacle_cells(_safe_map(), confirmed, 1.0)
 
     assert blocked == {(3, 3), (2, 3), (4, 3), (3, 2), (3, 4)}
+
+
+def test_associates_a_shifted_surface_return_with_confirmed_obstacle() -> None:
+    associated = associate_obstacle_hits(
+        observed={(6, 5), (10, 1)},
+        confirmed={(5, 5)},
+        resolution_m=1.0,
+        association_radius_m=1.5,
+    )
+
+    assert associated == {(5, 5), (10, 1)}
+
+
+def test_path_cells_ahead_excludes_the_travelled_prefix() -> None:
+    path = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]
+
+    assert path_cells_ahead(path, (3, 0)) == ((3, 0), (4, 0))
 
 
 def test_removed_obstacle_does_not_reset_an_existing_safe_detour() -> None:

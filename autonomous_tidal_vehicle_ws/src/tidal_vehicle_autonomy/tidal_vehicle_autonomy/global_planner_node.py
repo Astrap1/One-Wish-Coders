@@ -19,11 +19,13 @@ from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState
 
 from .lidar_obstacle_core import (
     ObstaclePersistenceFilter,
+    associate_obstacle_hits,
     inflate_no_go_cells,
     inflate_obstacle_cells,
     obstacle_cells_from_scan,
     obstacle_change_requires_replan,
     overlay_obstacles,
+    path_cells_ahead,
 )
 from .motion_limits import speed_aware_sensor_range
 from .planner_core import GridCell, GridCostMap, plan_path
@@ -44,6 +46,7 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("obstacle_reaction_time_s", 1.0)
         self.declare_parameter("obstacle_confirmation_scans", 2)
         self.declare_parameter("obstacle_clear_scans", 5)
+        self.declare_parameter("obstacle_association_radius_m", 0.0)
         self.declare_parameter("home_x_m", 0.0)
         self.declare_parameter("home_y_m", 0.0)
         self.declare_parameter("home_frame", "map")
@@ -88,11 +91,15 @@ class GlobalPlannerNode(Node):
         obstacle_max_range = self._float_parameter("obstacle_max_range_m")
         obstacle_brake_decel = self._float_parameter("obstacle_brake_decel_mps2")
         obstacle_reaction_time = self._float_parameter("obstacle_reaction_time_s")
+        obstacle_association_radius = self._float_parameter(
+            "obstacle_association_radius_m"
+        )
         self._obstacle_inflation_radius = inflation_radius
         self._obstacle_min_range = obstacle_min_range
         self._obstacle_max_range = obstacle_max_range
         self._obstacle_brake_decel = obstacle_brake_decel
         self._obstacle_reaction_time = obstacle_reaction_time
+        self._obstacle_association_radius = obstacle_association_radius
         confirmation_scans = self._positive_int_parameter(
             "obstacle_confirmation_scans"
         )
@@ -107,6 +114,8 @@ class GlobalPlannerNode(Node):
             raise ValueError(
                 "Obstacle minimum range must be non-negative and not exceed maximum"
             )
+        if obstacle_association_radius < 0.0:
+            raise ValueError("obstacle_association_radius_m must be non-negative")
         if obstacle_brake_decel <= 0.0:
             raise ValueError("obstacle_brake_decel_mps2 must be positive")
         if obstacle_reaction_time < 0.0:
@@ -404,6 +413,13 @@ class GlobalPlannerNode(Node):
                 if self._static_clearance_costmap.traversable(cell)
             )
 
+        obstacles = associate_obstacle_hits(
+            obstacles,
+            self._obstacle_filter.active,
+            resolution_m=self._base_costmap.resolution,
+            association_radius_m=self._obstacle_association_radius,
+        )
+
         stable_hits = self._obstacle_filter.update(obstacles)
         stable_obstacles = inflate_obstacle_cells(
             self._base_costmap,
@@ -474,11 +490,20 @@ class GlobalPlannerNode(Node):
         previous: frozenset[GridCell],
         current: frozenset[GridCell],
     ) -> bool:
+        active_path = self._last_path_cells if self._path_available else None
+        return_path = self._last_return_path_cells
+        if self._costmap is not None and self._pose is not None:
+            position = self._pose.pose.pose.position
+            current_cell = self._costmap.grid_from_world(position.x, position.y)
+            if active_path is not None:
+                active_path = path_cells_ahead(active_path, current_cell)
+            if return_path is not None:
+                return_path = path_cells_ahead(return_path, current_cell)
         return obstacle_change_requires_replan(
             previous,
             current,
-            self._last_path_cells if self._path_available else None,
-            self._last_return_path_cells,
+            active_path,
+            return_path,
         )
 
     @staticmethod

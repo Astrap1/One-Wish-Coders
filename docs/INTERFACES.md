@@ -20,7 +20,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/safety_status` | Safety | Autonomy, Operator, Evaluation | `tidal_vehicle_interfaces/SafetyStatus` | State, rationale, return requirement and Safety-calculated return energy, margin and ETA. Autonomy must act on `return_required=true`. |
 | `/mission_event` | Autonomy | Safety, Operator, Evaluation | `std_msgs/String` | Latest lifecycle event used by Safety for its internal mission phase. Reliable, transient-local QoS lets late-starting consumers recover the current lifecycle transition. |
 | `/mission_event_history` | Autonomy | Operator | `std_msgs/String` (JSON) | Reliable, transient-local snapshot of the most recent 20 lifecycle events. The browser dashboard uses it to restore its mission-event timeline after a restart. |
-| `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event; Autonomy consumes the existing `reset` value. |
+| `/scenario_event` | Evaluation | Simulation, Safety, Autonomy | `std_msgs/String` | Controlled fault or scenario event. `reset` and `tide_reset` both begin a fresh, low-tide mission run; `tide_hold`, `tide_resume`, and `tide_rise` affect tide progression only. |
 | `/points` | Simulation | Autonomy, Operator | `sensor_msgs/PointCloud2` | 16-channel 3D LiDAR, frame `lidar_link`, 10 Hz, 0.3–30 m. |
 | `/camera/image_raw`, `/camera/camera_info` | Simulation | Operator | `sensor_msgs/Image`, `CameraInfo` | Front camera, frame `camera_link`, 320×240 at 5 Hz (demo profile). |
 | `/camera/{rear,left,right}/image_raw`, `/camera/{rear,left,right}/camera_info` | Simulation (Version 3, with `cameras:=all`) | Operator | `sensor_msgs/Image`, `CameraInfo` | Mast cameras below the LiDAR, tilted 15° down, 320×240 at 5 Hz. Frames `camera_rear_link`, `camera_left_link`, `camera_right_link`. Only rendered while bridged. |
@@ -119,7 +119,7 @@ cost-map update requires a fresh path publication even when A* selects the same
 cells. While returning, Autonomy refreshes `/return_path` without republishing
 `/planned_path`, preventing callback ordering from resetting freshness or path
 follower progress. A later false `return_required` value does not clear the latched return;
-the existing `reset` scenario event clears it.
+the `reset` or `tide_reset` scenario event clears it.
 
 ## Control-source selection
 
@@ -143,11 +143,12 @@ return energy, return margin and return ETA from `/return_path`,
 values in `/safety_status`.
 
 `/scenario_event` is reserved for deterministic evaluation controls. The
-The supported mission values are `operator_abort` (request a controlled return) and
-`reset` (stop and reset the safety supervisor and tide). Simulation also accepts
-`tide_rise`, `tide_hold`, `tide_resume`, and `tide_reset`; these synchronously
-control the rendered water, physics-side water level, `/terrain_state`, and
-`/terrain_costmap`. Simulation-specific fault
+supported mission values are `operator_abort` (request a controlled return) and
+`reset` or `tide_reset` (stop, return to low tide, and reset Safety and
+Autonomy for a new mission). `tide_rise`, `tide_hold`, and `tide_resume`
+control tide progression only. These synchronously control the rendered water,
+physics-side water level, `/terrain_state`, and `/terrain_costmap`.
+Simulation-specific fault
 injection remains owned by Evaluation and Simulation and should be reflected in
 `/vehicle_health` or `/terrain_state`.
 

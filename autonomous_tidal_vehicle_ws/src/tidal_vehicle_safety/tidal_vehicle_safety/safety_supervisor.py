@@ -219,7 +219,10 @@ class SafetySupervisor(Node):
                 self._reason = "Operator abort received before mission start."
                 self._publish_stop()
                 self._publish_status(False)
-        elif event == "reset":
+        elif event in {"reset", "tide_reset"}:
+            # A low-tide reset is a complete new demo run. Treating it as a
+            # tide-only action left a cached route/mission phase in Safety,
+            # which could make the next delivery goal remain in HOLD.
             self._reset("Scenario reset; awaiting a new goal.")
 
     def _on_proposed_command(self, command: Twist) -> None:

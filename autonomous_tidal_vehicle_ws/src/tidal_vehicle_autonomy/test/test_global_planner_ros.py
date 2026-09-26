@@ -346,7 +346,9 @@ def test_goal_events_complete_delivery_return_and_reset_lifecycle() -> None:
         assert capture.paths[-1].poses == []
 
         reset = String()
-        reset.data = "reset"
+        # Dashboard operators commonly reset at low tide. That must reset the
+        # mission lifecycle too, otherwise stale routes can block the next goal.
+        reset.data = "tide_reset"
         scenario_publisher.publish(reset)
         _spin_for(executor)
         assert capture.mission_events.count("mission_reset") == 1

@@ -257,7 +257,7 @@ class GlobalPlannerNode(Node):
         self._replan("safety return request", force_publish=True)
 
     def _on_scenario_event(self, message: String) -> None:
-        if message.data.strip().lower() != "reset":
+        if message.data.strip().lower() not in {"reset", "tide_reset"}:
             return
 
         self._goal = None

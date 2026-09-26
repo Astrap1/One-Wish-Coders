@@ -41,7 +41,7 @@ The Blender script also runs with the pip `bpy` 4.2 module (`python3 .../build_v
     Stated assumption: each open vent bleeds about 0.85 m³/s of cushion air, similar to the skirt's own leakage. The lift fan is assumed to have the flow margin for one open pair, and no lift loss is modelled. Version 1 doesn't set these parameters and is unchanged.
 - Gazebo's `TrackController` and `TrackedVehicle` drive the tracks from `/vehicle/cmd_vel_tracks`.
 - `hover::TerrainZones` water only counts where the water surface is above the measured ground. A water zone can also rise over time (`<rise>`, `<rise_duration>`).
-- No Gazebo buoyancy for Version 2 in the tidal corridor. Water support comes from the cushion over `TerrainZones` water, and solid ground lies under the water. The corridor uses a flat simplified collision shore so the virtual water surface begins continuously at low tide; its 0.55 m rise over 30 simulated seconds is mirrored by the visual sheet and `/terrain_state`. The integration test world (flat ground at z = 0) keeps buoyancy for the channel.
+- The tidal corridor uses no world-wide Gazebo buoyancy plane. It has two z = 0 m banks around a 96 m-wide tidal valley, which is 80% of the 120 m corridor footprint. Short mirrored 15° bank sections lead into long 2.7° lower slopes and a narrow z = -3 m centre. The synchronized `TerrainZones` and visible water surfaces start at z = -2.80 m and rise 2.80 m over 20 simulated seconds, expanding from a small central channel to the bank crests. Air-cushion support and water drag come from `TerrainZones`, while solid collision ground remains beneath the water.
 
 **Mode control** (`vehicle_mobility_node`, `config/vehicle_mobility_v2.yaml`, `gear: tracks`, `mode_policy: terrain_auto`):
 

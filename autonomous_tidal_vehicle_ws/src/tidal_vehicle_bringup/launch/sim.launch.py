@@ -51,7 +51,7 @@ VEHICLES = {
     "v2": {"model": "hovercraft_v2", "urdf": "hovercraft_v2.urdf",
            "params": "vehicle_mobility_v2.yaml", "bridge": "ros_gz_bridge_v2.yaml"},
 }
-SPAWN_Z = {"tidal_corridor": 0.25}     # drop height above z = 0 (the corridor ground is uneven)
+SPAWN_Z = {"tidal_corridor": 0.25}     # 0.25 m above the HOME plateau at z = 0 m
 
 
 def _setup(context):

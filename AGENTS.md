@@ -205,12 +205,12 @@ The HOME values must match Person 2's safety parameters. The changing map-frame 
 
   The Version 1 regression checks are unchanged.
 - **ROS 2 integration verified** (headless, integration world with `tide:=false`). An autonomous goal across water and mud produced `delivery_confirmed` then `mission_complete` in 82 s. Version 2 now starts in HOVER at HOME and remains there across ordinary shore, mud and water; it deploys tracks only for a sustained forward firm-land climb above 15°. Safety remains the sole `/cmd_vel` publisher. The Version 1 fallback completes the same mission.
-- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors, buoyancy (Version 1 only) and terrain zones. The launch spawns the vehicle at map-frame HOME, and the tide manager is the sole dynamic `/terrain_state` and `/terrain_costmap` publisher. On the earlier heightmap collision Version 2 reached the delivery point. On the current `demo_terrain` surface it drives from HOME on its tracks but stalls at the channel edge (item 1 below), so the corridor mission is not yet verified end to end. `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
+- **Tidal corridor** (the default world): it runs through `sim.launch.py` with DART/Bullet physics, sensors and terrain zones. HOME is on the first z = 0 m bank of a 120 m corridor. The 96 m tidal valley occupies 80% of that footprint, mirrored 15° bank sections lead into long gentle lower slopes and a narrow z = -3 m centre, and the delivery marker is on the opposite bank at `(104, 0)`. Physical cushion support, the visible sheet and the ROS tide manager start at z = -2.80 m as a narrow central channel and rise 2.80 m over 20 simulated seconds until water reaches both bank crests. The corridor mission must still be verified end to end; `vehicle_tests/integration_test` remains the static regression world (`world:=vehicle_tests/integration_test tide:=false`).
 
 Open integration items:
 
-1. **Corridor support surface.** The simplified collision shore is deliberately flat. `TerrainZones`, the visual water sheet and `tide_manager` start together at `z=0.02 m` and rise by `0.55 m` over 30 simulated seconds. The rendered sheet covers the shared 80 x 60 m map for legibility, while the narrower `TerrainZones` channel remains the authoritative physical support and navigation-risk corridor. This prevents a sharp vertical water step at the channel entrance from overturning a hovering vehicle. Version 2 has no Gazebo buoyancy in this world: its air cushion is the authoritative water-support abstraction.
-2. **Tide timing.** The default automatic rise is suitable for a short rising-tide demo. For a longer normal-delivery recording, use the existing `tide_hold` scenario event before issuing the goal, then trigger `tide_resume` or `tide_rise` for the rising-tide scenario.
+1. **Valley mission validation.** Confirm that Version 2 transitions smoothly from HOME down the 15° slope, rides the `TerrainZones` water surface across the basin, climbs the opposite 15° slope and reaches the delivery marker at `(104, 0)` without contacting the basin floor.
+2. **Tide timing validation.** The synchronized rise is now 2.80 m over 20 simulated seconds, from z = -2.80 m to the z = 0 bank crests. Confirm on the demo laptop that a normal delivery can cross before Safety requests a fallback and that the rising-tide scenario still produces a visible risk response. For a longer normal-delivery recording, publish the existing `tide_hold` event before issuing the goal, then use `tide_resume` or `tide_rise` for the rising-tide demonstration.
 3. **Rendering load.** The mangrove and rock meshes are heavy for the LiDAR and camera. With software rendering in a CPU-only container, the full ROS corridor stack ran at a real-time factor of 0.001–0.6 (the integration world runs near real time), so the corridor mission could not be timed there. Check the real-time factor on the demo laptop's GPU.
 4. **Sensor transform.** Resolved: the Version 2 LiDAR is directly above `base_link`, so Autonomy's "LiDAR at odometry position" assumption is exact horizontally (*Open requests*, item 2).
 5. Confirm the complete corridor mission repeatedly from the shared headless launch: camera, LiDAR, map-frame odometry, tide updates, replan and Safety fallback must all be visible in Foxglove.
@@ -323,13 +323,13 @@ A workstream change is complete only when it has a documented input/output contr
 
 The active environment is launched from `autonomous_tidal_vehicle_ws` with `tidal_vehicle_simulation`. The map currently contains:
 
-- An approximately 80 m x 80 m inclined terrain heightmap with mudflat materials.
-- A visual-only water surface that rises in parallel with the terrain. It extends beyond the terrain edges so its perimeter is not visible and has no collision geometry. The configured rise is 2.4 m over 30 seconds, leaving higher land visible at high tide.
-- Nineteen Mangrovetree GLB-derived mangroves, 7-15 m tall, placed in a dense irregular layout. Their trunks, roots and branches have collision meshes for physics and LiDAR; foliage is represented by the visual GLB.
-- Eighteen Rock.glb instances placed as scattered obstacles. The rock visuals are enlarged and each has a larger primitive collision shape for stable physics and LiDAR detection.
-- The former red reference box has been removed.
+- A 120 m corridor spanning x = -12–108 m, with a 96 m tidal valley from x = 4–100 m (80%) and only 24 m of combined dry banks (20%). Mirrored 15° bank sections lead into long 2.7° lower slopes and a narrow z = -3 m centre. HOME remains `(0, 0)` and the delivery marker is `(104, 0)`.
+- A 96 m-long level water sheet spanning x = 4–100 m and the full 60 m map width. It starts at z = -2.80 m as a roughly 12.5 m-wide central channel (about 10% of the corridor area), then rises 2.80 m over 20 simulated seconds and expands to the full 80% tidal footprint only at bank height.
+- Nineteen Mangrovetree GLB-derived mangroves, 7–15 m tall, arranged along the dry and wet margins. Their roots and trunks retain collision geometry for physics and LiDAR.
+- Eighteen Rock.glb instances arranged in irregular bank and channel-edge clusters, with primitive collision shapes and a broad navigable route around y = 0.
+- A visual-only green delivery pad on the far high ground.
 
-Water remains visual-only, so it can overlap the tree and rock collision objects without colliding with them. Do not remove collision elements from tree or rock models: Gazebo ray sensors detect collision shapes, not visual meshes.
+The water sheet itself is visual-only so it can pass through trees and rocks. Physical water support and drag come from the matching `hover::TerrainZones` surface used by `hover::AirCushion`; this is what keeps the hovercraft above the rising water. Do not remove collision elements from tree or rock models: Gazebo ray sensors detect collision shapes, not visual meshes.
 
 ### Run the current map
 

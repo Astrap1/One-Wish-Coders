@@ -25,7 +25,7 @@ See [`docs/VEHICLE_SIMULATION.md`](../../../docs/VEHICLE_SIMULATION.md).
 
 - `worlds/` — firm shore, mudflat, shallow-water and mangrove corridor scenes. The world's `<world name>` must equal its file name.
 - `models/` — roots, debris, delivery zone and other reusable world assets.
-- Mud and water zones: add a `hover::TerrainZones` plugin to the world (see `worlds/vehicle_tests/transition_test.sdf`) so the vehicle's cushion and mud physics know where they are. Use Gazebo's `Buoyancy` system for water.
+- Mud and water zones: add a `hover::TerrainZones` plugin to the world (see `worlds/vehicle_tests/transition_test.sdf`) so the vehicle's cushion and mud physics know where they are. The live corridor uses this surface for air-cushion support and water drag rather than a world-wide buoyancy plane.
 
 `worlds/tidal_corridor.sdf` is the complete demo world: it includes the
 hovercraft, DART/Bullet physics, sensors and terrain-zone plugin. Its
@@ -35,8 +35,12 @@ The tide manager, not the vehicle placeholder, provides `/terrain_state` and
 surface: while in HOVER mode, the vehicle holds its configured skirt gap over
 the rising water rather than passively floating like a boat.
 
-For the live corridor, `models/terrain_demo/` retains the authored terrain mesh
-as a visual and uses an inclined box as the physics collision surface. The
-terrain zones and cost map—not that collision surface—represent firm shore, mud
-and shallow-water traversal behaviour. This is a deliberate performance
-abstraction for repeatable DART/Bullet demonstrations.
+For the live corridor, `models/terrain_demo/` uses primitive visual and collision
+surfaces to form a 120 m corridor with 96 m of tidal valley (80%) and 24 m
+of combined dry banks (20%). Mirrored 15° bank sections lead into long gentle lower slopes and a narrow
+z = -3 m centre. HOME is `(0, 0)` and the delivery marker is `(104, 0)`. The matching
+visible and physical water surfaces start at z = -2.80 m as a roughly 12.5 m
+central channel and rise 2.80 m over 20 simulated seconds, expanding to the full 80% tidal
+footprint only at high tide. This is
+a deliberate performance abstraction for repeatable DART/Bullet demonstrations,
+not a validated hydrodynamic model.

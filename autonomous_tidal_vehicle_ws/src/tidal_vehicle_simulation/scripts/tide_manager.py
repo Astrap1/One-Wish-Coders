@@ -14,29 +14,29 @@ from tidal_vehicle_interfaces.msg import TerrainState
 class TideManager(Node):
     def __init__(self) -> None:
         super().__init__("tide_manager")
-        self.declare_parameter("scenario_duration_s", 120.0)
-        self.declare_parameter("initial_water_level_m", 0.02)
-        self.declare_parameter("water_rise_m", 0.55)
-        self.declare_parameter("risk_rate_per_minute", 0.05)
+        self.declare_parameter("scenario_duration_s", 20.0)
+        self.declare_parameter("initial_water_level_m", -2.80)
+        self.declare_parameter("water_rise_m", 2.80)
+        self.declare_parameter("risk_rate_per_minute", 1.50)
         self.declare_parameter("corridor_unsafe_risk_threshold", 0.85)
         self.declare_parameter("publish_period_s", 0.5)
         self.declare_parameter("frame_id", "map")
         self.declare_parameter("map_resolution_m", 1.0)
-        self.declare_parameter("map_width_cells", 80)
+        self.declare_parameter("map_width_cells", 120)
         self.declare_parameter("map_height_cells", 60)
-        self.declare_parameter("map_origin_x_m", -40.0)
+        self.declare_parameter("map_origin_x_m", -12.0)
         self.declare_parameter("map_origin_y_m", -30.0)
         self.declare_parameter("firm_cost", 10)
         self.declare_parameter("mud_cost", 45)
         self.declare_parameter("water_cost", 55)
         self.declare_parameter("channel_min_x_m", 4.0)
-        self.declare_parameter("channel_max_x_m", 18.0)
-        self.declare_parameter("channel_min_y_m", -8.0)
-        self.declare_parameter("channel_max_y_m", 8.0)
-        self.declare_parameter("mud_min_x_m", 18.0)
-        self.declare_parameter("mud_max_x_m", 32.0)
-        self.declare_parameter("mud_min_y_m", -8.0)
-        self.declare_parameter("mud_max_y_m", 8.0)
+        self.declare_parameter("channel_max_x_m", 100.0)
+        self.declare_parameter("channel_min_y_m", -30.0)
+        self.declare_parameter("channel_max_y_m", 30.0)
+        self.declare_parameter("mud_min_x_m", 4.0)
+        self.declare_parameter("mud_max_x_m", 100.0)
+        self.declare_parameter("mud_min_y_m", -30.0)
+        self.declare_parameter("mud_max_y_m", 30.0)
 
         self.duration = float(self.get_parameter("scenario_duration_s").value)
         self.initial_level = float(self.get_parameter("initial_water_level_m").value)
@@ -142,17 +142,33 @@ class TideManager(Node):
             for col in range(self.width):
                 x = self.origin_x + (col + 0.5) * self.resolution
                 value = self.firm_cost
-                # These rectangles deliberately mirror TerrainZones in
-                # tidal_corridor.sdf. Obstacles remain a LiDAR planning overlay.
+                # The water rectangle mirrors TerrainZones; terrain height clips it
+                # into a river that expands outward as the level rises.
+                # Obstacles remain a LiDAR planning overlay.
                 if self._contains(self.mudflat, x, y):
                     value = min(89, self.mud_cost + int(20 * fraction))
-                if self._contains(self.channel, x, y):
+                if (self._contains(self.channel, x, y)
+                        and self.last_level >= self._terrain_height(x)):
                     value = min(89, self.water_cost + int(35 * fraction))
                     if risk >= self.unsafe_threshold:
                         value = 100
                 values.append(value)
         grid.data = values
         return grid
+
+    def _terrain_height(self, x: float) -> float:
+        """Surface height of the piecewise-linear tidal valley."""
+        if x <= 4.0 or x >= 100.0:
+            return 0.0
+        if x < 7.7320508:
+            return -(x - 4.0) * 0.2679491924
+        if x < 50.0:
+            return -1.0 - (x - 7.7320508) * (2.0 / 42.2679492)
+        if x <= 54.0:
+            return -3.0
+        if x < 96.2679492:
+            return -3.0 + (x - 54.0) * (2.0 / 42.2679492)
+        return -1.0 + (x - 96.2679492) * 0.2679491924
 
     def _rectangle(self, prefix: str) -> tuple[float, float, float, float]:
         return tuple(
@@ -175,7 +191,8 @@ def main() -> None:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

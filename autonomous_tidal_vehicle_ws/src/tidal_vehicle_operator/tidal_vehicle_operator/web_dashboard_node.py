@@ -14,7 +14,8 @@ from sensor_msgs.msg import Image, LaserScan
 from PIL import Image as PILImage
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.qos import (DurabilityPolicy, QoSProfile, ReliabilityPolicy,
+                       qos_profile_sensor_data)
 from std_msgs.msg import Bool, String
 
 from tidal_vehicle_interfaces.msg import SafetyStatus, TerrainState, VehicleHealth
@@ -70,7 +71,7 @@ class BrowserDashboardNode(Node):
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
         self.create_subscription(Path, "/planned_path", self._on_planned_path, 10)
         self.create_subscription(Path, "/return_path", self._on_return_path, 10)
-        self.create_subscription(LaserScan, "/scan", self._on_scan, 10)
+        self.create_subscription(LaserScan, "/scan", self._on_scan, qos_profile_sensor_data)
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd_vel, 10)
         self.create_subscription(Odometry, "/odom", self._on_odom, 10)

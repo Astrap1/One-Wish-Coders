@@ -127,6 +127,71 @@ def inflate_obstacle_cells(
     return frozenset(inflated)
 
 
+def associate_obstacle_hits(
+    observed: Iterable[GridCell],
+    confirmed: Iterable[GridCell],
+    *,
+    resolution_m: float,
+    association_radius_m: float,
+) -> frozenset[GridCell]:
+    """Keep successive views of one static obstacle at one grid location.
+
+    A LiDAR normally hits a different surface cell of a trunk or rock as the
+    vehicle moves around it.  Associating a new surface cell with a nearby
+    confirmed centre prevents that harmless shift from repeatedly changing the
+    inflated overlay and causing A* to choose a fresh detour.
+    """
+    if resolution_m <= 0.0:
+        raise ValueError("resolution_m must be positive")
+    if association_radius_m < 0.0:
+        raise ValueError("association_radius_m must be non-negative")
+
+    confirmed_cells = frozenset(confirmed)
+    if association_radius_m == 0.0 or not confirmed_cells:
+        return frozenset(observed)
+
+    max_distance_cells = association_radius_m / resolution_m
+    associated: set[GridCell] = set()
+    for candidate in observed:
+        match = min(
+            confirmed_cells,
+            key=lambda existing: (
+                hypot(candidate[0] - existing[0], candidate[1] - existing[1]),
+                existing,
+            ),
+        )
+        if (
+            hypot(candidate[0] - match[0], candidate[1] - match[1])
+            <= max_distance_cells
+        ):
+            associated.add(match)
+        else:
+            associated.add(candidate)
+    return frozenset(associated)
+
+
+def path_cells_ahead(
+    path: Iterable[GridCell], current_cell: GridCell
+) -> tuple[GridCell, ...]:
+    """Return the untravelled suffix of a route nearest to the vehicle.
+
+    An obstacle that appears on the already-traversed prefix cannot endanger
+    the current command.  Ignoring that prefix prevents a disappearing or
+    shifting rearward return from needlessly resetting the forward route.
+    """
+    cells = tuple(path)
+    if not cells:
+        return ()
+    start_index = min(
+        range(len(cells)),
+        key=lambda index: (
+            hypot(cells[index][0] - current_cell[0], cells[index][1] - current_cell[1]),
+            -index,
+        ),
+    )
+    return cells[start_index:]
+
+
 def obstacle_change_requires_replan(
     previous: Iterable[GridCell],
     current: Iterable[GridCell],

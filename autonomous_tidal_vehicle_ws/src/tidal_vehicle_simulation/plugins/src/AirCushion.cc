@@ -89,7 +89,9 @@
 //               hover_state (gz.msgs.StringMsg: OFF | SPIN_UP | FAN_ON_NO_SUPPORT |
 //               HOVER | LOAD_SHARE | SPIN_DOWN), terrain (gz.msgs.StringMsg),
 //               rudder_left_cmd, rudder_right_cmd (gz.msgs.Double, rad; only
-//               with rudder_control, read by the rudder JointPositionControllers)
+//               with rudder_control, read by the rudder JointPositionControllers),
+//               puff_{bow,stern}_{left,right}_cmd (gz.msgs.Double, m of shutter
+//               opening; only with puff_shutter_travel > 0, purely visual)
 
 #include <gz/msgs/boolean.pb.h>
 #include <gz/msgs/double.pb.h>
@@ -200,6 +202,7 @@ class AirCushion : public System,
                         math::Vector3d(0.8, 0.68, 0.0)).first;
     this->puffTau   = get("puff_port_time_constant", 0.15);
     this->puffLatGain = get("puff_lateral_gain", 0.0);
+    this->shutterTravel = get("puff_shutter_travel", 0.0);
     this->hdgKp     = get("heading_kp", 40.0);
     this->hdgKd     = get("heading_kd", 25.0);
     this->spdKp     = get("speed_kp", 40.0);
@@ -255,6 +258,13 @@ class AirCushion : public System,
     {
       this->pubRudder[0] = this->node.Advertise<msgs::Double>(ns + "rudder_left_cmd");
       this->pubRudder[1] = this->node.Advertise<msgs::Double>(ns + "rudder_right_cmd");
+    }
+    if (this->shutterTravel > 0.0)
+    {
+      const char *names[4] = {"puff_bow_left_cmd", "puff_bow_right_cmd",
+                              "puff_stern_left_cmd", "puff_stern_right_cmd"};
+      for (int i = 0; i < 4; ++i)
+        this->pubShutter[i] = this->node.Advertise<msgs::Double>(ns + names[i]);
     }
     this->pubGap = this->node.Advertise<msgs::Double>(ns + "cushion_gap");
     this->pubCorners = this->node.Advertise<msgs::Double_V>(ns + "corner_gaps");
@@ -441,14 +451,33 @@ class AirCushion : public System,
     for (int j = 0; j < 2; ++j)
       this->puffF[j] += (puffTarget[j] - this->puffF[j]) * ap;
 
-    // Rudder angle commands (50 Hz is plenty for the joint controllers)
-    if (this->rudderControl && t - this->lastRudderPub >= 0.02 - 1e-9)
+    // Rudder angles and puff-port shutters (50 Hz is plenty for the joint
+    // controllers). A +Y force comes from the right-hand vent, so each end
+    // opens the shutter on the side opposite the push, in proportion to the
+    // vent force.
+    if (t - this->lastRudderPub >= 0.02 - 1e-9)
     {
       this->lastRudderPub = t;
       this->rudderCmd = rudderTarget;
-      msgs::Double rm; rm.set_data(rudderTarget);
-      this->pubRudder[0].Publish(rm);
-      this->pubRudder[1].Publish(rm);
+      if (this->rudderControl)
+      {
+        msgs::Double rm; rm.set_data(rudderTarget);
+        this->pubRudder[0].Publish(rm);
+        this->pubRudder[1].Publish(rm);
+      }
+      if (this->shutterTravel > 0.0 && this->puffForce > 0.0)
+      {
+        for (int j = 0; j < 2; ++j)                  // 0 = bow, 1 = stern
+        {
+          double open = std::min(1.0, std::abs(this->puffF[j]) / this->puffForce);
+          if (open < 0.05) open = 0.0;               // don't twitch on tiny forces
+          msgs::Double left, right;
+          left.set_data(this->puffF[j] < 0 ? open * this->shutterTravel : 0.0);
+          right.set_data(this->puffF[j] > 0 ? open * this->shutterTravel : 0.0);
+          this->pubShutter[2 * j].Publish(left);
+          this->pubShutter[2 * j + 1].Publish(right);
+        }
+      }
     }
 
     // --- Gaps under each corner --------------------------------------------
@@ -714,6 +743,8 @@ class AirCushion : public System,
   private: math::Vector3d puffPt{0.8, 0.68, 0.0};
   private: std::array<double, 2> puffF{{0, 0}};      // bow, stern side force (N, +Y)
   private: std::array<transport::Node::Publisher, 2> pubRudder;
+  private: double shutterTravel{0};
+  private: std::array<transport::Node::Publisher, 4> pubShutter;   // bow L/R, stern L/R
   private: double weight{0}, f0{0}, ramp{0};
   private: std::array<double, 2> thrust{{0, 0}};
   private: std::array<double, 4> prevGap{{1, 1, 1, 1}};

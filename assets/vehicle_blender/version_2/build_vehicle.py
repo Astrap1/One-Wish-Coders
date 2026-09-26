@@ -114,6 +114,14 @@ PUFF_X = 0.74                  # +/- vent centre, x (on the straight topsides)
 PUFF_Z = 0.51                  # vent centre height, between chine and rub rail
 PUFF_W, PUFF_H = 0.24, 0.12    # outlet opening (m)
 PUFF_CD = 0.8                  # discharge coefficient of the louvred outlet
+# Each vent has a sliding shutter on the hull side: closed it covers the
+# outlet; open it slides along the hull (bow shutters aft, stern shutters
+# forward) and uncovers the louvres. It stays inside the footprint, so it
+# never widens the vehicle or shows up in the LiDAR as an obstacle.
+PUFF_SHUTTER_Y = 0.700         # shutter plate centre, outside the louvres
+PUFF_SHUTTER_TRAVEL = 0.26     # fully open
+PUFF_SIDES = {"bow_left": (1, 1), "bow_right": (1, -1),
+              "stern_left": (-1, 1), "stern_right": (-1, -1)}
 
 # Payload box (sealed, orange): rated 30 kg
 PAY_X = -0.42                  # box centre, x
@@ -129,7 +137,9 @@ RANGER_Z = HULL_BOTTOM_Z
 
 # Masses (kg) — sum = 300 kg incl. the 30 kg rated payload
 MASS = {
-    "hull": 147.8, "skirt": 18.0, "lift_fan": 12.0,
+    "hull": 145.8, "skirt": 18.0, "lift_fan": 12.0,
+    "puff_bow_left": 0.5, "puff_bow_right": 0.5,
+    "puff_stern_left": 0.5, "puff_stern_right": 0.5,
     "thrust_fan_left": 10.0, "thrust_fan_right": 10.0,
     "rudder_left": 1.5, "rudder_right": 1.5,
     "track_left": 34.0, "track_right": 34.0,
@@ -580,10 +590,15 @@ def build_hull():
             L.add(bm_box(0.42, 0.016, 0.008, bevel=0.002), "gunmetal",
                   T(-0.10, y + sy * 0.004, 0.468 + 0.019 * k))
         # registration / warning placard
-        L.add(bm_box(0.16, 0.006, 0.06), "label", T(0.40, sy * 0.681, 0.51))
+        L.add(bm_box(0.16, 0.006, 0.06), "label", T(0.25, sy * 0.681, 0.51))
         # puff ports (bow and stern): framed outlet, dark duct mouth and
-        # angled shutter vanes that open to one side or close the vent
+        # angled guide vanes; the sliding shutter is its own link
         for px in (PUFF_X, -PUFF_X):
+            # shutter guide rails above and below, over the closed + open range
+            xc = px - math.copysign(PUFF_SHUTTER_TRAVEL / 2, px)
+            for dz in (1, -1):
+                L.add(bm_box(PUFF_W + 0.02 + PUFF_SHUTTER_TRAVEL, 0.020, 0.010, bevel=0.002),
+                      "gunmetal", T(xc, sy * 0.688, PUFF_Z + dz * (PUFF_H / 2 + 0.012)))
             L.add(bm_box(PUFF_W + 0.03, 0.014, PUFF_H + 0.03, bevel=0.005), "gunmetal",
                   T(px, sy * 0.679, PUFF_Z), tag="puff_ports")
             L.add(bm_box(PUFF_W, 0.012, PUFF_H), "blade", T(px, sy * 0.682, PUFF_Z))
@@ -851,6 +866,22 @@ def build_rudder(side):
     return L
 
 
+def build_puff_shutter(name):
+    """Sliding shutter over one puff port. Origin = shutter centre, closed."""
+    sx, sy = PUFF_SIDES[name]
+    x, y = sx * PUFF_X, sy * PUFF_SHUTTER_Y
+    L = Link(f"puff_{name}", (x, y, PUFF_Z))
+    L.add(bm_box(PUFF_W + 0.02, 0.006, PUFF_H + 0.02, bevel=0.003), "olive",
+          T(x, y, PUFF_Z), tag="shutter")
+    # grip on the trailing edge and a warning stripe on the leading edge
+    lead = -sx                          # the edge that moves first when opening
+    L.add(bm_box(0.012, 0.012, PUFF_H - 0.03, bevel=0.003), "gunmetal",
+          T(x - lead * (PUFF_W / 2 - 0.01), y + sy * 0.006, PUFF_Z))
+    L.add(bm_box(0.03, 0.002, PUFF_H + 0.02), "orange",
+          T(x + lead * (PUFF_W / 2 - 0.005), y + sy * 0.0035, PUFF_Z))
+    return L
+
+
 def build_payload():
     L = Link("payload_box", (PAY_X, 0, PAY_BASE_Z))
     body_h, gasket_h = 0.27, 0.01
@@ -929,6 +960,12 @@ def joint_table():
                               {"control": "position",
                                "note": f"0 = deployed (TRACK mode); {TRACK_STROKE} = "
                                        "retracted into the hull (HOVER mode)"})
+    for name, (sx, _sy) in PUFF_SIDES.items():
+        # Slides towards the hull centre: bow shutters aft, stern shutters forward
+        J[f"puff_{name}"] = ("hull", "prismatic", (-sx, 0, 0),
+                             (-TRACK_LIMIT_MARGIN, PUFF_SHUTTER_TRAVEL + TRACK_LIMIT_MARGIN),
+                             {"control": "position",
+                              "note": f"0 = closed; {PUFF_SHUTTER_TRAVEL} = vent fully open"})
     J["payload_box"] = ("hull", "fixed", None, None)
     J["lidar"] = ("hull", "fixed", None, None)
     J["camera"] = ("hull", "fixed", None, None)
@@ -958,6 +995,9 @@ def collision_table():
         "camera": {"type": "box", "size": [0.075, 0.11, 0.075],
                    "pose": [-0.055, 0, 0, 0, 0, 0]},
     }
+    for name in PUFF_SIDES:
+        C[f"puff_{name}"] = {"type": "box", "size": [PUFF_W + 0.02, 0.006, PUFF_H + 0.02],
+                             "pose": [0, 0, 0, 0, 0, 0]}
     for side in ("left", "right"):
         C[f"thrust_fan_{side}"] = {"type": "cylinder", "radius": THRUST_ROTOR_R,
                                    "length": 0.04, "pose": [0, 0, 0, 0, h, 0]}
@@ -1006,6 +1046,7 @@ def build_all():
                 lambda: build_thrust_fan("left"), lambda: build_thrust_fan("right"),
                 lambda: build_rudder("left"), lambda: build_rudder("right"),
                 lambda: build_track("left"), lambda: build_track("right"),
+                *[lambda n=n: build_puff_shutter(n) for n in PUFF_SIDES],
                 build_payload, build_lidar, build_camera]
 
     links, tags = {}, {}
@@ -1062,6 +1103,13 @@ def animate_mode_switch(links, root):
         tf = links[f"thrust_fan_{side}"]
         key(tf, "rotation_euler", 90, 0.0, 0)
         key(tf, "rotation_euler", 140, 25 * TAU, 0)
+    # 100-110: a turn to the left opens the bow-right and stern-left vents
+    for name in ("bow_right", "stern_left"):
+        sh = links[f"puff_{name}"]
+        x0 = sh.location.x
+        key(sh, "location", 100, x0, 0)
+        key(sh, "location", 110, x0 - PUFF_SIDES[name][0] * PUFF_SHUTTER_TRAVEL, 0)
+        sh.location.x = x0
     for ob in list(links.values()) + [root]:
         ad = ob.animation_data
         if ad and ad.action:
@@ -1283,7 +1331,8 @@ def export_all(links, tags, repo):
                        "z": PUFF_Z, "width": PUFF_W, "height": PUFF_H,
                        "discharge_coefficient": PUFF_CD,
                        "cushion_pressure_pa": round(cushion_pressure(), 1),
-                       "force_n": round(puff_port_force(), 1)},
+                       "force_n": round(puff_port_force(), 1),
+                       "shutter_travel": PUFF_SHUTTER_TRAVEL},
         "links": {}, "sensors": sensor_table(),
     }
     for name, ob in links.items():
@@ -1324,6 +1373,8 @@ def add_preview_cameras():
         "rear_34": eu.add_camera("cam_rear_34", (-4.2, 3.2, 2.0), (-0.1, 0.0, 0.6), lens=50),
         "tracks_cutaway": eu.add_camera("cam_cutaway", (3.0, -2.6, 0.75), (0.0, 0.0, 0.25),
                                         lens=35),
+        "puff_port": eu.add_camera("cam_puff_port", (2.2, -2.4, 0.95), (0.55, -0.70, 0.52),
+                                   lens=40),
     }
     cams["top"].rotation_euler = (0, 0, 0)       # +X right, +Y up in image
     bpy.context.scene.camera = cams["front_34"]
@@ -1342,6 +1393,8 @@ def render_previews(cams, renders_dir, links):
     eu.render_to(cams["tracks_cutaway"], renders_dir / "hover_cutaway.png")
     links["skirt"].hide_render = False
     eu.render_to(cams["front_34"], renders_dir / "hover_mode.png")
+    bpy.context.scene.frame_set(125)             # bow-right puff port open (turning left)
+    eu.render_to(cams["puff_port"], renders_dir / "puff_port_open.png")
     bpy.context.scene.frame_set(1)
     bpy.context.scene.camera = cams["front_34"]
 

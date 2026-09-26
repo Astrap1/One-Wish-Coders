@@ -24,7 +24,7 @@ These are the initial contracts between workstreams. Topic names and message typ
 | `/camera/image_raw`, `/camera/camera_info` | Simulation | Operator | `sensor_msgs/Image`, `CameraInfo` | Front camera, frame `camera_link`, 640×480 at 15 Hz. |
 | `/gps/fix` | Simulation | Operator | `sensor_msgs/NavSatFix` | Simulated GNSS (world origin at Sungei Buloh, 1.4466 N 103.7300 E), 10 Hz. |
 | `/tf`, `/tf_static` | Simulation, `robot_state_publisher` | All | `tf2_msgs/TFMessage` | `map → base_link` from odometry; `base_link →` every vehicle part and sensor from the URDF and `/joint_states`. |
-| `/joint_states` | Simulation | `robot_state_publisher`, `vehicle_mobility_node` | `sensor_msgs/JointState` | Version 2: track retract joints, fans, rudders (the mobility node reads the track positions). Version 1: legs, suspension, wheels, fans, rudders. |
+| `/joint_states` | Simulation | `robot_state_publisher`, `vehicle_mobility_node` | `sensor_msgs/JointState` | Version 2: track retract joints, fans, rudders, puff-port shutters (the mobility node reads the track positions). Version 1: legs, suspension, wheels, fans, rudders. |
 | `/robot_description` | `robot_state_publisher` | Operator (RViz / Foxglove) | `std_msgs/String` | Vehicle URDF (meshes as `package://tidal_vehicle_description/...`). |
 | `/vehicle/mode` | Simulation (`vehicle_mobility_node`) | Operator, Evaluation | `std_msgs/String` | Public mobility mode: `TRACK`, `TRANSITION` or `HOVER`. |
 | `/clock` | Simulation | All | `rosgraph_msgs/Clock` | Simulation time; every node runs with `use_sim_time: true`. |

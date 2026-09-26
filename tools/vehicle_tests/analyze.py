@@ -354,6 +354,8 @@ def v2_turn():
           abs(pb - 0.8) < 0.15 and pb > pa)
     puff = np.max(np.abs(d["puff_bow"][_win(d, 64, 74)]))
     check(t, "Puff ports open in the pivot", f"{puff:.1f} N", "> 10 N", puff > 10)
+    sh = np.max(d["puff_bow_right_joint"][_win(d, 64, 74)])
+    check(t, "Bow-right shutter slides open (left pivot)", f"{sh:.3f} m", "> 0.05 m", sh > 0.05)
     drift = math.hypot(at(d, 74, "x") - at(d, 64, "x"), at(d, 74, "y") - at(d, 64, "y"))
     check(t, "Pivot with puff ports stays in place", f"{drift:.3f} m", "< 0.3 m", drift < 0.3)
     g = d["gap_mean"][_win(d, 8, 96)]

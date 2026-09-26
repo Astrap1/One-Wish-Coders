@@ -34,7 +34,8 @@
     "height": 0.12,
     "discharge_coefficient": 0.8,
     "cushion_pressure_pa": 813.1,
-    "force_n": 37.5
+    "force_n": 37.5,
+    "shutter_travel": 0.26
   },
   "links": {
     "hull": {
@@ -43,7 +44,7 @@
         0.0,
         0.5
       ],
-      "mass_kg": 147.8,
+      "mass_kg": 145.8,
       "mesh": {
         "dae": "meshes/hull.dae",
         "glb": "meshes/hull.glb"
@@ -571,6 +572,242 @@
         "upper": 0.27,
         "control": "position",
         "note": "0 = deployed (TRACK mode); 0.25 = retracted into the hull (HOVER mode)"
+      }
+    },
+    "puff_bow_left": {
+      "origin_xyz": [
+        0.74,
+        0.7,
+        0.51
+      ],
+      "mass_kg": 0.5,
+      "mesh": {
+        "dae": "meshes/puff_bow_left.dae",
+        "glb": "meshes/puff_bow_left.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.26,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.13,
+          -0.003,
+          -0.07
+        ],
+        "max": [
+          0.13,
+          0.012,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.74,
+        0.7,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_bow_left_joint",
+        "type": "prismatic",
+        "axis": [
+          -1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.28,
+        "control": "position",
+        "note": "0 = closed; 0.26 = vent fully open"
+      }
+    },
+    "puff_bow_right": {
+      "origin_xyz": [
+        0.74,
+        -0.7,
+        0.51
+      ],
+      "mass_kg": 0.5,
+      "mesh": {
+        "dae": "meshes/puff_bow_right.dae",
+        "glb": "meshes/puff_bow_right.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.26,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.13,
+          -0.012,
+          -0.07
+        ],
+        "max": [
+          0.13,
+          0.003,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        0.74,
+        -0.7,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_bow_right_joint",
+        "type": "prismatic",
+        "axis": [
+          -1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.28,
+        "control": "position",
+        "note": "0 = closed; 0.26 = vent fully open"
+      }
+    },
+    "puff_stern_left": {
+      "origin_xyz": [
+        -0.74,
+        0.7,
+        0.51
+      ],
+      "mass_kg": 0.5,
+      "mesh": {
+        "dae": "meshes/puff_stern_left.dae",
+        "glb": "meshes/puff_stern_left.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.26,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.13,
+          -0.003,
+          -0.07
+        ],
+        "max": [
+          0.13,
+          0.012,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -0.74,
+        0.7,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_stern_left_joint",
+        "type": "prismatic",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.28,
+        "control": "position",
+        "note": "0 = closed; 0.26 = vent fully open"
+      }
+    },
+    "puff_stern_right": {
+      "origin_xyz": [
+        -0.74,
+        -0.7,
+        0.51
+      ],
+      "mass_kg": 0.5,
+      "mesh": {
+        "dae": "meshes/puff_stern_right.dae",
+        "glb": "meshes/puff_stern_right.glb"
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          0.26,
+          0.006,
+          0.13999999999999999
+        ],
+        "pose": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "bbox_local": {
+        "min": [
+          -0.13,
+          -0.012,
+          -0.07
+        ],
+        "max": [
+          0.13,
+          0.003,
+          0.07
+        ]
+      },
+      "parent": "hull",
+      "origin_in_parent": [
+        -0.74,
+        -0.7,
+        0.01
+      ],
+      "joint": {
+        "name": "puff_stern_right_joint",
+        "type": "prismatic",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "lower": -0.02,
+        "upper": 0.28,
+        "control": "position",
+        "note": "0 = closed; 0.26 = vent fully open"
       }
     },
     "payload_box": {

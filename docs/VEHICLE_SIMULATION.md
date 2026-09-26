@@ -15,7 +15,7 @@ ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v1            # Version
 - Bag skirt with segmented fingers.
 - Lift fan offset forward, so the 16-channel LiDAR sits on a centre mast directly above `base_link` at 1.44 m.
 - Two reversible ducted fans (200 N each, 80% reverse) with rudders in their slipstream (±25° commanded).
-- Four puff ports: louvred side vents (0.24 × 0.12 m) at the bow and stern on both sides, fed with cushion air.
+- Four puff ports: louvred side vents (0.24 × 0.12 m) at the bow and stern on both sides, fed with cushion air. Each vent has a sliding shutter (`puff_<bow|stern>_<left|right>` links). It slides 0.26 m along the hull, bow shutters aft and stern shutters forward, in proportion to the vent force. So Gazebo, RViz and Foxglove show which vents are firing. The shutters are visual only: the thrust is computed in the plugin, and they stay inside the 1.5 m footprint and the LiDAR self-filter box. See `renders/puff_port_open.png`.
 - Two inboard rubber tracks (0.28 m wide, 1.40 m contact, 0.84 m gauge) on prismatic joints. They retract 0.25 m into hull wells in HOVER.
 
 **Rebuild the model:**
@@ -73,7 +73,7 @@ All 19 Version 2 checks pass:
 | Load share | 0.600 at 0.6 commanded, resting on the tracks (gap 2.7–3.0 cm) |
 | Water → mud → bank | hover across; stop; deploy; 40% share; climb a 12° bank on the tracks |
 
-Those 19 results predate the rudder and puff-port control. `v2_turn_test` (10 checks: turning at 1.5 m/s and pivoting in place, fans only against rudders plus puff ports) is new and **has not yet been run in Gazebo**. Rerun all five Version 2 tests before relying on these numbers.
+Those 19 results predate the rudder and puff-port control. `v2_turn_test` (11 checks: turning at 1.5 m/s and pivoting in place, fans only against rudders plus puff ports) is new and **has not yet been run in Gazebo**. Rerun all five Version 2 tests before relying on these numbers.
 
 With the full ROS stack in the integration world, an autonomous goal across the water channel produced `delivery_confirmed` then `mission_complete` in 87 s. Open items in the tidal corridor are listed in `AGENTS.md` (Role 4).
 

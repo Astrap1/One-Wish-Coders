@@ -110,7 +110,10 @@ FRICTION = {  # (mu, mu2)
     "track": (1.0, 1.0), "skirt": (0.2, 0.2), "hull": (0.3, 0.3), "default": (0.5, 0.5)}
 
 NO_COLLISION = {"lift_fan", "thrust_fan_left", "thrust_fan_right",
-                "rudder_left", "rudder_right"}          # cosmetic parts
+                "rudder_left", "rudder_right",          # cosmetic parts
+                "puff_bow_left", "puff_bow_right", "puff_stern_left", "puff_stern_right"}
+PUFF_SHUTTERS = ("puff_bow_left", "puff_bow_right", "puff_stern_left", "puff_stern_right")
+SHUTTER_SPEED = 1.0              # m/s: a puff-port shutter opens fully in about 0.3 s
 
 
 def collision_xml(name, col):
@@ -204,9 +207,11 @@ def joint_xml(name, e):
         else:
             lim = f"<lower>{j['lower']}</lower><upper>{j['upper']}</upper>"
         effort = {"revolute": 80, "prismatic": RETRACT_EFFORT, "continuous": 15}[jt]
-        if name.startswith(("lift_fan", "thrust_fan", "rudder")):
+        if name.startswith(("lift_fan", "thrust_fan", "rudder", "puff_")):
             effort = 20
         damping = 0.01 if jt == "continuous" else (200.0 if jt == "prismatic" else 0.5)
+        if name.startswith("puff_"):
+            damping = 1.0                      # light shutter, not a load-bearing track
         xml += f"""
       <axis>
         <xyz>{fmt(j['axis'])}</xyz>
@@ -272,6 +277,8 @@ def plugins_xml(links, data):
       <puff_port_point>{fmt(puff_pt)}</puff_port_point>
       <puff_port_time_constant>0.15</puff_port_time_constant>
       <puff_lateral_gain>150</puff_lateral_gain>
+      <!-- sliding shutters show which vents are open (puff_<bow|stern>_<left|right>_cmd) -->
+      <puff_shutter_travel>{puff['shutter_travel']}</puff_shutter_travel>
       <heading_kp>600</heading_kp><heading_kd>400</heading_kd>
       <!-- hover-mode velocity control on /model/<name>/cmd_vel_hover (gz.msgs.Twist) -->
       <speed_kp>480</speed_kp><speed_ki>120</speed_ki><yaw_rate_kp>800</yaw_rate_kp>
@@ -279,7 +286,7 @@ def plugins_xml(links, data):
       <use_raycast>true</use_raycast>
       <log_file>/tmp/hover_{{model}}.csv</log_file>
       <log_joint>track_left_joint</log_joint><log_joint>track_right_joint</log_joint>
-      <log_joint>rudder_left_joint</log_joint>
+      <log_joint>rudder_left_joint</log_joint><log_joint>puff_bow_right_joint</log_joint>
     </plugin>
 
     <!-- TRACK mode drive: skid steer on /model/<name>/cmd_vel (gz.msgs.Twist).
@@ -328,6 +335,15 @@ def plugins_xml(links, data):
       <joint_name>{r}_joint</joint_name><sub_topic>{r}_cmd</sub_topic>
       <p_gain>20</p_gain><d_gain>0.5</d_gain>
       <cmd_max>20</cmd_max><cmd_min>-20</cmd_min>
+    </plugin>""")
+    for s in PUFF_SHUTTERS:
+        out.append(f"""
+    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
+      <joint_name>{s}_joint</joint_name><sub_topic>{s}_cmd</sub_topic>
+      <use_velocity_commands>true</use_velocity_commands>
+      <p_gain>10.0</p_gain><i_gain>0</i_gain><d_gain>0</d_gain>
+      <cmd_max>{SHUTTER_SPEED}</cmd_max><cmd_min>-{SHUTTER_SPEED}</cmd_min>
+      <initial_position>0</initial_position>
     </plugin>""")
     out.append(f"""
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher"/>
@@ -476,6 +492,8 @@ def write_urdf(links, ext_pref="auto"):
         if j["type"] in ("revolute", "prismatic"):
             effort = RETRACT_EFFORT if j["type"] == "prismatic" else 100
             vel = RETRACT_SPEED if j["type"] == "prismatic" else 2
+            if name in PUFF_SHUTTERS:
+                effort, vel = 20, SHUTTER_SPEED
             xml += f'<limit lower="{j["lower"]}" upper="{j["upper"]}" effort="{effort:g}" velocity="{vel}"/>'
         out.append(xml + "</joint>")
     out.append("</robot>")

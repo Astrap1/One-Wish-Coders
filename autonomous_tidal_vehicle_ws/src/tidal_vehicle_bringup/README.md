@@ -30,8 +30,9 @@ Open `http://localhost:8000`. The **Remote control** toggle selects supervised
 manual driving. The dashboard publishes only `/operator_cmd_vel`; the safety
 supervisor remains the sole publisher of `/cmd_vel`. Switching back to
 Autonomous control immediately releases manual authority.
-The **Dispatch demo delivery** button publishes the documented `(14 m, 0 m)`
-map-frame mission goal for the tidal-corridor demonstration.
+The **Dispatch demo delivery** button publishes the documented `(104 m, 0 m)`
+map-frame mission goal: from HOME `(0 m, 0 m)` on the western firm bank to the
+delivery pad on the eastern firm bank, across the tidal corridor.
 
 On the NVIDIA WSL2 demo laptop, add `gpu:=nvidia`. This selects the WSLg D3D12
 adapter instead of Mesa's `llvmpipe` software renderer; verify it with

@@ -109,3 +109,7 @@ def test_dashboard_declares_dom_helper_before_remote_handlers() -> None:
     assert page.index("const E=id=>document.getElementById(id)") < page.index(
         "E('remote-toggle').addEventListener"
     )
+
+
+def test_dashboard_dispatch_goal_is_the_far_riverbank() -> None:
+    assert "{kind:'goal',x:104.0,y:0.0}" in web_dashboard.DASHBOARD_PAGE

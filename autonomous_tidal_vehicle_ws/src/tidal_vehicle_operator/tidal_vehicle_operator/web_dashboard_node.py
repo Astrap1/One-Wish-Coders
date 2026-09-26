@@ -9,7 +9,7 @@ import threading
 import time
 
 from geometry_msgs.msg import PoseStamped, Twist
-from nav_msgs.msg import Odometry, Path
+from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from sensor_msgs.msg import Image, LaserScan
 from PIL import Image as PILImage
 import rclpy
@@ -59,6 +59,8 @@ class BrowserDashboardNode(Node):
         self._vehicle_y = 0.0
         self._planned_path: list[dict[str, float]] = []
         self._return_path: list[dict[str, float]] = []
+        self._mission_events: list[dict[str, str]] = []
+        self._cost_map: dict[str, object] = {"width": 0, "height": 0, "resolution": 1.0, "data": []}
         self._remote_enabled = False
         self._remote_action = "stop"
         self._remote_action_at = 0.0
@@ -71,6 +73,7 @@ class BrowserDashboardNode(Node):
         self.create_subscription(TerrainState, "/terrain_state", self._on_terrain_state, 10)
         self.create_subscription(Path, "/planned_path", self._on_planned_path, 10)
         self.create_subscription(Path, "/return_path", self._on_return_path, 10)
+        self.create_subscription(OccupancyGrid, "/terrain_costmap", self._on_costmap, 10)
         self.create_subscription(LaserScan, "/scan", self._on_scan, qos_profile_sensor_data)
         self.create_subscription(PoseStamped, "/mission_goal", self._on_mission_goal, 10)
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd_vel, 10)
@@ -166,6 +169,8 @@ class BrowserDashboardNode(Node):
 
     def _on_mission_event(self, message: String) -> None:
         event = message.data.strip()
+        self._mission_events.append({"time": time.strftime("%H:%M:%S"), "event": event or "(empty event)"})
+        self._mission_events = self._mission_events[-20:]
         if event == "delivery_confirmed":
             self._mission_state = "DELIVERED"
         elif event in {"mission_complete", "mission_reset"}:
@@ -210,6 +215,21 @@ class BrowserDashboardNode(Node):
         self._tide_rate_m_per_minute = float(message.tide_rate_m_per_minute)
         self._seconds_until_corridor_unsafe = float(message.seconds_until_corridor_unsafe)
         self._corridor_traversable = bool(message.corridor_traversable)
+        self._publish_state()
+
+    def _on_costmap(self, message: OccupancyGrid) -> None:
+        width = int(message.info.width)
+        height = int(message.info.height)
+        data = [int(value) for value in message.data]
+        if width * height != len(data) or width <= 0 or height <= 0:
+            self._cost_map = {"width": 0, "height": 0, "resolution": 1.0, "data": []}
+        else:
+            self._cost_map = {
+                "width": width,
+                "height": height,
+                "resolution": float(message.info.resolution),
+                "data": data,
+            }
         self._publish_state()
 
     def _on_planned_path(self, message: Path) -> None:
@@ -288,6 +308,8 @@ class BrowserDashboardNode(Node):
                 "vehicle_y": self._vehicle_y,
                 "planned_path": self._planned_path,
                 "return_path": self._return_path,
+                "mission_events": self._mission_events,
+                "cost_map": self._cost_map,
             },
         )
         payload["remote_enabled"] = self._remote_enabled

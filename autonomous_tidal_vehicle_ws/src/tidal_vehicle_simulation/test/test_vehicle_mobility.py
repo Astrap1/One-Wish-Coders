@@ -156,12 +156,34 @@ def test_tracks_steep_slope_selects_track_with_slope_share() -> None:
 
 def test_v3_tracks_arm_at_eight_degree_forward_climb() -> None:
     """V3 must deploy before its 8 degree hover-climb limit is exceeded."""
-    modes = _tracks(track_deploy_slope_deg=8.0, slope_dwell_s=0.2)
+    modes = _tracks(track_deploy_slope_deg=8.0, slope_dwell_s=0.25)
     _enter_v2_hover(modes)
     for _ in range(3):
         modes.step(0.1, terrain="FIRM", slope_deg=8.0,
                    hover_state="HOVER", gap=0.05, gear_pos=0.25)
     assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+
+
+def test_v3_track_deployment_uses_terrain_under_vehicle_and_latches() -> None:
+    """A firm bank must arm tracks even when the look-ahead map sees mud.
+
+    Once the transition is armed, a slip below 8 degrees must not retract the
+    tracks mid-deployment.  The transition state owns completion or reports a
+    deployment fault.
+    """
+    modes = _tracks(track_deploy_slope_deg=8.0, slope_dwell_s=0.25)
+    _enter_v2_hover(modes)
+    for _ in range(3):
+        modes.step(0.1, terrain="MUD", terrain_here="FIRM", slope_deg=8.5,
+                   hover_state="HOVER", gap=0.05, gear_pos=0.25)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+
+    # The craft slips below the trigger while the joints are lowering.  TRACK
+    # remains latched until the deployment/settle sequence completes.
+    modes.step(0.1, terrain="MUD", terrain_here="FIRM", slope_deg=2.5,
+               hover_state="HOVER", gap=0.05, gear_pos=0.0)
+    assert modes.mode == "TRANSITION" and modes.transition_target == "TRACK"
+    assert modes.lift_share == 0.6
 
 
 def test_low_or_non_firm_slope_does_not_leave_hover() -> None:

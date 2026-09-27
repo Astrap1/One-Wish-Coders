@@ -28,11 +28,13 @@ vehicle_mobility:
     gear_joints: [track_left_joint, track_right_joint]
     track_share_slope: 0.6         # cushion load share while climbing on tracks
     # V3 is hover-capable through 8 degrees and track-capable through 20 degrees.
-    # Deploy before the hover margin is exhausted; the 1.5 s dwell rejects bumps.
+    # Deploy before the hover margin is exhausted. A 0.25 s dwell rejects one
+    # controller-tick noise but starts deployment before a slipping craft loses
+    # its usable pitch signal.
     track_deploy_slope_deg: 8.0
     settle_gap_m: 0.03             # skirt gap when the vehicle rests on its tracks
     settle_gap_tolerance_m: 0.008
-    slope_dwell_s: 1.5             # climb must persist this long (edges and bumps are brief)
+    slope_dwell_s: 0.25            # anticipatory firm-bank climb confirmation
     track_exit_slope_deg: 4.0      # leave TRACK once the climb is below this (below the 8 deg deploy) ...
     track_exit_dwell_s: 0.5        # ... for this long (a bump on the bank does not retract)
     # Smoother driving: speeding up and turning are ramped (slowing is never

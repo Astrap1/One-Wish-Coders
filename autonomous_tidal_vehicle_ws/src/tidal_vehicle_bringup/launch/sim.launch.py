@@ -93,7 +93,45 @@ VEHICLES = {
                       "return_linear_speed_limit_mps": 8.3},
            "collision_monitor": True},
 }
-SPAWN_Z = {"tidal_corridor": 0.25}     # 0.25 m above the HOME plateau at z = 0 m
+# World-specific limits make the mobility demonstration legible and safe to
+# repeat. They are not used by the tidal-corridor mission.
+WORLD_OVERRIDES = {
+    "track_deployment_demo": {
+        "mobility": {
+            "terrain_source": "truth",
+            "max_speed_mps": 1.0,
+            "track_max_speed_mps": 1.0,
+            "zone_speed_limits_mps": [1.0],
+        },
+        "costmap": {
+            "origin_x_m": -10.0,
+            "origin_y_m": -7.5,
+            "width_cells": 84,
+            "height_cells": 30,
+            # Keep the compact demonstration entirely firm. The terrain-truth
+            # classifier confirms the physical bank beneath the vehicle.
+            "water_start_x_m": 100.0,
+            "water_end_x_m": 101.0,
+            "mud_end_x_m": 102.0,
+        },
+        "follower": {
+            "max_linear_speed": 0.8,
+            "max_angular_speed": 0.35,
+            "lookahead_distance": 1.5,
+            "zone_speed_limits_mps": [1.0],
+        },
+        "safety": {
+            "cruise_linear_speed_limit_mps": 1.0,
+            "caution_linear_speed_limit_mps": 0.6,
+            "return_linear_speed_limit_mps": 0.8,
+            "zone_speed_limits_mps": [1.0],
+        },
+    },
+}
+SPAWN_Z = {
+    "tidal_corridor": 0.25,
+    "track_deployment_demo": 0.25,
+}     # metres above the start platform
 
 
 def _setup(context):
@@ -114,6 +152,7 @@ def _setup(context):
 
     world_file = sim_share / "worlds" / f"{world}.sdf"
     world_name = Path(world).name                        # <world name="..."> == file stem
+    world_overrides = WORLD_OVERRIDES.get(world_name, {})
     bridge_cfg = Path("/tmp") / f"tidal_bridge_{world_name}_{vehicle}.yaml"
     bridge_cfg.write_text((bringup / "config" / veh["bridge"]).read_text()
                           .replace("WORLD", world_name))
@@ -137,6 +176,10 @@ def _setup(context):
                        else "scenario_defaults.yaml")
     scenario_params = str(sim_share / "config" / scenario_config)
     tide = LaunchConfiguration("tide").perform(context).lower() in ("true", "1", "yes")
+    # The track demonstration has no water or tide. Force the static cost map
+    # even if a caller omits tide:=false.
+    if world_name == "track_deployment_demo":
+        tide = False
     # Spawn the vehicle at HOME (0, 0) unless the world file already includes it.
     spawn = f"<uri>model://{veh['model']}</uri>" not in world_file.read_text()
 
@@ -182,7 +225,7 @@ def _setup(context):
              output="screen", parameters=[params]),
         Node(package="tidal_vehicle_simulation", executable="vehicle_mobility_node.py",
              name="vehicle_mobility", output="screen",
-             parameters=[params, mode_policy,
+             parameters=[params, world_overrides.get("mobility", {}), mode_policy,
                          # Tide manager is the only terrain-state publisher in the
                          # tidal corridor. Keep the placeholder for test worlds.
                          {"publish_terrain_state": not tide}]),
@@ -190,16 +233,19 @@ def _setup(context):
               name="tide_manager", output="screen", parameters=[scenario_params])
          if tide else
          Node(package="tidal_vehicle_simulation", executable="terrain_costmap_node.py",
-              name="terrain_costmap", output="screen", parameters=[params])),
+              name="terrain_costmap", output="screen",
+              parameters=[params, world_overrides.get("costmap", {})])),
         Node(package="tidal_vehicle_autonomy", executable="global_planner",
              name="global_planner", output="screen",
              parameters=[{"use_sim_time": True,
                           "obstacle_inflation_radius_m":
                               veh["obstacle_inflation_radius_m"],
-                          **veh.get("planner", {})}]),
+                          **veh.get("planner", {}),
+                          **world_overrides.get("planner", {})}]),
         Node(package="tidal_vehicle_autonomy", executable="path_follower",
              name="path_follower", output="screen",
-             parameters=[{"use_sim_time": True, **veh.get("follower", {})}]),
+             parameters=[{"use_sim_time": True, **veh.get("follower", {}),
+                          **world_overrides.get("follower", {})}]),
         Node(package="tidal_vehicle_safety", executable="safety_supervisor",
              name="safety_supervisor", output="screen",
              # Version 2 is hover-first; tracks deploy only for an exceptional
@@ -207,7 +253,8 @@ def _setup(context):
              # conservative hover profile for every ordinary route segment.
              parameters=[safety_params, {"use_sim_time": True,
                                          "track_mode_enabled": False,
-                                         **veh.get("safety", {})}]),
+                                         **veh.get("safety", {}),
+                                         **world_overrides.get("safety", {})}]),
         Node(package="foxglove_bridge", executable="foxglove_bridge", output="screen",
              parameters=[{"port": 8765, "address": "0.0.0.0", "use_sim_time": True}],
              condition=IfCondition(LaunchConfiguration("foxglove"))),

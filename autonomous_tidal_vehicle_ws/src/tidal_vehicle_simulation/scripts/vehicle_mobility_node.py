@@ -201,12 +201,16 @@ class ModeMachine:
         descent_deg: float = 0.0,
         terrain_here: str = "FIRM",
     ) -> tuple[bool, float]:
-        # Tracks are for a deliberate, sustained forward climb on firm land.
-        # They are never selected merely because the vehicle is stopped, is
+        # Tracks are for a deliberate forward climb on firm land. The
+        # look-ahead terrain class is useful for speed planning, but is not a
+        # valid deployment guard: it can already see mud beyond the crest
+        # while the craft is still on a firm bank and needs traction.  Prefer
+        # the classifier directly beneath the vehicle when it is available.
+        # Tracks are never selected merely because the vehicle is stopped, is
         # side-tilted, or is over mud/water.
         climbing = (
             self.policy == "terrain_auto"
-            and terrain == "FIRM"
+            and terrain_here == "FIRM"
             and not over_water
             and climb_slope_deg >= self.track_deploy_slope_deg
         )
@@ -774,7 +778,7 @@ def main() -> None:
             enabled, legs = self.modes.step(
                 self.dt,
                 self.mobility_terrain(),
-                self.hover_state,
+                hover_state=self.hover_state,
                 gap=self.gap,
                 gear_pos=self.gear_pos,
                 slope_deg=self.climb_slope_deg,

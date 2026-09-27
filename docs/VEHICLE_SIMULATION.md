@@ -90,9 +90,22 @@ With the full ROS stack in the integration world, an autonomous goal across the 
 ```bash
 ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v3                     # front camera only
 ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v3 cameras:=all        # + rear, left, right
+ros2 launch tidal_vehicle_bringup sim.launch.py vehicle:=v3 world:=track_deployment_demo tide:=false
 ```
 
 Version 2 scaled up: 3.0 × 1.8 × 1.9 m, 530 kg including a 100 kg payload, series hybrid (a 20 kW diesel generator, 30 L of fuel, a 5 kWh buffer battery), 2 × 0.7 m ducted fans (940 N), rudders and puff ports, retractable tracks (15 km/h), a LiDAR mast raised to 1.82 m, and four cameras. Decisions: `AGENTS.md`, *Vehicle Version 3*. Plan, status and results: [`VEHICLE_V3_PLAN.md`](VEHICLE_V3_PLAN.md). Sizing: `tools/vehicle_sizing/v3_sizing.py`.
+
+### Track-deployment demonstration
+
+`world:=track_deployment_demo` is a small, all-firm scene: an 8 m flat launch
+area, a 15° bank, and a flat upper platform. It is deliberately separate from
+the tidal-corridor mission, so it demonstrates the mobility transition without
+route obstacles or tide changes. V3 starts in HOVER. On the firm bank it sees a
+forward climb of at least 8° for 0.25 s, latches `TRANSITION → TRACK`, lowers
+both tracks, settles to a 60% cushion load share, and then climbs the bank.
+The transition uses terrain truth directly beneath the craft; a forward costmap
+class is not allowed to suppress deployment just because it sees terrain beyond
+the crest. Send a goal to `(24, 0)` after launch.
 
 **Model pipeline:** `assets/vehicle_blender/version_3/build_vehicle.py` → `gen_description_v3.py` → `models/hovercraft_v3/`, `urdf/hovercraft_v3.urdf`.
 

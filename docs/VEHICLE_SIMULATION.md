@@ -107,7 +107,10 @@ The transition uses terrain truth directly beneath the craft; a forward costmap
 class is not allowed to suppress deployment just because it sees terrain beyond
 the crest. Its static costmap is the planner boundary (`x=-10…32 m`,
 `y=-7.5…7.5 m`), rather than V3's larger LiDAR-only corridor grid. Send a goal
-to `(24, 0)` after launch.
+to `(24, 0)` after launch. The world deliberately contains no obstacles, so
+its planner also disables the dynamic LiDAR-obstacle overlay: the exposed ramp
+surface must not be mistaken for a physical obstacle and force a route around
+the platform edge. Corridor launches retain the LiDAR overlay.
 
 **Model pipeline:** `assets/vehicle_blender/version_3/build_vehicle.py` → `gen_description_v3.py` → `models/hovercraft_v3/`, `urdf/hovercraft_v3.urdf`.
 

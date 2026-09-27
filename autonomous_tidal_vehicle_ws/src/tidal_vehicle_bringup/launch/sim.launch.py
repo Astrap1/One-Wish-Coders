@@ -103,6 +103,7 @@ WORLD_OVERRIDES = {
         # legitimately route through empty space beyond the two platforms.
         "planner": {
             "lidar_only_navigation": False,
+            "use_lidar_obstacle_overlay": False,
         },
         "mobility": {
             "terrain_source": "truth",

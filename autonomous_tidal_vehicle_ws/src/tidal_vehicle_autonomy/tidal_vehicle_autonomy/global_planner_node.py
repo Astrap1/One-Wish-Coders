@@ -49,6 +49,11 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("obstacle_association_radius_m", 0.0)
         self.declare_parameter("replan_on_obstacle_clear", True)
         self.declare_parameter("obstacle_replan_min_interval_s", 0.0)
+        # A compact, obstacle-free mobility demonstration may use a fixed map
+        # boundary without treating its deliberately visible ramp as a newly
+        # discovered LiDAR obstacle. Keep the overlay enabled by default for
+        # corridor missions.
+        self.declare_parameter("use_lidar_obstacle_overlay", True)
         self.declare_parameter("home_x_m", 0.0)
         self.declare_parameter("home_y_m", 0.0)
         self.declare_parameter("home_frame", "map")
@@ -86,6 +91,9 @@ class GlobalPlannerNode(Node):
         self._mission_event_sequence = 0
         self._lidar_only_navigation = bool(
             self.get_parameter("lidar_only_navigation").value
+        )
+        self._use_lidar_obstacle_overlay = bool(
+            self.get_parameter("use_lidar_obstacle_overlay").value
         )
 
         inflation_radius = self._float_parameter("obstacle_inflation_radius_m")
@@ -398,6 +406,8 @@ class GlobalPlannerNode(Node):
         self.get_logger().info("Mission reset; waiting for a new goal")
 
     def _on_scan(self, message: LaserScan) -> None:
+        if not self._use_lidar_obstacle_overlay:
+            return
         if self._base_costmap is None or self._pose is None:
             return
         if not self._lidar_only_navigation and self._costmap_msg is None:

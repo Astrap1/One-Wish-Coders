@@ -97,7 +97,7 @@ Version 2 scaled up: 3.0 × 1.8 × 1.9 m, 530 kg including a 100 kg payload, ser
 
 ### Track-deployment demonstration
 
-`world:=track_deployment_demo` is a small, all-firm scene: an 8 m flat launch
+`world:=track_deployment_demo` is a small, all-firm scene: a 20 m flat launch
 area, a 15° bank, and a flat upper platform. It is deliberately separate from
 the tidal-corridor mission, so it demonstrates the mobility transition without
 route obstacles or tide changes. V3 starts in HOVER. On the firm bank it sees a
@@ -105,7 +105,9 @@ forward climb of at least 8° for 0.25 s, latches `TRANSITION → TRACK`, lowers
 both tracks, settles to a 60% cushion load share, and then climbs the bank.
 The transition uses terrain truth directly beneath the craft; a forward costmap
 class is not allowed to suppress deployment just because it sees terrain beyond
-the crest. Send a goal to `(24, 0)` after launch.
+the crest. Its static costmap is the planner boundary (`x=-10…32 m`,
+`y=-7.5…7.5 m`), rather than V3's larger LiDAR-only corridor grid. Send a goal
+to `(24, 0)` after launch.
 
 **Model pipeline:** `assets/vehicle_blender/version_3/build_vehicle.py` → `gen_description_v3.py` → `models/hovercraft_v3/`, `urdf/hovercraft_v3.urdf`.
 

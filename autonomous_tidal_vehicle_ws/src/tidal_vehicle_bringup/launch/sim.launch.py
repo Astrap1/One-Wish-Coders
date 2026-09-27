@@ -97,6 +97,13 @@ VEHICLES = {
 # repeat. They are not used by the tidal-corridor mission.
 WORLD_OVERRIDES = {
     "track_deployment_demo": {
+        # The V3 corridor currently uses a larger LiDAR-only planning grid.
+        # This compact physics demonstration must instead keep planning within
+        # its own x=-10..32 m, y=-7.5..7.5 m static costmap; otherwise A* may
+        # legitimately route through empty space beyond the two platforms.
+        "planner": {
+            "lidar_only_navigation": False,
+        },
         "mobility": {
             "terrain_source": "truth",
             "max_speed_mps": 1.0,

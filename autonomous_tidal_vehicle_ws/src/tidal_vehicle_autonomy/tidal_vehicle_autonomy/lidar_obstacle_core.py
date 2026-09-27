@@ -197,6 +197,8 @@ def obstacle_change_requires_replan(
     current: Iterable[GridCell],
     active_path: Iterable[GridCell] | None,
     return_path: Iterable[GridCell] | None = None,
+    *,
+    replan_on_clear: bool = True,
 ) -> bool:
     """Return whether an overlay change can invalidate or restore a route.
 
@@ -212,7 +214,10 @@ def obstacle_change_requires_replan(
 
     removed = previous_cells - current_cells
     if removed and (active_cells is None or not current_cells):
-        return True
+        # Keep an established detour when a temporarily obscured obstacle
+        # disappears, but recover a route that was previously unavailable.
+        if replan_on_clear or active_cells is None:
+            return True
 
     added = current_cells - previous_cells
     if not added:

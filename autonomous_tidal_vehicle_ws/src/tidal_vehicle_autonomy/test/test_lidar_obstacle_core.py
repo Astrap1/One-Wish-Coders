@@ -211,6 +211,29 @@ def test_obstacle_change_replans_for_route_risk_or_route_recovery() -> None:
     assert obstacle_change_requires_replan({(4, 4)}, set(), None)
 
 
+def test_lidar_only_profile_keeps_an_existing_detour_when_hits_clear() -> None:
+    path = [(0, 0), (1, 0), (2, 0)]
+
+    assert not obstacle_change_requires_replan(
+        previous={(1, 0)},
+        current=set(),
+        active_path=path,
+        replan_on_clear=False,
+    )
+    assert obstacle_change_requires_replan(
+        previous=set(),
+        current={(1, 0)},
+        active_path=path,
+        replan_on_clear=False,
+    )
+    assert obstacle_change_requires_replan(
+        previous={(1, 0)},
+        current=set(),
+        active_path=None,
+        replan_on_clear=False,
+    )
+
+
 def test_return_route_is_also_protected_from_new_obstacles() -> None:
     assert obstacle_change_requires_replan(
         set(), {(3, 0)}, [(0, 0), (1, 0)], [(2, 0), (3, 0)]

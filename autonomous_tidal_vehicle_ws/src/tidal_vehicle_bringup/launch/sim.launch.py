@@ -68,6 +68,8 @@ VEHICLES = {
                        "lidar_only_resolution_m": 1.0,
                        "obstacle_min_range_m": 30.0, "obstacle_max_range_m": 30.0,
                        "obstacle_association_radius_m": 1.5,
+                       "replan_on_obstacle_clear": False,
+                       "obstacle_replan_min_interval_s": 1.5,
                        "obstacle_brake_decel_mps2": 1.0,
                        "obstacle_reaction_time_s": 1.0,
                        "goal_event_tolerance_m": 0.3},

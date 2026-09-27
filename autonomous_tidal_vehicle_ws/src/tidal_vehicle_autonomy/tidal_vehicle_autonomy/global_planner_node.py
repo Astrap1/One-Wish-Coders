@@ -47,6 +47,8 @@ class GlobalPlannerNode(Node):
         self.declare_parameter("obstacle_confirmation_scans", 2)
         self.declare_parameter("obstacle_clear_scans", 5)
         self.declare_parameter("obstacle_association_radius_m", 0.0)
+        self.declare_parameter("replan_on_obstacle_clear", True)
+        self.declare_parameter("obstacle_replan_min_interval_s", 0.0)
         self.declare_parameter("home_x_m", 0.0)
         self.declare_parameter("home_y_m", 0.0)
         self.declare_parameter("home_frame", "map")
@@ -94,12 +96,21 @@ class GlobalPlannerNode(Node):
         obstacle_association_radius = self._float_parameter(
             "obstacle_association_radius_m"
         )
+        obstacle_replan_min_interval = self._float_parameter(
+            "obstacle_replan_min_interval_s"
+        )
         self._obstacle_inflation_radius = inflation_radius
         self._obstacle_min_range = obstacle_min_range
         self._obstacle_max_range = obstacle_max_range
         self._obstacle_brake_decel = obstacle_brake_decel
         self._obstacle_reaction_time = obstacle_reaction_time
         self._obstacle_association_radius = obstacle_association_radius
+        self._replan_on_obstacle_clear = bool(
+            self.get_parameter("replan_on_obstacle_clear").value
+        )
+        self._obstacle_replan_min_interval = obstacle_replan_min_interval
+        self._last_obstacle_replan_at: float | None = None
+        self._obstacle_replan_pending = False
         confirmation_scans = self._positive_int_parameter(
             "obstacle_confirmation_scans"
         )
@@ -116,6 +127,8 @@ class GlobalPlannerNode(Node):
             )
         if obstacle_association_radius < 0.0:
             raise ValueError("obstacle_association_radius_m must be non-negative")
+        if obstacle_replan_min_interval < 0.0:
+            raise ValueError("obstacle_replan_min_interval_s must be non-negative")
         if obstacle_brake_decel <= 0.0:
             raise ValueError("obstacle_brake_decel_mps2 must be positive")
         if obstacle_reaction_time < 0.0:
@@ -179,6 +192,7 @@ class GlobalPlannerNode(Node):
             1.0 / return_refresh_rate,
             self._on_return_path_refresh_timer,
         )
+        self.create_timer(0.1, self._on_obstacle_replan_timer)
 
         inputs = (
             "pose, mission goal, and LiDAR"
@@ -325,6 +339,7 @@ class GlobalPlannerNode(Node):
         self._goal = message
         self._last_path_cells = None
         self._last_return_path_cells = None
+        self._obstacle_replan_pending = False
         self._return_path_available = False
         self._active_path_end = None
         self._delivery_reported = False
@@ -354,6 +369,7 @@ class GlobalPlannerNode(Node):
         self._last_path_cells = None
         self._active_path_end = None
         self._path_available = False
+        self._obstacle_replan_pending = False
         self._publish_empty_routes(include_return=True)
         self.get_logger().warning(
             f"Safety requested return to HOME: {message.reason or 'no reason provided'}"
@@ -373,6 +389,7 @@ class GlobalPlannerNode(Node):
         self._last_path_cells = None
         self._last_return_path_cells = None
         self._return_path_available = False
+        self._obstacle_replan_pending = False
         self._active_path_end = None
         self._path_available = False
         self._last_odometry_replan_position = None
@@ -443,7 +460,7 @@ class GlobalPlannerNode(Node):
             previous_obstacles,
             stable_obstacles,
         ):
-            self._replan("confirmed LiDAR obstacle update")
+            self._request_obstacle_replan(previous_obstacles, stable_obstacles)
 
     def _project_scan(
         self,
@@ -504,7 +521,73 @@ class GlobalPlannerNode(Node):
             current,
             active_path,
             return_path,
+            replan_on_clear=self._replan_on_obstacle_clear,
         )
+
+    def _request_obstacle_replan(
+        self,
+        previous: frozenset[GridCell],
+        current: frozenset[GridCell],
+    ) -> None:
+        """Batch far-field scan updates without delaying a near obstacle."""
+        now = time.monotonic()
+        elapsed = (
+            float("inf")
+            if self._last_obstacle_replan_at is None
+            else now - self._last_obstacle_replan_at
+        )
+        if (
+            elapsed >= self._obstacle_replan_min_interval
+            or self._new_obstacle_is_nearby(previous, current)
+        ):
+            self._obstacle_replan_pending = False
+            self._last_obstacle_replan_at = now
+            self._replan("confirmed LiDAR obstacle update")
+            return
+        self._obstacle_replan_pending = True
+
+    def _new_obstacle_is_nearby(
+        self,
+        previous: frozenset[GridCell],
+        current: frozenset[GridCell],
+    ) -> bool:
+        if self._costmap is None or self._pose is None:
+            return False
+        added = current - previous
+        if not added:
+            return False
+        position = self._pose.pose.pose.position
+        linear = self._pose.twist.twist.linear
+        speed = hypot(linear.x, linear.y)
+        stopping_reach = (
+            speed * self._obstacle_reaction_time
+            + speed * speed / (2.0 * self._obstacle_brake_decel)
+            + self._obstacle_inflation_radius
+        )
+        return any(
+            hypot(
+                self._costmap.world_from_grid(cell)[0] - position.x,
+                self._costmap.world_from_grid(cell)[1] - position.y,
+            ) <= stopping_reach
+            for cell in added
+        )
+
+    def _on_obstacle_replan_timer(self) -> None:
+        if not self._obstacle_replan_pending:
+            return
+        if not self._obstacle_change_requires_replan(
+            frozenset(), self._dynamic_obstacles
+        ):
+            self._obstacle_replan_pending = False
+            return
+        if self._last_obstacle_replan_at is not None and (
+            time.monotonic() - self._last_obstacle_replan_at
+            < self._obstacle_replan_min_interval
+        ):
+            return
+        self._obstacle_replan_pending = False
+        self._last_obstacle_replan_at = time.monotonic()
+        self._replan("batched LiDAR obstacle update")
 
     @staticmethod
     def _costmap_geometry(
